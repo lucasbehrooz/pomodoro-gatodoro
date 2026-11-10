@@ -6,6 +6,7 @@ from collections.abc import Mapping
 from dataclasses import replace
 
 from pomodoro.config import Config
+from pomodoro.ui.theme import THEMES
 
 # Faixas válidas para os campos inteiros do formulário (inclusive).
 INT_FIELDS: dict[str, tuple[int, int]] = {
@@ -34,6 +35,7 @@ LABELS: dict[str, str] = {
     "brown_noise_enabled": "Ruído marrom",
     "brown_noise_focus_only": "Ruído só durante o foco",
     "close_to_tray": "Fechar a janela manda para a bandeja",
+    "theme": "Tema",
 }
 
 
@@ -50,6 +52,7 @@ def form_values(config: Config) -> dict[str, object]:
     values["brown_noise_volume"] = round(config.brown_noise_volume * 100, 1)
     for name in BOOL_FIELDS:
         values[name] = getattr(config, name)
+    values["theme"] = config.theme
     return values
 
 
@@ -91,4 +94,9 @@ def build_config(raw: Mapping[str, object], base: Config) -> Config:
     for name in BOOL_FIELDS:
         if name in raw:
             updates[name] = bool(raw[name])
+    if "theme" in raw:
+        theme = raw["theme"]
+        if not isinstance(theme, str) or theme not in THEMES:
+            raise SettingsError(f"{LABELS['theme']}: escolha uma opção válida.")
+        updates["theme"] = theme
     return replace(base, **updates)

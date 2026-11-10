@@ -19,6 +19,14 @@ from pomodoro.ui.cat import CatAnimation
 from pomodoro.ui.controller import ApplyStatus, PomodoroController, format_mmss
 from pomodoro.ui.settings_dialog import SettingsDialog
 from pomodoro.ui.stats import StatsWindow
+from pomodoro.ui.theme import (
+    Palette,
+    apply_accent_button,
+    apply_text,
+    apply_window,
+    get_palette,
+    refresh_transparent_bg,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -66,11 +74,13 @@ class MainWindow(ctk.CTk):
         self._settings_dialog: SettingsDialog | None = None
         self._stats_window: StatsWindow | None = None
         self._quitting = False
+        self._palette: Palette = get_palette(controller.config.theme)
 
         self.title("Pomodoro")
         self.geometry("340x500")
         self.resizable(False, False)
         self._build()
+        self._apply_palette()
         self.protocol("WM_DELETE_WINDOW", self._on_close_requested)
 
         self._refresh()
@@ -105,12 +115,39 @@ class MainWindow(ctk.CTk):
         self._status_label = ctk.CTkLabel(self, text="", wraplength=300)
         self._status_label.pack(pady=(4, 0))
 
-        ctk.CTkButton(
+        self._settings_btn = ctk.CTkButton(
             self, text="Configurações", width=160, command=self._open_settings
-        ).pack(side="bottom", pady=16)
-        ctk.CTkButton(
+        )
+        self._settings_btn.pack(side="bottom", pady=16)
+        self._stats_btn = ctk.CTkButton(
             self, text="Estatísticas", width=160, command=self._open_stats
-        ).pack(side="bottom", pady=(0, 0))
+        )
+        self._stats_btn.pack(side="bottom", pady=(0, 0))
+
+    def _apply_palette(self) -> None:
+        p = self._palette
+        apply_window(self, p, "CTk")
+        apply_text(self._phase_label, p)
+        apply_text(self._time_label, p)
+        apply_text(self._cycle_label, p, muted=True)
+        apply_text(self._status_label, p, muted=True)
+        self._pending_label.configure(text_color=p.warning)
+        for btn in (
+            self._toggle_btn,
+            self._reset_btn,
+            self._skip_btn,
+            self._settings_btn,
+            self._stats_btn,
+        ):
+            apply_accent_button(btn, p)
+        refresh_transparent_bg(self)
+
+    def _set_theme(self, name: str) -> None:
+        """Troca o tema em tempo de execução, sem reiniciar. Atualiza as janelas abertas."""
+        self._palette = get_palette(name)
+        self._apply_palette()
+        if self._stats_window is not None and self._stats_window.winfo_exists():
+            self._stats_window.apply_palette(self._palette)
 
     # ---- ações de usuário -----------------------------------------------
 
@@ -146,13 +183,14 @@ class MainWindow(ctk.CTk):
             window.lift()
             window.focus()
             return
-        self._stats_window = StatsWindow(self, self._storage)
+        self._stats_window = StatsWindow(self, self._storage, palette=self._palette)
 
     def _save_settings(self, new: Config) -> None:
         self._save(new)  # OSError é tratado pelo diálogo
         status = self._controller.apply_config(new)
         message = MSG_SETTINGS_APPLIED if status is ApplyStatus.APPLIED else MSG_SETTINGS_DEFERRED
         self._status_label.configure(text=message)
+        self._set_theme(new.theme)
         self._refresh()
 
     def _on_close_requested(self) -> None:
