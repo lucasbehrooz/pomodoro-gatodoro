@@ -14,8 +14,10 @@ from collections.abc import Callable
 import customtkinter as ctk
 
 from pomodoro.config import Config, save_config
+from pomodoro.storage import Storage
 from pomodoro.ui.controller import ApplyStatus, PomodoroController, format_mmss
 from pomodoro.ui.settings_dialog import SettingsDialog
+from pomodoro.ui.stats import StatsWindow
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +28,7 @@ MSG_SETTINGS_DEFERRED = (
     "Configurações salvas. Durações e ciclos serão aplicados ao reiniciar o ciclo."
 )
 MSG_PENDING_NOTICE = "Novas durações serão aplicadas ao reiniciar."
+MSG_STATS_UNAVAILABLE = "Estatísticas indisponíveis: armazenamento não informado."
 
 
 class MainWindow(ctk.CTk):
@@ -48,6 +51,7 @@ class MainWindow(ctk.CTk):
         on_quit: Callable[[], None] | None = None,
         can_hide_to_tray: bool = True,
         save: Callable[[Config], None] = save_config,
+        storage: Storage | None = None,
     ) -> None:
         super().__init__()
         self._controller = controller
@@ -55,13 +59,15 @@ class MainWindow(ctk.CTk):
         self._on_quit = on_quit
         self._can_hide_to_tray = can_hide_to_tray
         self._save = save
+        self._storage = storage
         self._ui_queue: queue.Queue[Callable[[], None]] = queue.Queue()
         self._tick_after_id: str | None = None
         self._settings_dialog: SettingsDialog | None = None
+        self._stats_window: StatsWindow | None = None
         self._quitting = False
 
         self.title("Pomodoro")
-        self.geometry("340x400")
+        self.geometry("340x440")
         self.resizable(False, False)
         self._build()
         self.protocol("WM_DELETE_WINDOW", self._on_close_requested)
@@ -98,6 +104,9 @@ class MainWindow(ctk.CTk):
         ctk.CTkButton(
             self, text="Configurações", width=160, command=self._open_settings
         ).pack(side="bottom", pady=16)
+        ctk.CTkButton(
+            self, text="Estatísticas", width=160, command=self._open_stats
+        ).pack(side="bottom", pady=(0, 0))
 
     # ---- ações de usuário -----------------------------------------------
 
@@ -121,6 +130,19 @@ class MainWindow(ctk.CTk):
         self._settings_dialog = SettingsDialog(
             self, self._controller.config, on_save=self._save_settings
         )
+
+    def _open_stats(self) -> None:
+        if self._storage is None:
+            self._status_label.configure(text=MSG_STATS_UNAVAILABLE)
+            return
+        window = self._stats_window
+        if window is not None and window.winfo_exists():
+            window.refresh()
+            window.deiconify()
+            window.lift()
+            window.focus()
+            return
+        self._stats_window = StatsWindow(self, self._storage)
 
     def _save_settings(self, new: Config) -> None:
         self._save(new)  # OSError é tratado pelo diálogo
