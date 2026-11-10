@@ -50,7 +50,7 @@ def main() -> None:
         )
         tray.start()
         # Sem bandeja disponível, "fechar para a bandeja" esconderia a janela sem volta.
-        window = MainWindow(controller, can_hide_to_tray=tray.is_available)
+        window = MainWindow(controller, can_hide_to_tray=tray.is_available, storage=storage)
         _start_tray_loop(window, controller, tray)
         try:
             window.mainloop()
