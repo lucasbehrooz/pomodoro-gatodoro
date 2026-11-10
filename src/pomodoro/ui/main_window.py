@@ -15,6 +15,7 @@ import customtkinter as ctk
 
 from pomodoro.config import Config, save_config
 from pomodoro.storage import Storage
+from pomodoro.ui.cat import CatAnimation
 from pomodoro.ui.controller import ApplyStatus, PomodoroController, format_mmss
 from pomodoro.ui.settings_dialog import SettingsDialog
 from pomodoro.ui.stats import StatsWindow
@@ -67,7 +68,7 @@ class MainWindow(ctk.CTk):
         self._quitting = False
 
         self.title("Pomodoro")
-        self.geometry("340x440")
+        self.geometry("340x500")
         self.resizable(False, False)
         self._build()
         self.protocol("WM_DELETE_WINDOW", self._on_close_requested)
@@ -86,6 +87,9 @@ class MainWindow(ctk.CTk):
 
         self._cycle_label = ctk.CTkLabel(self, text="")
         self._cycle_label.pack(pady=4)
+
+        self._cat = CatAnimation(self)
+        self._cat.pack(pady=(0, 0))
 
         buttons = ctk.CTkFrame(self, fg_color="transparent")
         buttons.pack(pady=16)
@@ -226,4 +230,5 @@ class MainWindow(ctk.CTk):
             text=f"Focos no ciclo: {c.completed_focus_count}/{c.cycles_before_long_break}"
         )
         self._toggle_btn.configure(text="Pausar" if c.is_running else "Iniciar")
+        self._cat.set_running(c.is_running)
         self._pending_label.configure(text=MSG_PENDING_NOTICE if c.timer_config_pending else "")
