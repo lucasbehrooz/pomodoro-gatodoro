@@ -54,8 +54,8 @@ pomodoro/
 
 ### Fase 3: Persistência e estatísticas
 - [x] Tabela `sessions` (tipo, início, duração, concluída).
-- [ ] Tela de histórico: pomodoros de hoje e da semana.
-- [ ] Gráfico de barras simples em Canvas (sem matplotlib, para não inflar o `.exe`).
+- [x] Tela de histórico: pomodoros de hoje e da semana.
+- [x] Gráfico de barras simples em Canvas (sem matplotlib, para não inflar o `.exe`).
 
 ### Fase 4: Configurações
 - [x] Duração de foco, pausa curta, pausa longa, ciclos até pausa longa, volume.
@@ -77,6 +77,10 @@ pomodoro/
 - [x] Controle de volume e toggle.
 - [x] Opção de tocar só durante o foco ou também nas pausas.
 - [x] Pausar o ruído brevemente ao tocar o alerta.
+
+### Extras
+- [x] Gato animado fazendo pãozinho enquanto o timer executa (`assets/gato_pao.gif`, gerado por `tools/make_cat_gif.py`; pode ser substituído por um GIF real).
+- [x] README.md na raiz.
 
 ### Fase 8: Empacotamento e testes no Windows
 - [ ] `PyInstaller --onefile --windowed`, incluindo assets e a DLL do PortAudio.
