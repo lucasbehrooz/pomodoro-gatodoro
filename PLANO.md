@@ -49,8 +49,8 @@ pomodoro/
 - [x] Testes unitários para transições e contagem de ciclos.
 
 ### Fase 2: Interface básica
-- [ ] Janela CustomTkinter com contador e botões Iniciar / Pausar / Reiniciar / Pular.
-- [ ] Tick via `after()`, sem bloquear a UI.
+- [x] Janela CustomTkinter com contador e botões Iniciar / Pausar / Reiniciar / Pular.
+- [x] Tick via `after()`, sem bloquear a UI.
 
 ### Fase 3: Persistência e estatísticas
 - [x] Tabela `sessions` (tipo, início, duração, concluída).
@@ -58,25 +58,25 @@ pomodoro/
 - [ ] Gráfico de barras simples em Canvas (sem matplotlib, para não inflar o `.exe`).
 
 ### Fase 4: Configurações
-- [ ] Duração de foco, pausa curta, pausa longa, ciclos até pausa longa, volume.
-- [ ] Salvar em JSON e aplicar sem reiniciar.
+- [x] Duração de foco, pausa curta, pausa longa, ciclos até pausa longa, volume.
+- [x] Salvar em JSON e aplicar sem reiniciar. (Durações com timer em andamento valem a partir do próximo Reiniciar.)
 
 ### Fase 5: Notificações
 - [x] Som de alerta ao fim de cada bloco.
 - [x] Toast do Windows com o próximo passo ("Hora da pausa").
-- [ ] Toggle para ligar/desligar cada tipo de notificação. (Flags já existem em `Config`; falta o controle na UI.)
+- [x] Toggle para ligar/desligar cada tipo de notificação.
 
 ### Fase 6: Bandeja do sistema
-- [ ] `pystray` em thread própria. Comunicação com o Tk por fila (Tk não é thread-safe).
-- [ ] Minimizar para a bandeja e opção de fechar para a bandeja.
-- [ ] Menu da bandeja: iniciar/pausar, abrir, sair.
+- [x] `pystray` em thread própria. Comunicação com o Tk por fila (Tk não é thread-safe).
+- [x] Minimizar para a bandeja e opção de fechar para a bandeja.
+- [x] Menu da bandeja: iniciar/pausar, abrir, sair.
 
 ### Fase 7: Ruído marrom
 - [x] Gerar ruído marrom (white noise integrado e normalizado) em buffers contínuos.
-- [ ] Reproduzir em thread com `sounddevice`, com fade in/out para evitar cliques.
-- [ ] Controle de volume e toggle.
-- [ ] Opção de tocar só durante o foco ou também nas pausas.
-- [ ] Pausar o ruído brevemente ao tocar o alerta.
+- [x] Reproduzir em thread com `sounddevice`, com fade in/out para evitar cliques.
+- [x] Controle de volume e toggle.
+- [x] Opção de tocar só durante o foco ou também nas pausas.
+- [x] Pausar o ruído brevemente ao tocar o alerta.
 
 ### Fase 8: Empacotamento e testes no Windows
 - [ ] `PyInstaller --onefile --windowed`, incluindo assets e a DLL do PortAudio.
