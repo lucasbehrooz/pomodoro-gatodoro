@@ -40,20 +40,20 @@ pomodoro/
 ## Fases de desenvolvimento
 
 ### Fase 0: Setup
-- [ ] Repositório git, ambiente virtual, `pyproject.toml`, estrutura de pastas.
+- [x] Repositório git, ambiente virtual, `pyproject.toml`, estrutura de pastas.
 
 ### Fase 1: Núcleo do timer (sem interface)
-- [ ] Estados: foco, pausa curta, pausa longa, pausado, ocioso.
-- [ ] Ciclo 25/5, com pausa longa de 15 min a cada 4 focos.
-- [ ] Usar `time.monotonic()` para evitar drift (não `sleep()`).
-- [ ] Testes unitários para transições e contagem de ciclos.
+- [x] Estados: foco, pausa curta, pausa longa, pausado, ocioso.
+- [x] Ciclo 25/5, com pausa longa de 15 min a cada 4 focos.
+- [x] Usar `time.monotonic()` para evitar drift (não `sleep()`).
+- [x] Testes unitários para transições e contagem de ciclos.
 
 ### Fase 2: Interface básica
 - [ ] Janela CustomTkinter com contador e botões Iniciar / Pausar / Reiniciar / Pular.
 - [ ] Tick via `after()`, sem bloquear a UI.
 
 ### Fase 3: Persistência e estatísticas
-- [ ] Tabela `sessions` (tipo, início, duração, concluída).
+- [x] Tabela `sessions` (tipo, início, duração, concluída).
 - [ ] Tela de histórico: pomodoros de hoje e da semana.
 - [ ] Gráfico de barras simples em Canvas (sem matplotlib, para não inflar o `.exe`).
 
@@ -62,9 +62,9 @@ pomodoro/
 - [ ] Salvar em JSON e aplicar sem reiniciar.
 
 ### Fase 5: Notificações
-- [ ] Som de alerta ao fim de cada bloco.
-- [ ] Toast do Windows com o próximo passo ("Hora da pausa").
-- [ ] Toggle para ligar/desligar cada tipo de notificação.
+- [x] Som de alerta ao fim de cada bloco.
+- [x] Toast do Windows com o próximo passo ("Hora da pausa").
+- [ ] Toggle para ligar/desligar cada tipo de notificação. (Flags já existem em `Config`; falta o controle na UI.)
 
 ### Fase 6: Bandeja do sistema
 - [ ] `pystray` em thread própria. Comunicação com o Tk por fila (Tk não é thread-safe).
@@ -72,7 +72,7 @@ pomodoro/
 - [ ] Menu da bandeja: iniciar/pausar, abrir, sair.
 
 ### Fase 7: Ruído marrom
-- [ ] Gerar ruído marrom (white noise integrado e normalizado) em buffers contínuos.
+- [x] Gerar ruído marrom (white noise integrado e normalizado) em buffers contínuos.
 - [ ] Reproduzir em thread com `sounddevice`, com fade in/out para evitar cliques.
 - [ ] Controle de volume e toggle.
 - [ ] Opção de tocar só durante o foco ou também nas pausas.
@@ -94,7 +94,7 @@ pomodoro/
 
 ## Decisões pendentes
 
-1. **Ruído marrom:** tocar apenas no foco ou também nas pausas?
-2. **Fechar a janela:** encerrar o app ou enviar para a bandeja?
-3. **Idioma:** apenas português ou suporte a outros idiomas?
-4. **Versão do Python:** 3.11 ou superior?
+1. **Ruído marrom:** tocar apenas no foco ou também nas pausas? (padrão adotado: apenas no foco)
+2. **Fechar a janela:** encerrar o app ou enviar para a bandeja? (padrão adotado: bandeja)
+3. **Idioma:** apenas português ou suporte a outros idiomas? (padrão adotado: apenas português)
+4. **Versão do Python:** 3.11 ou superior? (padrão adotado: 3.11+)
