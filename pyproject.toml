@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pomodoro"
+version = "0.1.0"
+description = "Pomodoro para Windows com ruído marrom, notificações e bandeja do sistema"
+requires-python = ">=3.11"
+dependencies = [
+    "customtkinter>=5.2",
+    "pystray>=0.19",
+    "Pillow>=10.0",
+    "winotify>=1.1; sys_platform == 'win32'",
+    "numpy>=1.26",
+    "sounddevice>=0.4.6",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+pomodoro = "pomodoro.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
