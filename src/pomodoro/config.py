@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import json
 import os
-from dataclasses import asdict, dataclass, fields
+from dataclasses import asdict, dataclass, fields, replace
 from pathlib import Path
+
+from pomodoro.ui.theme import DEFAULT_THEME, is_valid_theme
 
 
 @dataclass
@@ -29,6 +31,8 @@ class Config:
 
     # Janela
     close_to_tray: bool = True
+    # Tema visual: "padrao", "feminino" ou "escuro" (ver pomodoro.ui.theme)
+    theme: str = DEFAULT_THEME
 
 
 def config_dir() -> Path:
@@ -56,7 +60,10 @@ def load_config(path: Path | None = None) -> Config:
         return Config()
 
     known = {f.name for f in fields(Config)}
-    return Config(**{k: v for k, v in raw.items() if k in known})
+    config = Config(**{k: v for k, v in raw.items() if k in known})
+    if not is_valid_theme(config.theme):
+        config = replace(config, theme=DEFAULT_THEME)
+    return config
 
 
 def save_config(config: Config, path: Path | None = None) -> None:

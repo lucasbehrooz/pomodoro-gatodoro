@@ -15,6 +15,16 @@ import tkinter as tk
 import customtkinter as ctk
 
 from pomodoro.storage import Storage
+from pomodoro.ui.theme import (
+    DEFAULT_THEME,
+    Palette,
+    apply_accent_button,
+    apply_card,
+    apply_text,
+    apply_window,
+    get_palette,
+    refresh_transparent_bg,
+)
 
 CHART_DAYS = 7
 
@@ -101,8 +111,15 @@ _LIGHT = {"bg": "#dbdbdb", "bar": "#3b8ed0", "text": "#000000"}
 _DARK = {"bg": "#2b2b2b", "bar": "#3b8ed0", "text": "#ffffff"}
 
 
-def _palette() -> dict[str, str]:
-    return _DARK if ctk.get_appearance_mode() == "Dark" else _LIGHT
+def chart_colors(palette: Palette, dark: bool) -> dict[str, str]:
+    """Cores do gráfico para a paleta. ``dark`` é o modo do sistema (usado no tema padrão).
+
+    Tema padrão (sem cores próprias): mantém as cores originais do gráfico.
+    Demais temas: fundo do card, barras no accent e texto da paleta.
+    """
+    if palette.card is None or palette.accent is None or palette.text is None:
+        return _DARK if dark else _LIGHT
+    return {"bg": palette.card, "bar": palette.accent, "text": palette.text}
 
 
 class StatsWindow(ctk.CTkToplevel):
@@ -117,6 +134,7 @@ class StatsWindow(ctk.CTkToplevel):
         master: ctk.CTk,
         storage: Storage,
         today: Callable[[], date] = date.today,
+        palette: Palette | None = None,
     ) -> None:
         super().__init__(master)
         self.title("Estatísticas")
@@ -125,8 +143,10 @@ class StatsWindow(ctk.CTkToplevel):
 
         self._storage = storage
         self._today = today
+        self._palette: Palette = palette or get_palette(DEFAULT_THEME)
 
-        frame = ctk.CTkFrame(self)
+        self._frame = ctk.CTkFrame(self)
+        frame = self._frame
         frame.pack(fill="both", expand=True, padx=16, pady=16)
 
         self._today_label = ctk.CTkLabel(frame, text="", anchor="w")
@@ -136,9 +156,8 @@ class StatsWindow(ctk.CTkToplevel):
         self._last7_label = ctk.CTkLabel(frame, text="", anchor="w")
         self._last7_label.pack(anchor="w", pady=2)
 
-        ctk.CTkLabel(frame, text="Focos concluídos por dia (últimos 7 dias)").pack(
-            anchor="w", pady=(12, 4)
-        )
+        self._caption = ctk.CTkLabel(frame, text="Focos concluídos por dia (últimos 7 dias)")
+        self._caption.pack(anchor="w", pady=(12, 4))
         self._canvas = tk.Canvas(
             frame,
             width=CANVAS_WIDTH,
@@ -148,10 +167,21 @@ class StatsWindow(ctk.CTkToplevel):
         )
         self._canvas.pack()
 
-        ctk.CTkButton(frame, text="Fechar", width=90, command=self.destroy).pack(
-            anchor="e", pady=(12, 0)
-        )
+        self._close_btn = ctk.CTkButton(frame, text="Fechar", width=90, command=self.destroy)
+        self._close_btn.pack(anchor="e", pady=(12, 0))
 
+        self.apply_palette(self._palette)
+
+    def apply_palette(self, palette: Palette) -> None:
+        """Aplica a paleta à janela e redesenha o gráfico. Pode ser chamado a qualquer momento."""
+        self._palette = palette
+        apply_window(self, palette, "CTkToplevel")
+        apply_card(self._frame, palette)
+        for label in (self._today_label, self._week_label, self._last7_label):
+            apply_text(label, palette)
+        apply_text(self._caption, palette, muted=True)
+        apply_accent_button(self._close_btn, palette)
+        refresh_transparent_bg(self)
         self.refresh()
 
     def refresh(self) -> None:
@@ -167,7 +197,8 @@ class StatsWindow(ctk.CTkToplevel):
     # ---- internos ---------------------------------------------------------
 
     def _draw_chart(self, series: list[tuple[date, int]]) -> None:
-        colors = _palette()
+        dark = ctk.get_appearance_mode() == "Dark"
+        colors = chart_colors(self._palette, dark)
         canvas = self._canvas
         canvas.delete("all")
         canvas.configure(bg=colors["bg"])
