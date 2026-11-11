@@ -96,6 +96,19 @@ class MainWindow(ctk.CTk):
     # ---- construção -----------------------------------------------------
 
     def _build(self) -> None:
+        # Rodapé empacotado primeiro: assim os botões nunca são cortados quando
+        # a altura da janela não sobra (ex.: fontes maiores no Windows).
+        footer = ctk.CTkFrame(self, fg_color="transparent")
+        footer.pack(side="bottom", pady=16)
+        self._settings_btn = ctk.CTkButton(
+            footer, text="Configurações", width=160, command=self._open_settings
+        )
+        self._settings_btn.grid(row=0, column=0, padx=4, pady=(0, 6))
+        self._stats_btn = ctk.CTkButton(
+            footer, text="Estatísticas", width=160, command=self._open_stats
+        )
+        self._stats_btn.grid(row=1, column=0, padx=4)
+
         self._phase_label = ctk.CTkLabel(self, text="", font=ctk.CTkFont(size=20, weight="bold"))
         self._phase_label.pack(pady=(24, 4))
 
@@ -122,14 +135,6 @@ class MainWindow(ctk.CTk):
         self._status_label = ctk.CTkLabel(self, text="", wraplength=300)
         self._status_label.pack(pady=(4, 0))
 
-        self._settings_btn = ctk.CTkButton(
-            self, text="Configurações", width=160, command=self._open_settings
-        )
-        self._settings_btn.pack(side="bottom", pady=16)
-        self._stats_btn = ctk.CTkButton(
-            self, text="Estatísticas", width=160, command=self._open_stats
-        )
-        self._stats_btn.pack(side="bottom", pady=(0, 0))
 
     def _apply_palette(self) -> None:
         p = self._palette
