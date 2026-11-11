@@ -43,7 +43,7 @@ Use este procedimento para gerar um novo `PomodoroGatodoro.exe` e instalador par
    O push da tag dispara `.github/workflows/release-windows.yml`, que:
    - roda os testes em Windows;
    - gera `dist/PomodoroGatodoro.exe` com PyInstaller (`--icon assets/gato.ico`);
-   - gera `dist/PomodoroGatodoro-Setup-X.Y.Z.exe` com Inno Setup (`packaging/pomodoro.iss`);
+   - gera `dist/pomodoro-gatodoro-x64-setup.exe` com Inno Setup (`packaging/pomodoro.iss`);
    - publica os dois arquivos na release da tag.
 
 7. **Confirme o resultado.** Verifique `git ls-remote --tags origin` e informe ao usuário o endereço:

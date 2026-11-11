@@ -2,7 +2,7 @@
 ;
 ; Uso (a partir da raiz do repositório, depois de gerar dist\PomodoroGatodoro.exe):
 ;   iscc /DMyAppVersion=0.0.3 packaging\pomodoro.iss
-; Saída: dist\PomodoroGatodoro-Setup-<versão>.exe
+; Saída: dist\pomodoro-gatodoro-x64-setup.exe
 ;
 ; O Inno Setup resolve caminhos relativos a partir da pasta deste script,
 ; por isso ".." aponta para a raiz do repositório.
@@ -42,7 +42,7 @@ SolidCompression=yes
 WizardStyle=modern
 CloseApplications=yes
 OutputDir={#RepoRoot}\dist
-OutputBaseFilename=PomodoroGatodoro-Setup-{#MyAppVersion}
+OutputBaseFilename=pomodoro-gatodoro-x64-setup
 
 [Languages]
 #ifdef HasPtBr
