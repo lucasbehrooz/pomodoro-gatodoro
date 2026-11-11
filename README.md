@@ -1,4 +1,4 @@
-# Pomodoro para Windows
+# Pomodoro Gatodoro para Windows
 
 ![Gato fazendo pãozinho](assets/gato_pao.gif)
 
@@ -114,7 +114,7 @@ pomodoro/
 
 ## Status
 
-Versão atual: 0.0.6. O andamento das fases está em [PLANO.md](PLANO.md). O app foi testado no Windows, e as versões são publicadas em [Releases](https://github.com/lucasbehrooz/pomodoro/releases), com o executável `Pomodoro.exe` e um instalador.
+Versão atual: 0.0.6. O andamento das fases está em [PLANO.md](PLANO.md). O app foi testado no Windows, e as versões são publicadas em [Releases](https://github.com/lucasbehrooz/pomodoro/releases), com o executável `PomodoroGatodoro.exe` e um instalador.
 
 ## Licença
 

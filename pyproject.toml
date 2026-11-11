@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "pomodoro"
 version = "0.0.6"
 license = { text = "MIT" }
-description = "Pomodoro para Windows com ruído marrom, notificações e bandeja do sistema"
+description = "Pomodoro Gatodoro para Windows com ruído marrom, notificações e bandeja do sistema"
 requires-python = ">=3.11"
 dependencies = [
     "customtkinter>=5.2",

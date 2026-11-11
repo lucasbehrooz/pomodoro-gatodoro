@@ -1,8 +1,8 @@
 ; Instalador do Pomodoro (Inno Setup 6).
 ;
-; Uso (a partir da raiz do repositório, depois de gerar dist\Pomodoro.exe):
+; Uso (a partir da raiz do repositório, depois de gerar dist\PomodoroGatodoro.exe):
 ;   iscc /DMyAppVersion=0.0.3 packaging\pomodoro.iss
-; Saída: dist\Pomodoro-Setup-<versão>.exe
+; Saída: dist\PomodoroGatodoro-Setup-<versão>.exe
 ;
 ; O Inno Setup resolve caminhos relativos a partir da pasta deste script,
 ; por isso ".." aponta para a raiz do repositório.
@@ -11,8 +11,8 @@
   #define MyAppVersion "0.0.0-dev"
 #endif
 
-#define MyAppName "Pomodoro"
-#define MyAppExeName "Pomodoro.exe"
+#define MyAppName "Pomodoro Gatodoro"
+#define MyAppExeName "PomodoroGatodoro.exe"
 #define RepoRoot ".."
 
 ; Idioma português só se o compilador instalado tiver o arquivo; senão, inglês (padrão).
@@ -42,7 +42,7 @@ SolidCompression=yes
 WizardStyle=modern
 CloseApplications=yes
 OutputDir={#RepoRoot}\dist
-OutputBaseFilename=Pomodoro-Setup-{#MyAppVersion}
+OutputBaseFilename=PomodoroGatodoro-Setup-{#MyAppVersion}
 
 [Languages]
 #ifdef HasPtBr

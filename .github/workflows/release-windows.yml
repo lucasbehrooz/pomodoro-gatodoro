@@ -1,6 +1,6 @@
 name: Build Windows
 
-# Gera Pomodoro.exe em uma máquina Windows.
+# Gera PomodoroGatodoro.exe em uma máquina Windows.
 # - Em push de tag v* (ex.: v0.0.1): gera o .exe e publica uma GitHub Release com ele.
 # - Manualmente (workflow_dispatch): gera o .exe e disponibiliza como artefato da execução.
 
@@ -38,7 +38,7 @@ jobs:
       - name: Gerar executável
         run: >
           python -m PyInstaller --noconfirm --onefile --windowed
-          --name Pomodoro
+          --name PomodoroGatodoro
           --icon assets/gato.ico
           --paths src
           --collect-all customtkinter
@@ -63,16 +63,16 @@ jobs:
       - name: Enviar artefato
         uses: actions/upload-artifact@v4
         with:
-          name: Pomodoro-windows
+          name: PomodoroGatodoro-windows
           path: |
-            dist/Pomodoro.exe
-            dist/Pomodoro-Setup-*.exe
+            dist/PomodoroGatodoro.exe
+            dist/PomodoroGatodoro-Setup-*.exe
 
       - name: Publicar release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            dist/Pomodoro.exe
-            dist/Pomodoro-Setup-*.exe
+            dist/PomodoroGatodoro.exe
+            dist/PomodoroGatodoro-Setup-*.exe
           generate_release_notes: true

@@ -256,7 +256,7 @@ def test_tick_transition_records_completed_and_notifies(cfg, storage, clock, not
     assert rows(storage) == [("focus", 60, 1, BASE.isoformat())]
     assert storage.count_completed_focus(DAY) == 1
     assert notifier.alerts == 1
-    assert notifier.toasts == [("Pomodoro", "Hora da pausa")]
+    assert notifier.toasts == [("Pomodoro Gatodoro", "Hora da pausa")]
 
 
 def test_tick_break_completion_records_break_and_announces_focus(cfg, storage, clock, notifier):
@@ -269,7 +269,7 @@ def test_tick_break_completion_records_break_and_announces_focus(cfg, storage, c
     assert event.finished is Phase.SHORT_BREAK
     assert event.next is Phase.FOCUS
     assert c.phase is Phase.FOCUS
-    assert notifier.toasts[-1] == ("Pomodoro", "Hora de focar")
+    assert notifier.toasts[-1] == ("Pomodoro Gatodoro", "Hora de focar")
     recorded = rows(storage)
     assert recorded[1][:3] == ("short_break", 60, 1)
     # a pausa começou no tick da transição foco -> pausa (BASE + 60 s)
@@ -376,7 +376,7 @@ def test_non_timer_fields_apply_immediately_while_running(cfg, storage, clock):
     c.tick()
     assert old.alerts == 0 and old.toasts == []
     assert new.alerts == 0  # som desligado no config novo
-    assert new.toasts == [("Pomodoro", "Hora da pausa")]
+    assert new.toasts == [("Pomodoro Gatodoro", "Hora da pausa")]
 
 
 # ---- ruído ------------------------------------------------------------

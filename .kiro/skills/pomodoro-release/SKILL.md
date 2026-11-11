@@ -1,11 +1,11 @@
 ---
 name: pomodoro-release
-description: Publish a new Pomodoro version - bump version in pyproject.toml and __init__.py, run tests, commit, push, and create tag vX.Y.Z so GitHub Actions builds Pomodoro.exe and the installer and publishes the release. Use when the user asks for a new version, release, tag, exe build, or instalador.
+description: Publish a new Pomodoro version - bump version in pyproject.toml and __init__.py, run tests, commit, push, and create tag vX.Y.Z so GitHub Actions builds PomodoroGatodoro.exe and the installer and publishes the release. Use when the user asks for a new version, release, tag, exe build, or instalador.
 ---
 
 # Publicar uma nova versão do Pomodoro
 
-Use este procedimento para gerar um novo `Pomodoro.exe` e instalador para download nas releases do GitHub.
+Use este procedimento para gerar um novo `PomodoroGatodoro.exe` e instalador para download nas releases do GitHub.
 
 ## Pré-requisitos
 - Trabalhe na branch `main`, com a árvore limpa (`git status`).
@@ -42,8 +42,8 @@ Use este procedimento para gerar um novo `Pomodoro.exe` e instalador para downlo
    ```
    O push da tag dispara `.github/workflows/release-windows.yml`, que:
    - roda os testes em Windows;
-   - gera `dist/Pomodoro.exe` com PyInstaller (`--icon assets/gato.ico`);
-   - gera `dist/Pomodoro-Setup-X.Y.Z.exe` com Inno Setup (`packaging/pomodoro.iss`);
+   - gera `dist/PomodoroGatodoro.exe` com PyInstaller (`--icon assets/gato.ico`);
+   - gera `dist/PomodoroGatodoro-Setup-X.Y.Z.exe` com Inno Setup (`packaging/pomodoro.iss`);
    - publica os dois arquivos na release da tag.
 
 7. **Confirme o resultado.** Verifique `git ls-remote --tags origin` e informe ao usuário o endereço:

@@ -81,11 +81,11 @@ def test_toast_desligado_nao_chama_winotify(fake_winotify):
 
 
 def test_toast_chama_winotify_com_title_e_msg(fake_winotify):
-    n = WindowsNotifier(app_id="Pomodoro", toast_enabled=True)
+    n = WindowsNotifier(app_id="Pomodoro Gatodoro", toast_enabled=True)
     n.toast("Foco concluído", "Hora da pausa")
     assert len(FakeNotification.instances) == 1
     note = FakeNotification.instances[0]
-    assert note.app_id == "Pomodoro"
+    assert note.app_id == "Pomodoro Gatodoro"
     assert note.title == "Foco concluído"
     assert note.msg == "Hora da pausa"
     assert note.shown is True

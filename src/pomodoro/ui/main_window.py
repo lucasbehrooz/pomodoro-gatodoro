@@ -82,7 +82,7 @@ class MainWindow(ctk.CTk):
         self._quitting = False
         self._palette: Palette = get_palette(controller.config.theme)
 
-        self.title("Pomodoro")
+        self.title("Pomodoro Gatodoro")
         apply_window_icon(self)
         self.geometry("340x500")
         self.resizable(False, False)

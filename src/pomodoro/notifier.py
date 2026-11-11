@@ -50,7 +50,7 @@ class WindowsNotifier:
 
     def __init__(
         self,
-        app_id: str = "Pomodoro",
+        app_id: str = "Pomodoro Gatodoro",
         sound_enabled: bool = True,
         toast_enabled: bool = True,
     ) -> None:

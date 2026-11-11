@@ -74,7 +74,7 @@ class TrayIcon:
         on_toggle: Callable[[], None],
         on_show: Callable[[], None],
         on_quit: Callable[[], None],
-        title: str = "Pomodoro",
+        title: str = "Pomodoro Gatodoro",
     ) -> None:
         self._callbacks: dict[str, Callable[[], None]] = {
             EVENT_TOGGLE: on_toggle,

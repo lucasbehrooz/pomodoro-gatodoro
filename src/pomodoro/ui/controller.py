@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 NOISE_FADE_SECONDS = 1.0
 ALERT_PAUSE_SECONDS = 3.0
 
-TOAST_TITLE = "Pomodoro"
+TOAST_TITLE = "Pomodoro Gatodoro"
 NEXT_STEP_MESSAGES: dict[Phase, str] = {
     Phase.FOCUS: "Hora de focar",
     Phase.SHORT_BREAK: "Hora da pausa",
