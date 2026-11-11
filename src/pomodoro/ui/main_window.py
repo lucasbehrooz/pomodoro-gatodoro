@@ -77,6 +77,7 @@ class MainWindow(ctk.CTk):
         self._palette: Palette = get_palette(controller.config.theme)
 
         self.title("Pomodoro")
+        self._apply_window_icon()
         self.geometry("340x500")
         self.resizable(False, False)
         self._build()
@@ -200,6 +201,16 @@ class MainWindow(ctk.CTk):
             self.quit_app()
 
     # ---- API para a bandeja (thread do Tk) ------------------------------
+
+    def _apply_window_icon(self) -> None:
+        """Ícone .ico na janela (título e barra de tarefas). Falha não é fatal."""
+        try:
+            from pomodoro.assets import ICON_ICO_PATH
+
+            if ICON_ICO_PATH.exists():
+                self.iconbitmap(str(ICON_ICO_PATH))
+        except Exception:
+            logger.warning("Não foi possível aplicar o ícone da janela", exc_info=True)
 
     @property
     def controller(self) -> PomodoroController:

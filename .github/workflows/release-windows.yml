@@ -39,6 +39,7 @@ jobs:
         run: >
           python -m PyInstaller --noconfirm --onefile --windowed
           --name Pomodoro
+          --icon assets/gato.ico
           --paths src
           --collect-all customtkinter
           --add-data "assets;assets"

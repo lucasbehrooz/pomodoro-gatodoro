@@ -12,21 +12,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import sys
-
 import customtkinter as ctk
 from PIL import Image, ImageSequence, UnidentifiedImageError
 
-
-def _asset_root() -> Path:
-    """Raiz dos assets: pasta extraída pelo PyInstaller ou raiz do repositório."""
-    if getattr(sys, "frozen", False):
-        return Path(getattr(sys, "_MEIPASS", Path(sys.executable).parent))
-    # src/pomodoro/ui/cat.py -> parents[3] é a raiz do repositório.
-    return Path(__file__).resolve().parents[3]
-
-
-CAT_ASSET_PATH = _asset_root() / "assets" / "gato_pao.gif"
+from pomodoro.assets import CAT_GIF_PATH as CAT_ASSET_PATH
 
 DISPLAY_SIZE: tuple[int, int] = (150, 150)
 FRAME_MS = 120

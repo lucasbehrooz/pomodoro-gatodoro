@@ -45,8 +45,20 @@ EVENT_QUIT = "quit"
 
 
 def make_icon(running: bool = False) -> Any:
-    """Gera o ícone 64x64 em memória: círculo vermelho; ponto branco ao rodar."""
+    """Ícone 64x64 da bandeja: gato (assets/gato.png) com ponto branco ao rodar.
+
+    Sem o arquivo, usa o círculo vermelho de reserva.
+    """
     from PIL import Image, ImageDraw
+
+    from pomodoro.assets import ICON_PNG_PATH
+
+    if ICON_PNG_PATH.exists():
+        image = Image.open(ICON_PNG_PATH).convert("RGBA").resize((ICON_SIZE, ICON_SIZE))
+        if running:
+            draw = ImageDraw.Draw(image)
+            draw.ellipse((ICON_SIZE - 20, ICON_SIZE - 20, ICON_SIZE - 3, ICON_SIZE - 3), fill=_RED, outline=_WHITE, width=2)
+        return image
 
     image = Image.new("RGBA", (ICON_SIZE, ICON_SIZE), (0, 0, 0, 0))
     draw = ImageDraw.Draw(image)

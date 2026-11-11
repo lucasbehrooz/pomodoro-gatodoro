@@ -12,6 +12,14 @@ from pomodoro import tray as tray_mod
 from pomodoro.tray import TrayIcon, make_icon
 
 
+@pytest.fixture(autouse=True)
+def _use_fallback_icon(monkeypatch, tmp_path):
+    # Testa o círculo vermelho de reserva; o ícone do gato é coberto em test_icon.py.
+    import pomodoro.assets as assets
+
+    monkeypatch.setattr(assets, "ICON_PNG_PATH", tmp_path / "inexistente.png")
+
+
 class FakeMenu:
     SEPARATOR = object()
 
