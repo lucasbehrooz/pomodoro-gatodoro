@@ -40,6 +40,8 @@ Configurações e histórico ficam em `%APPDATA%\Pomodoro\`. Os detalhes estão 
 
 Instruções de instalação do código-fonte, testes, estrutura do projeto e publicação de versões estão em [docs/DESENVOLVIMENTO.md](docs/DESENVOLVIMENTO.md).
 
+Quer contribuir? Veja [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## Licença
 
 Distribuído sob a licença MIT. Veja [LICENSE](LICENSE).
