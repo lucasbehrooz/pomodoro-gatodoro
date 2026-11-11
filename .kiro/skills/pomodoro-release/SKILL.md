@@ -53,7 +53,7 @@ Use este procedimento para gerar um novo `PomodoroGatodoro.exe` e instalador par
    - publica os dois arquivos na release da tag.
 
 7. **Confirme o resultado.** Verifique `git ls-remote --tags origin` e informe ao usuário o endereço:
-   `https://github.com/lucasbehrooz/pomodoro/releases/tag/vX.Y.Z`
+   `https://github.com/lucasbehrooz/pomodoro-gatodoro/releases/tag/vX.Y.Z`
    Se o build falhar, o log fica em **Actions → Build Windows**.
 
 ## Regras
