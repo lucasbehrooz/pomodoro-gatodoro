@@ -29,6 +29,7 @@ pomodoro/
 │   ├── notifier.py      # som + toast do Windows
 │   ├── noise.py         # gerador e player de ruído marrom
 │   ├── tray.py          # ícone na bandeja
+│   ├── autostart.py     # iniciar com o Windows (HKCU\Run)
 │   └── ui/              # janelas: timer, estatísticas, configurações
 ├── assets/              # ícone e sons
 ├── tests/
@@ -83,12 +84,12 @@ pomodoro/
 - [x] README.md na raiz.
 
 ### Fase 8: Empacotamento e testes no Windows
-- [ ] `PyInstaller --onefile --windowed`, incluindo assets e a DLL do PortAudio.
-- [ ] Teste manual em Windows: áudio, toast, bandeja, inicialização.
+- [x] `PyInstaller --onefile --windowed`, incluindo assets (feito pelo workflow `release-windows.yml`). A DLL do PortAudio vem do pacote `sounddevice`; confirmar no teste que o áudio funciona no `.exe`.
+- [ ] Teste manual em Windows: áudio, toast, bandeja, inicialização. (Feito pelo usuário, ver `docs/TESTE_WINDOWS.md`.)
 
 ### Fase 9 (opcional)
-- [ ] Iniciar com o Windows.
-- [ ] Instalador com Inno Setup.
+- [x] Iniciar com o Windows (`autostart.py`, valor HKCU\...\Run; opção em Configurações). Validação no Windows: `docs/TESTE_WINDOWS.md`, item 9.
+- [x] Instalador com Inno Setup (`packaging/pomodoro.iss`, gerado pelo workflow). Não compilado localmente; validação: `docs/TESTE_WINDOWS.md`, item 11.
 
 ## Pontos de atenção
 

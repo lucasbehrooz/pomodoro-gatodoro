@@ -31,6 +31,9 @@ class Config:
 
     # Janela
     close_to_tray: bool = True
+
+    # Sistema: abrir junto com o Windows (ver pomodoro.autostart)
+    start_with_windows: bool = False
     # Tema visual: "padrao", "feminino" ou "escuro" (ver pomodoro.ui.theme)
     theme: str = DEFAULT_THEME
 
@@ -63,6 +66,8 @@ def load_config(path: Path | None = None) -> Config:
     config = Config(**{k: v for k, v in raw.items() if k in known})
     if not is_valid_theme(config.theme):
         config = replace(config, theme=DEFAULT_THEME)
+    if not isinstance(config.start_with_windows, bool):
+        config = replace(config, start_with_windows=False)
     return config
 
 

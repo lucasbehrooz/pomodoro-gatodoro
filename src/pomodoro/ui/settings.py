@@ -22,6 +22,7 @@ BOOL_FIELDS: tuple[str, ...] = (
     "brown_noise_enabled",
     "brown_noise_focus_only",
     "close_to_tray",
+    "start_with_windows",
 )
 
 LABELS: dict[str, str] = {
@@ -35,6 +36,7 @@ LABELS: dict[str, str] = {
     "brown_noise_enabled": "Ruído marrom",
     "brown_noise_focus_only": "Ruído só durante o foco",
     "close_to_tray": "Fechar a janela manda para a bandeja",
+    "start_with_windows": "Iniciar com o Windows",
     "theme": "Tema",
 }
 
