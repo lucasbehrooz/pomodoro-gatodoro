@@ -1,0 +1,25 @@
+name: Sugerir uma melhoria
+description: Ideia de funcionalidade ou ajuste para o Pomodoro Gatodoro.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Antes de sugerir, veja se já não existe uma issue parecida. O projeto é pequeno, então nem toda ideia entra, mas todas são lidas.
+  - type: textarea
+    id: problema
+    attributes:
+      label: Qual problema isso resolveria?
+      description: Descreva a situação do dia a dia em que a melhoria faria diferença.
+    validations:
+      required: true
+  - type: textarea
+    id: solucao
+    attributes:
+      label: Como você imagina que funcione
+    validations:
+      required: true
+  - type: textarea
+    id: alternativas
+    attributes:
+      label: Alternativas consideradas (opcional)
