@@ -143,7 +143,7 @@ def test_is_valid_theme():
 def test_label_and_key_mapping_roundtrip():
     for key in THEMES:
         assert theme_key_from_label(theme_label(key)) == key
-    assert theme_label("feminino") == "Feminino"
+    assert theme_label("feminino") == "Rosa"
     assert theme_key_from_label("Escuro") == "escuro"
     assert theme_key_from_label("Padrão") == "padrao"
 

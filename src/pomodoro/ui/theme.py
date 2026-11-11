@@ -85,7 +85,7 @@ THEMES: dict[str, Palette] = {
 
 THEME_LABELS: dict[str, str] = {
     "padrao": "Padrão",
-    "feminino": "Feminino",
+    "feminino": "Rosa",
     "escuro": "Escuro",
 }
 
