@@ -5,6 +5,14 @@ Cada versão publicada por tag usa a seção correspondente como texto da releas
 
 ## [Não lançado]
 
+### Adicionado
+
+### Alterado
+
+### Corrigido
+
+## [0.0.7]
+
 ### Alterado
 - Tema "Feminino" renomeado para "Rosa".
 - App renomeado para Pomodoro Gatodoro (janelas, bandeja, notificações e instalador).
@@ -12,6 +20,7 @@ Cada versão publicada por tag usa a seção correspondente como texto da releas
 
 ### Adicionado
 - Licença MIT.
+- Notas da release geradas a partir deste changelog.
 
 ## [0.0.6]
 
