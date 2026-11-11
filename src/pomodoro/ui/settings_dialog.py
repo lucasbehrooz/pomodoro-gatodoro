@@ -6,6 +6,8 @@ from collections.abc import Callable
 
 import customtkinter as ctk
 
+from pomodoro.ui.icon import apply_window_icon
+
 from pomodoro.config import Config
 from pomodoro.ui.settings import (
     BOOL_FIELDS,
@@ -51,6 +53,7 @@ class SettingsDialog(ctk.CTkToplevel):
     ) -> None:
         super().__init__(master)
         self.title("Configurações")
+        apply_window_icon(self)
         self.resizable(False, False)
         self.transient(master)
 
