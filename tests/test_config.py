@@ -1,3 +1,5 @@
+import pytest
+
 from pomodoro.config import Config, load_config, save_config
 
 
@@ -24,3 +26,26 @@ def test_unknown_keys_ignored(tmp_path):
     cfg = load_config(p)
     assert cfg.focus_minutes == 30
     assert cfg.short_break_minutes == Config().short_break_minutes
+
+
+def test_start_with_windows_default_is_false():
+    assert Config().start_with_windows is False
+
+
+def test_start_with_windows_roundtrip(tmp_path):
+    p = tmp_path / "config.json"
+    save_config(Config(start_with_windows=True), p)
+    assert load_config(p).start_with_windows is True
+
+
+def test_start_with_windows_missing_uses_default(tmp_path):
+    p = tmp_path / "config.json"
+    p.write_text('{"focus_minutes": 30}', encoding="utf-8")
+    assert load_config(p).start_with_windows is False
+
+
+@pytest.mark.parametrize("value", ['"sim"', "1", "null", "[]"])
+def test_start_with_windows_invalid_uses_default(tmp_path, value):
+    p = tmp_path / "config.json"
+    p.write_text('{"start_with_windows": %s}' % value, encoding="utf-8")
+    assert load_config(p).start_with_windows is False

@@ -13,6 +13,7 @@ from collections.abc import Callable
 
 import customtkinter as ctk
 
+from pomodoro.autostart import set_autostart
 from pomodoro.config import Config, save_config
 from pomodoro.storage import Storage
 from pomodoro.ui.cat import CatAnimation
@@ -38,6 +39,7 @@ MSG_SETTINGS_DEFERRED = (
 )
 MSG_PENDING_NOTICE = "Novas durações serão aplicadas ao reiniciar."
 MSG_STATS_UNAVAILABLE = "Estatísticas indisponíveis: armazenamento não informado."
+MSG_AUTOSTART_FAILED = "Não foi possível atualizar 'Iniciar com o Windows'."
 
 
 class MainWindow(ctk.CTk):
@@ -50,6 +52,7 @@ class MainWindow(ctk.CTk):
         can_hide_to_tray: se False, fechar a janela encerra o app mesmo com
             close_to_tray ligado (evita esconder a janela sem como reabri-la).
         save: função de persistência da configuração. Default: save_config.
+        autostart: aplica "Iniciar com o Windows" ao salvar. Pode lançar OSError.
     """
 
     def __init__(
@@ -61,6 +64,7 @@ class MainWindow(ctk.CTk):
         can_hide_to_tray: bool = True,
         save: Callable[[Config], None] = save_config,
         storage: Storage | None = None,
+        autostart: Callable[[bool], None] = set_autostart,
     ) -> None:
         super().__init__()
         self._controller = controller
@@ -68,6 +72,7 @@ class MainWindow(ctk.CTk):
         self._on_quit = on_quit
         self._can_hide_to_tray = can_hide_to_tray
         self._save = save
+        self._apply_autostart = autostart
         self._storage = storage
         self._ui_queue: queue.Queue[Callable[[], None]] = queue.Queue()
         self._tick_after_id: str | None = None
@@ -190,6 +195,11 @@ class MainWindow(ctk.CTk):
         self._save(new)  # OSError é tratado pelo diálogo
         status = self._controller.apply_config(new)
         message = MSG_SETTINGS_APPLIED if status is ApplyStatus.APPLIED else MSG_SETTINGS_DEFERRED
+        try:
+            self._apply_autostart(new.start_with_windows)
+        except Exception as exc:  # falha do registro não pode impedir o resto
+            logger.warning("Falha ao aplicar 'Iniciar com o Windows'", exc_info=True)
+            message = f"{message} {MSG_AUTOSTART_FAILED}: {exc}"
         self._status_label.configure(text=message)
         self._set_theme(new.theme)
         self._refresh()

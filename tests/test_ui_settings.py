@@ -82,3 +82,14 @@ def test_build_config_rejects_invalid_volume(volume):
 
 def test_settings_error_is_value_error():
     assert issubclass(SettingsError, ValueError)
+
+
+def test_start_with_windows_checkbox_is_built_and_parsed():
+    from pomodoro.ui.settings import BOOL_FIELDS, LABELS
+
+    assert "start_with_windows" in BOOL_FIELDS
+    assert LABELS["start_with_windows"] == "Iniciar com o Windows"
+    assert form_values(Config(start_with_windows=True))["start_with_windows"] is True
+    new = build_config({"start_with_windows": True}, Config())
+    assert new.start_with_windows is True
+    assert build_config({"start_with_windows": False}, new).start_with_windows is False
