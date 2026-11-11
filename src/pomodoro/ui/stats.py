@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import date, timedelta
+import math
 import tkinter as tk
 
 import customtkinter as ctk
@@ -30,8 +31,17 @@ from pomodoro.ui.theme import (
 
 CHART_DAYS = 7
 
+# Períodos disponíveis no seletor: rótulo -> chave interna.
+PERIOD_LABELS: dict[str, str] = {
+    "7 dias": "7",
+    "30 dias": "30",
+    "Mês atual": "month",
+}
+DEFAULT_PERIOD = "7"
+MAX_X_LABELS = 7  # quantidade máxima de datas no eixo X
+
 # Geometria do gráfico (pixels). Padding também reserva espaço para rótulos.
-CANVAS_WIDTH = 300
+CANVAS_WIDTH = 320
 CANVAS_HEIGHT = 200
 CANVAS_PADDING = 28
 BAR_FILL_RATIO = 0.6  # fração do espaço de cada coluna ocupada pela barra
@@ -70,6 +80,41 @@ def summarize(storage: Storage, today: date) -> dict[str, int]:
         "week": storage.count_completed_focus_between(monday, sunday),
         "last_7_days": sum(count for _, count in series),
     }
+
+
+def period_range(period: str, today: date) -> tuple[date, date]:
+    """Intervalo inclusivo [início, fim] de um período do seletor.
+
+    - "7" / "30": últimos N dias terminando em `today`.
+    - "month": do dia 1 do mês de `today` até `today`.
+    """
+    if period == "month":
+        return today.replace(day=1), today
+    if period.isdigit() and int(period) >= 1:
+        return today - timedelta(days=int(period) - 1), today
+    raise ValueError(f"período desconhecido: {period!r}")
+
+
+def build_period_series(
+    storage: Storage, today: date, period: str
+) -> list[tuple[date, int]]:
+    """Focos concluídos por dia no período, em ordem cronológica, com zeros."""
+    start, end = period_range(period, today)
+    counts = storage.daily_focus_counts(start, end)
+    return [(day, counts[day]) for day in sorted(counts)]
+
+
+def period_total(storage: Storage, today: date, period: str) -> int:
+    """Total de focos concluídos no período."""
+    start, end = period_range(period, today)
+    return storage.count_completed_focus_between(start, end)
+
+
+def label_step(count: int, max_labels: int = MAX_X_LABELS) -> int:
+    """Passo entre datas exibidas no eixo X, para não sobrepor os rótulos."""
+    if count <= max_labels:
+        return 1
+    return math.ceil(count / max_labels)
 
 
 def bar_geometry(
@@ -156,11 +201,21 @@ class StatsWindow(ctk.CTkToplevel):
         self._today_label.pack(anchor="w", pady=2)
         self._week_label = ctk.CTkLabel(frame, text="", anchor="w")
         self._week_label.pack(anchor="w", pady=2)
-        self._last7_label = ctk.CTkLabel(frame, text="", anchor="w")
-        self._last7_label.pack(anchor="w", pady=2)
+        self._period_label = ctk.CTkLabel(frame, text="", anchor="w")
+        self._period_label.pack(anchor="w", pady=2)
 
-        self._caption = ctk.CTkLabel(frame, text="Focos concluídos por dia (últimos 7 dias)")
-        self._caption.pack(anchor="w", pady=(12, 4))
+        self._period_key = DEFAULT_PERIOD
+        self._period_menu = ctk.CTkOptionMenu(
+            frame,
+            values=list(PERIOD_LABELS),
+            command=self._on_period_selected,
+            width=160,
+        )
+        self._period_menu.set(self._label_for(self._period_key))
+        self._period_menu.pack(anchor="w", pady=(8, 0))
+
+        self._caption = ctk.CTkLabel(frame, text="")
+        self._caption.pack(anchor="w", pady=(8, 4))
         self._canvas = tk.Canvas(
             frame,
             width=CANVAS_WIDTH,
@@ -180,7 +235,7 @@ class StatsWindow(ctk.CTkToplevel):
         self._palette = palette
         apply_window(self, palette, "CTkToplevel")
         apply_card(self._frame, palette)
-        for label in (self._today_label, self._week_label, self._last7_label):
+        for label in (self._today_label, self._week_label, self._period_label):
             apply_text(label, palette)
         apply_text(self._caption, palette, muted=True)
         apply_accent_button(self._close_btn, palette)
@@ -192,12 +247,28 @@ class StatsWindow(ctk.CTkToplevel):
         totals = summarize(self._storage, today)
         self._today_label.configure(text=f"Pomodoros hoje: {totals['today']}")
         self._week_label.configure(text=f"Na semana (seg a dom): {totals['week']}")
-        self._last7_label.configure(text=f"Nos últimos 7 dias: {totals['last_7_days']}")
 
-        series = build_week_series(self._storage, today, CHART_DAYS)
+        period = self._period_key
+        total = period_total(self._storage, today, period)
+        self._period_label.configure(text=f"{self._period_title()}: {total}")
+        self._caption.configure(text=f"Focos concluídos por dia ({self._period_title().lower()})")
+
+        series = build_period_series(self._storage, today, period)
         self._draw_chart(series)
 
     # ---- internos ---------------------------------------------------------
+
+    def _label_for(self, key: str) -> str:
+        return next(label for label, k in PERIOD_LABELS.items() if k == key)
+
+    def _period_title(self) -> str:
+        if self._period_key == "month":
+            return "No mês"
+        return f"Nos últimos {self._period_key} dias"
+
+    def _on_period_selected(self, label: str) -> None:
+        self._period_key = PERIOD_LABELS[label]
+        self.refresh()
 
     def _draw_chart(self, series: list[tuple[date, int]]) -> None:
         dark = ctk.get_appearance_mode() == "Dark"
@@ -217,11 +288,15 @@ class StatsWindow(ctk.CTkToplevel):
             fill=colors["text"],
         )
 
-        for (day, count), (x0, y0, x1, y1) in zip(series, rects, strict=True):
+        step = label_step(len(series))
+        for index, ((day, count), (x0, y0, x1, y1)) in enumerate(zip(series, rects, strict=True)):
             cx = (x0 + x1) / 2
             if y1 > y0:
                 canvas.create_rectangle(x0, y0, x1, y1, fill=colors["bar"], outline="")
-            canvas.create_text(cx, y0 - 4, text=str(count), anchor="s", fill=colors["text"])
-            canvas.create_text(
-                cx, base + 12, text=f"{day:%d/%m}", anchor="center", fill=colors["text"]
-            )
+            # Valor em cima da barra só quando há espaço (poucos dias).
+            if len(series) <= 14:
+                canvas.create_text(cx, y0 - 4, text=str(count), anchor="s", fill=colors["text"])
+            if index % step == 0:
+                canvas.create_text(
+                    cx, base + 12, text=f"{day:%d/%m}", anchor="center", fill=colors["text"]
+                )
