@@ -10,7 +10,7 @@ body:
     id: versao
     attributes:
       label: Versão do app
-      description: Está no rodapé da release (ex.: 0.0.7) ou em Configurações, se disponível.
+      description: "Está na página da release (ex.: 0.0.7)."
       placeholder: "0.0.7"
     validations:
       required: true
