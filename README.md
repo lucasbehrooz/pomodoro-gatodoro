@@ -114,4 +114,8 @@ pomodoro/
 
 ## Status
 
-O andamento das fases está em [PLANO.md](PLANO.md). A Fase 8 (empacotamento com PyInstaller e testes manuais no Windows) ainda está pendente. Até lá, o app é executado a partir do código-fonte. O recurso de iniciar com o Windows e o instalador (Fase 9) são opcionais e não estão implementados.
+Versão atual: 0.0.6. O andamento das fases está em [PLANO.md](PLANO.md). O app foi testado no Windows, e as versões são publicadas em [Releases](https://github.com/lucasbehrooz/pomodoro/releases), com o executável `Pomodoro.exe` e um instalador.
+
+## Licença
+
+Distribuído sob a licença MIT. Veja [LICENSE](LICENSE).

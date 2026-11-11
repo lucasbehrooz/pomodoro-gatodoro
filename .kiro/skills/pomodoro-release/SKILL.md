@@ -9,7 +9,7 @@ Use este procedimento para gerar um novo `Pomodoro.exe` e instalador para downlo
 
 ## Pré-requisitos
 - Trabalhe na branch `main`, com a árvore limpa (`git status`).
-- Use a chave SSH do repositório: `GIT_SSH_COMMAND="ssh -i ~/.ssh/id_ed25519_lucasbehrooz -o IdentitiesOnly=yes"`. Exporte essa variável antes dos comandos `git push`.
+- Use a chave SSH do repositório: `GIT_SSH_COMMAND="ssh -i <caminho-da-sua-chave> -o IdentitiesOnly=yes"`. Exporte essa variável antes dos comandos `git push`.
 
 ## Passos
 
