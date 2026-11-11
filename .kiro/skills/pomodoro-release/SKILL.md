@@ -28,9 +28,15 @@ Use este procedimento para gerar um novo `PomodoroGatodoro.exe` e instalador par
 
 4. **Atualize o `PLANO.md`** se a versão trouxe funcionalidade nova ou concluiu uma fase.
 
+4b. **Atualize o `CHANGELOG.md`** (obrigatório antes da tag):
+   - Crie a seção `## [X.Y.Z]` logo abaixo de `## [Não lançado]`, movendo para ela os itens que estavam em "Não lançado".
+   - Use as categorias Adicionado, Alterado, Corrigido ou Removido, em português, uma linha por mudança voltada ao usuário.
+   - Deixe `## [Não lançado]` vazio, com as mesmas categorias, para a próxima versão.
+   - O workflow usa essa seção como texto da release. Sem ela, a release sai só com a mensagem padrão.
+
 5. **Commit e push:**
    ```bash
-   git add pyproject.toml src/pomodoro/__init__.py PLANO.md
+   git add pyproject.toml src/pomodoro/__init__.py PLANO.md CHANGELOG.md
    git commit -m "Versão X.Y.Z: <resumo>"
    git push origin main
    ```

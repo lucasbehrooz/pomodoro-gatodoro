@@ -68,6 +68,15 @@ jobs:
             dist/PomodoroGatodoro.exe
             dist/pomodoro-gatodoro-x64-setup.exe
 
+      - name: Gerar notas da release
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          python tools/extract_changelog.py "$VERSION" > release-notes.md
+          echo "--- notas da release:"
+          cat release-notes.md
+
       - name: Publicar release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
@@ -75,4 +84,4 @@ jobs:
           files: |
             dist/PomodoroGatodoro.exe
             dist/pomodoro-gatodoro-x64-setup.exe
-          generate_release_notes: true
+          body_path: release-notes.md
