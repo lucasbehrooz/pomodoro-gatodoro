@@ -17,6 +17,7 @@ from pomodoro.autostart import set_autostart
 from pomodoro.config import Config, save_config
 from pomodoro.storage import Storage
 from pomodoro.ui.cat import CatAnimation
+from pomodoro.ui.icon import apply_window_icon
 from pomodoro.ui.controller import ApplyStatus, PomodoroController, format_mmss
 from pomodoro.ui.settings_dialog import SettingsDialog
 from pomodoro.ui.stats import StatsWindow
@@ -82,7 +83,7 @@ class MainWindow(ctk.CTk):
         self._palette: Palette = get_palette(controller.config.theme)
 
         self.title("Pomodoro")
-        self._apply_window_icon()
+        apply_window_icon(self)
         self.geometry("340x500")
         self.resizable(False, False)
         self._build()
@@ -211,16 +212,6 @@ class MainWindow(ctk.CTk):
             self.quit_app()
 
     # ---- API para a bandeja (thread do Tk) ------------------------------
-
-    def _apply_window_icon(self) -> None:
-        """Ícone .ico na janela (título e barra de tarefas). Falha não é fatal."""
-        try:
-            from pomodoro.assets import ICON_ICO_PATH
-
-            if ICON_ICO_PATH.exists():
-                self.iconbitmap(str(ICON_ICO_PATH))
-        except Exception:
-            logger.warning("Não foi possível aplicar o ícone da janela", exc_info=True)
 
     @property
     def controller(self) -> PomodoroController:

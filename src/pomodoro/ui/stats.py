@@ -14,6 +14,8 @@ import tkinter as tk
 
 import customtkinter as ctk
 
+from pomodoro.ui.icon import apply_window_icon
+
 from pomodoro.storage import Storage
 from pomodoro.ui.theme import (
     DEFAULT_THEME,
@@ -138,6 +140,7 @@ class StatsWindow(ctk.CTkToplevel):
     ) -> None:
         super().__init__(master)
         self.title("Estatísticas")
+        apply_window_icon(self)
         self.resizable(False, False)
         self.transient(master)
 
