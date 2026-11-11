@@ -149,7 +149,7 @@ def test_label_and_key_mapping_roundtrip():
 
 
 def test_label_mapping_unknown_values():
-    assert theme_key_from_label("Rosa") is None
+    assert theme_key_from_label("Lilás") is None
     assert theme_key_from_label("") is None
     assert theme_label("nao-existe") == "Padrão"
 
