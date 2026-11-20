@@ -6,7 +6,7 @@ Um timer Pomodoro para Windows com um gatinho que faz pãozinho enquanto você e
 
 - **Ciclo 25/5:** 25 minutos de foco, 5 de pausa, e 15 de pausa longa a cada 4 focos.
 - **Ruído marrom de fundo:** para ajudar a manter a concentração.
-- **Avisos:** som e notificação do Windows quando um bloco termina.
+- **Avisos:** som e notificação do Windows quando um bloco termina, e um som curto opcional pouco antes do fim do foco.
 - **Histórico:** veja quantos pomodoros você fez hoje, na semana ou no mês.
 - **Meta diária:** acompanhe "Hoje: 3/8" na tela inicial e ganhe uma comemoração ao bater a meta.
 - **Bandeja:** o app pode ficar minimizado no canto da tela.

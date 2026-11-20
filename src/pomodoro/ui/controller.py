@@ -22,6 +22,11 @@ Meta diária (``Config.daily_goal``, 0 = desligada):
   do dia, isso acontece uma vez por dia e sobrevive a reinícios do app sem
   gravar nada extra. Um guarda em memória evita repetir no mesmo dia se o
   usuário mudar a meta depois de batê-la.
+
+Aviso antes do fim (pre_end_warning_seconds): som curto, uma vez por bloco de
+foco em execução, quando o restante chega ao limite. Não toca em pausas, com
+som desligado, com o timer pausado nem se o foco não for maior que o aviso.
+Pular, Reiniciar e a troca de bloco rearmam o aviso.
 """
 
 from __future__ import annotations
@@ -149,6 +154,8 @@ class PomodoroController:
         # Contagem None = consulta falhou (desconhecida): a tela mostra 0 e não há comemoração.
         self._today_cache: Optional[tuple[date, Optional[int]]] = None
         self._goal_celebrated_on: Optional[date] = None
+        # Aviso antes do fim do foco já tratado no bloco atual.
+        self._pre_end_warned = False
 
     # ---- estado para a UI -----------------------------------------------
 
@@ -245,6 +252,7 @@ class PomodoroController:
 
     def reset(self) -> None:
         self._end_block()
+        self._pre_end_warned = False
         self._timer.reset()
         self._apply_pending_timer_config()
         self._sync_noise()
@@ -253,6 +261,7 @@ class PomodoroController:
         if self._timer.phase is Phase.IDLE:
             return
         self._end_block()
+        self._pre_end_warned = False
         self._timer.skip()
         if self._timer.is_running:
             self._block_started_at = self._now()
@@ -261,8 +270,10 @@ class PomodoroController:
     def tick(self) -> Optional[TransitionEvent]:
         event = self._timer.tick()
         if event is None:
+            self._check_pre_end_warning()
             return None
 
+        self._pre_end_warned = False
         finished_started = self._block_started_at
         if self._auto_start(event.next):
             # O próximo bloco começa contando imediatamente neste instante.
@@ -391,6 +402,22 @@ class PomodoroController:
         if self._config.toast_enabled:
             message = GOAL_REACHED_MESSAGE.format(goal=goal)
             self._call("toast (meta diária)", lambda: self._notifier.toast(TOAST_TITLE, message))
+
+    def _check_pre_end_warning(self) -> None:
+        """Toca o aviso uma vez quando faltar pre_end_warning_seconds no foco."""
+        warning = self._config.pre_end_warning_seconds
+        if (
+            self._pre_end_warned
+            or warning <= 0
+            or self._timer.phase is not Phase.FOCUS
+            or not self._timer.is_running
+            or self._planned_seconds(Phase.FOCUS) <= warning
+            or self._timer.remaining_seconds > warning
+        ):
+            return
+        self._pre_end_warned = True
+        if self._config.sound_enabled:
+            self._call("aviso antes do fim", lambda: self._notifier.warning_sound())
 
     # ---- internos: ruído ------------------------------------------------
 

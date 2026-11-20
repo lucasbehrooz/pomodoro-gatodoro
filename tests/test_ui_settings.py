@@ -144,3 +144,20 @@ def test_daily_goal_is_in_form_and_accepts_zero():
     assert form_values(Config(daily_goal=6))["daily_goal"] == 6
     assert build_config({"daily_goal": "0"}, Config()).daily_goal == 0
     assert build_config({"daily_goal": " 12 "}, Config()).daily_goal == 12
+
+
+def test_pre_end_warning_is_in_form():
+    from pomodoro.ui.settings import INT_FIELDS, LABELS
+
+    assert INT_FIELDS["pre_end_warning_seconds"] == (0, 300)
+    assert LABELS["pre_end_warning_seconds"] == "Aviso antes do fim do foco (s, 0 = desligado)"
+    assert form_values(Config(pre_end_warning_seconds=45))["pre_end_warning_seconds"] == 45
+    assert build_config({"pre_end_warning_seconds": "0"}, Config()).pre_end_warning_seconds == 0
+    assert build_config({"pre_end_warning_seconds": "300"}, Config()).pre_end_warning_seconds == 300
+
+
+@pytest.mark.parametrize("value", ["-1", "301", "um minuto"])
+def test_pre_end_warning_rejects_invalid(value):
+    with pytest.raises(SettingsError) as exc:
+        build_config({"pre_end_warning_seconds": value}, Config())
+    assert str(exc.value).startswith("Aviso antes do fim do foco (s, 0 = desligado):")
