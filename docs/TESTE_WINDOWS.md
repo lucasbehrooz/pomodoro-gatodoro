@@ -141,6 +141,21 @@ Obs.: a pausa do ruído só acontece com o som de alerta ligado (comportamento a
 - Sair pela bandeja: (X) OK  ( ) Falhou  Observação: ______________________
 - Com toggle desligado, X encerra: (X) OK  ( ) Falhou  Observação: ______________________
 
+### 8.1. Uma instância só
+
+**Passos:**
+1. Com o app aberto e a janela visível, abra o Pomodoro de novo pelo atalho (área de trabalho ou menu Iniciar). Não deve aparecer uma segunda janela nem um segundo ícone na bandeja; a janela existente vem para frente.
+2. Minimize a janela e abra o app de novo. A janela volta e ganha o foco.
+3. Feche a janela para a bandeja (**X**), clique em outro programa e abra o app de novo. A janela reaparece na frente e com foco, e o timer continua de onde estava.
+4. Repita o passo 3 mais duas vezes: deve funcionar todas as vezes.
+5. Confira no Gerenciador de Tarefas que só há um processo `PomodoroGatodoro.exe` depois das aberturas.
+
+- Segunda abertura não cria janela nem ícone: ( ) OK  ( ) Falhou  Observação: ______________________
+- Janela minimizada volta: ( ) OK  ( ) Falhou  Observação: ______________________
+- Janela na bandeja volta com foco: ( ) OK  ( ) Falhou  Observação: ______________________
+- Funciona várias vezes seguidas: ( ) OK  ( ) Falhou  Observação: ______________________
+- Um processo só: ( ) OK  ( ) Falhou  Observação: ______________________
+
 ---
 
 ## 9. Iniciar com o Windows

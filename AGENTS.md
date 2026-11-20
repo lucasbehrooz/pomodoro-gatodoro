@@ -18,6 +18,7 @@ Ajudar a manter foco com ciclos de 25 min de foco e 5 min de pausa curta, com pa
 - Configurações: durações, ciclos até pausa longa, volume do ruído, toggles de som, toast, ruído e "fechar para a bandeja", tema, "iniciar com o Windows" e "avisar quando houver nova versão".
 - Atualizações: aviso de nova versão na tela inicial e seção "Atualizações" nas Configurações, que baixa o instalador da release, confere o SHA-256 e abre a instalação. A verificação usa o `latest.json` da release (sem o limite da API do GitHub).
 - O instalador fecha sozinho o app aberto (mutex/evento nomeados) antes de instalar.
+- Uma instância só: abrir o app de novo mostra a janela já aberta (evento `PomodoroGatodoroShow`).
 - Ruído marrom de fundo (gerado em tempo real), tocando só no foco por padrão, pausado brevemente durante o alerta.
 - Bandeja do sistema com menu (iniciar/pausar, abrir, sair).
 - Gato animado (`assets/gato_pao.gif`) que anima só enquanto o timer roda.
@@ -91,7 +92,7 @@ pomodoro/
 │   ├── tray.py          # TrayIcon (pystray em thread própria, fila de eventos)
 │   ├── autostart.py     # "Iniciar com o Windows" via registro HKCU\...\Run
 │   ├── updater.py       # verificar/baixar/abrir atualização (latest.json, API como reserva) + UpdateManager
-│   ├── instance.py      # mutex/evento nomeados para o instalador fechar o app aberto
+│   ├── instance.py      # mutex/eventos nomeados: instância única e fechamento pelo instalador
 │   └── ui/
 │       ├── controller.py       # PomodoroController: lógica sem widgets
 │       ├── main_window.py      # MainWindow (CTk): só traduz eventos

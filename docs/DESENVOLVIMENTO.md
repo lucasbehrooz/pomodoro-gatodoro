@@ -158,6 +158,8 @@ Todo push na `main` que mexa em `src/`, `packaging/`, `pyproject.toml` ou no wor
 
 O instalador fecha o app aberto pelo mutex `PomodoroGatodoroRunning` e pelo evento `PomodoroGatodoroQuit` (`src/pomodoro/instance.py` e a seção `[Code]` do `.iss`). Se mudar os nomes, mude dos dois lados: `tests/test_instance.py` confere.
 
+O mesmo mutex garante uma instância só: `__main__.main()` cria `InstanceSignals` antes de banco, bandeja e janela. Se o mutex já existia (`ERROR_ALREADY_EXISTS`), a nova abertura sinaliza o evento `PomodoroGatodoroShow` (reset automático) e sai; a instância original escuta esse evento numa thread daemon e chama `window.show_window` via `window.post()`. Os testes usam um kernel32 falso.
+
 O app compara `__version__` com a última release do GitHub para mostrar o aviso de nova versão (`src/pomodoro/updater.py`). Por isso as duas versões precisam acompanhar a tag. Rascunhos e pré-releases não disparam o aviso.
 
 O `.exe` não é assinado digitalmente, por isso o SmartScreen pode avisar na primeira execução.

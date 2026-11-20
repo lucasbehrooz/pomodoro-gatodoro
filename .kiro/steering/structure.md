@@ -17,7 +17,7 @@ pomodoro/
 │   ├── tray.py          # TrayIcon (pystray em thread própria, fila de eventos)
 │   ├── autostart.py     # "Iniciar com o Windows" via registro HKCU\...\Run
 │   ├── updater.py       # verificar/baixar/abrir atualização (latest.json, API como reserva) + UpdateManager
-│   ├── instance.py      # mutex/evento nomeados para o instalador fechar o app aberto
+│   ├── instance.py      # mutex/eventos nomeados: instância única e fechamento pelo instalador
 │   └── ui/
 │       ├── controller.py       # PomodoroController: lógica sem widgets
 │       ├── main_window.py      # MainWindow (CTk): só traduz eventos
