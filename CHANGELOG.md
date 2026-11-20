@@ -5,10 +5,12 @@ Cada versão publicada por tag usa a seção correspondente como texto da releas
 
 ## [Não lançado]
 
+### Adicionado
+- Aviso antes do fim do foco: um som curto e discreto toca uma vez quando falta o tempo escolhido (padrão: 1 minuto) para o foco acabar. O tempo fica em **Configurações** ("Aviso antes do fim do foco", de 0 a 300 s; 0 desliga). Não toca nas pausas nem com o som desligado.
+
 ## [0.0.12]
 
 ### Adicionado
-- Aviso antes do fim do foco: um som curto e discreto toca uma vez quando falta 1 minuto para o foco acabar. O tempo fica em **Configurações** ("Aviso antes do fim do foco", de 0 a 300 s; 0 desliga). Não toca nas pausas nem com o som desligado.
 - Sequência de dias nas Estatísticas: "Sequência: N dias" conta os dias seguidos com pelo menos um foco concluído (inclui hoje se já houver foco, senão vai até ontem), ao lado do "Recorde".
 - Meta diária de focos (padrão 8, 0 desliga): a tela inicial mostra "Hoje: 3/8", uma notificação comemora a meta uma vez por dia e o gráfico de Pomodoros ganha a linha da meta.
 - Uma instância só: abrir o Pomodoro com outro já aberto traz a janela existente para frente (mesmo se estava na bandeja) em vez de criar um segundo app e um segundo ícone na bandeja.

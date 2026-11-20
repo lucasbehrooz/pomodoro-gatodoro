@@ -702,6 +702,8 @@ def test_unknown_count_after_record_does_not_celebrate(cfg, tmp_path, clock, not
         assert c.phase is Phase.SHORT_BREAK
     finally:
         storage.close()
+
+
 # ---- aviso antes do fim do foco (F06) ---------------------------------
 
 

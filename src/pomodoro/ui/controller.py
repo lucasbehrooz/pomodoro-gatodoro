@@ -399,7 +399,7 @@ class PomodoroController:
             return
         self._pre_end_warned = True
         if self._config.sound_enabled:
-            self._call("aviso antes do fim", self._notifier.warning_sound)
+            self._call("aviso antes do fim", lambda: self._notifier.warning_sound())
 
     # ---- internos: ruído ------------------------------------------------
 
