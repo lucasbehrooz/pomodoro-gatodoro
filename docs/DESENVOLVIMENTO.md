@@ -110,6 +110,10 @@ Passos:
 
 Não reutilize uma tag já publicada: para corrigir, publique uma nova versão.
 
+Todo push na `main` que mexa em `src/`, `packaging/`, `pyproject.toml` ou no workflow também roda o build completo (testes, `.exe` e instalador), sem publicar release. Os arquivos ficam como artefato da execução, na aba Actions. Assim um erro no `packaging/pomodoro.iss` aparece antes da tag.
+
+O instalador fecha o app aberto pelo mutex `PomodoroGatodoroRunning` e pelo evento `PomodoroGatodoroQuit` (`src/pomodoro/instance.py` e a seção `[Code]` do `.iss`). Se mudar os nomes, mude dos dois lados: `tests/test_instance.py` confere.
+
 O app compara `__version__` com a última release do GitHub para mostrar o aviso de nova versão (`src/pomodoro/updater.py`). Por isso as duas versões precisam acompanhar a tag. Rascunhos e pré-releases não disparam o aviso.
 
 O `.exe` não é assinado digitalmente, por isso o SmartScreen pode avisar na primeira execução.

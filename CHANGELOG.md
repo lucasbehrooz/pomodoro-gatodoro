@@ -6,6 +6,8 @@ Cada versão publicada por tag usa a seção correspondente como texto da releas
 ## [Não lançado]
 
 ### Adicionado
+- O instalador fecha sozinho o Pomodoro que estiver aberto (inclusive na bandeja) antes de instalar. O app sai normalmente, gravando o bloco em andamento; o que não fechar em 5 s é encerrado.
+- Build de validação do instalador a cada push na `main` (sem publicar release).
 
 ### Alterado
 

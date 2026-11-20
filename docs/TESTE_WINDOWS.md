@@ -195,6 +195,7 @@ Obs.: ao rodar pelo `.exe` instalado, o valor aponta para o `PomodoroGatodoro.ex
 8. Desinstale: **Configurações → Aplicativos** (ou Painel de Controle) → Pomodoro Gatodoro → Desinstalar. Ou use "Desinstalar Pomodoro Gatodoro" no menu Iniciar.
 9. Confira que a pasta do programa, os atalhos e o valor **Pomodoro** em `HKCU\...\Run` foram removidos.
 10. Confira que `%APPDATA%\Pomodoro` (config e histórico) foi mantido (comportamento esperado: a desinstalação não apaga os dados do usuário).
+11. Instale de novo e abra o app. Inicie um foco e feche a janela para a bandeja. Rode o instalador outra vez (por cima) e clique em **Instalar** sem fechar o app: o Pomodoro deve sumir da bandeja sozinho em até 5 s, a instalação segue sem pedir para fechar nada, e o foco interrompido aparece no tempo de foco das **Estatísticas**.
 
 - Instalação concluída: ( ) OK  ( ) Falhou  Observação: ______________________
 - Atalho no Menu Iniciar: ( ) OK  ( ) Falhou  Observação: ______________________
@@ -203,6 +204,7 @@ Obs.: ao rodar pelo `.exe` instalado, o valor aponta para o `PomodoroGatodoro.ex
 - Desinstalação remove programa e atalhos: ( ) OK  ( ) Falhou  Observação: ______________________
 - Desinstalação remove o valor de inicialização: ( ) OK  ( ) Falhou  Observação: ______________________
 - Dados em %APPDATA% mantidos: ( ) OK  ( ) Falhou  Observação: ______________________
+- Fecha o app aberto sozinho ao instalar por cima: ( ) OK  ( ) Falhou  Observação: ______________________
 
 Obs.: a instalação só para o usuário não pede administrador. Se escolher "para todos os usuários", o assistente pedirá UAC e instalará em Arquivos de Programas.
 

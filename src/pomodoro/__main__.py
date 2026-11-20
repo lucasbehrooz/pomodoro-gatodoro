@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 
 from pomodoro.config import load_config
+from pomodoro.instance import InstanceSignals
 from pomodoro.notifier import get_notifier
 from pomodoro.storage import Storage
 from pomodoro.tray import TrayIcon
@@ -60,11 +61,14 @@ def main() -> None:
             controller, can_hide_to_tray=tray.is_available, storage=storage, updates=updates
         )
         _start_tray_loop(window, controller, tray)
+        # O instalador pede para fechar antes de substituir o .exe (packaging/pomodoro.iss).
+        signals = InstanceSignals(lambda: window.post(window.quit_app))
         if config.check_updates:
             updates.check(silent=True)
         try:
             window.mainloop()
         finally:
+            signals.close()
             tray.stop()
     finally:
         storage.close()

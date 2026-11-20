@@ -67,3 +67,60 @@ Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: 
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "Abrir o {#MyAppName}"; Flags: nowait postinstall skipifsilent
+
+[Code]
+// Fecha o Pomodoro aberto antes de copiar os arquivos, sem o usuário precisar
+// fazer nada. Os nomes batem com src/pomodoro/instance.py.
+//  1. Se o app está aberto (mutex), sinaliza o evento de fechar: o app sai como
+//     no "Sair" da bandeja, gravando o bloco em andamento.
+//  2. Espera até 5 s o mutex sumir.
+//  3. Encerra à força o que sobrar (ex.: versões até 0.0.10, sem o evento).
+const
+  RunningMutexName = 'PomodoroGatodoroRunning';
+  QuitEventName = 'PomodoroGatodoroQuit';
+  EVENT_MODIFY_STATE = $0002;
+  WaitSteps = 50;  // 50 x 100 ms
+
+function OpenEvent(dwDesiredAccess: Cardinal; bInheritHandle: Boolean; lpName: String): THandle;
+  external 'OpenEventW@kernel32.dll stdcall';
+function SetEvent(hEvent: THandle): Boolean;
+  external 'SetEvent@kernel32.dll stdcall';
+function CloseHandle(hObject: THandle): Boolean;
+  external 'CloseHandle@kernel32.dll stdcall';
+
+procedure AskRunningAppToQuit;
+var
+  H: THandle;
+  I: Integer;
+begin
+  if not CheckForMutexes(RunningMutexName) then
+    Exit;
+  H := OpenEvent(EVENT_MODIFY_STATE, False, QuitEventName);
+  if H <> 0 then
+  begin
+    SetEvent(H);
+    CloseHandle(H);
+  end;
+  I := 0;
+  while CheckForMutexes(RunningMutexName) and (I < WaitSteps) do
+  begin
+    Sleep(100);
+    I := I + 1;
+  end;
+end;
+
+procedure KillRemainingInstances;
+var
+  ResultCode: Integer;
+begin
+  // Código 128 = nenhum processo encontrado: tudo certo.
+  Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM {#MyAppExeName}', '',
+    SW_HIDE, ewWaitUntilTerminated, ResultCode);
+end;
+
+function PrepareToInstall(var NeedsRestart: Boolean): String;
+begin
+  Result := '';
+  AskRunningAppToQuit;
+  KillRemainingInstances;
+end;

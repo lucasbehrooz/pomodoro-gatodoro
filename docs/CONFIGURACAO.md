@@ -64,3 +64,7 @@ Mostra a versão instalada e o botão **Verificar atualizações**, que consulta
 O instalador não é assinado digitalmente, então o SmartScreen pode avisar ("O Windows protegeu o computador"): clique em **Mais informações** → **Executar mesmo assim**. Quem usa o `PomodoroGatodoro.exe` sem instalação passa a ter a versão instalada depois de atualizar.
 
 Configurações e histórico ficam em `%APPDATA%\Pomodoro\` e não são afetados pela atualização.
+
+### Pomodoro aberto durante a instalação
+
+Não precisa fechar o app antes de instalar. Ao clicar em **Instalar**, o instalador pede para todo Pomodoro aberto (inclusive o que está só na bandeja) fechar. Ele fecha como no **Sair** da bandeja, gravando o bloco em andamento no histórico. O que não fechar em 5 segundos, como versões até a 0.0.10, que não atendem o pedido, é encerrado à força. Nesse caso o bloco em andamento não é gravado.
