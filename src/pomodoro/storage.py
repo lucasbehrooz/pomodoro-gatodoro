@@ -148,6 +148,15 @@ class Storage:
             current += timedelta(days=1)
         return result
 
+    def completed_focus_days(self) -> list[date]:
+        """Dias locais com pelo menos um foco concluído, em ordem crescente."""
+        rows = self._db.execute(
+            f"SELECT DISTINCT {_DAY_SQL} AS day FROM sessions "
+            f"WHERE phase = ? AND completed = 1 ORDER BY day",
+            (Phase.FOCUS.value,),
+        ).fetchall()
+        return [date.fromisoformat(day) for (day,) in rows]
+
     def today_count(self) -> int:
         return self.count_completed_focus(date.today())
 
