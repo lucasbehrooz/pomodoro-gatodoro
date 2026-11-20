@@ -34,6 +34,22 @@ def _make_noise_player() -> NoiseControl | None:
 
 def main() -> None:
     logging.basicConfig(level=logging.INFO)
+    # Antes de abrir banco, bandeja ou janela: se já há um Pomodoro aberto, só
+    # pede para ele aparecer e sai (sem segundo ícone na bandeja).
+    signals = InstanceSignals()
+    if signals.already_running:
+        if not signals.notify_existing():
+            logger.warning("Outra instância já está aberta e não respondeu")
+        logger.info("Pomodoro já está aberto; saindo")
+        signals.close()
+        return
+    try:
+        _run(signals)
+    finally:
+        signals.close()
+
+
+def _run(signals: InstanceSignals) -> None:
     config = load_config()
     storage = Storage()
     try:
@@ -61,8 +77,12 @@ def main() -> None:
             controller, can_hide_to_tray=tray.is_available, storage=storage, updates=updates
         )
         _start_tray_loop(window, controller, tray)
-        # O instalador pede para fechar antes de substituir o .exe (packaging/pomodoro.iss).
-        signals = InstanceSignals(lambda: window.post(window.quit_app))
+        # O instalador pede para fechar antes de substituir o .exe (packaging/pomodoro.iss);
+        # uma segunda abertura pede para mostrar a janela. Ambos vêm de threads.
+        signals.listen(
+            on_quit_requested=lambda: window.post(window.quit_app),
+            on_show_requested=lambda: window.post(window.show_window),
+        )
         if config.check_updates:
             updates.check(silent=True)
         try:

@@ -34,6 +34,8 @@ Quando sai uma versão nova, o app avisa ao abrir. Clique em **Atualizar** (ou v
 
 Fechar a janela pode enviar o app para a bandeja, perto do relógio. Clique com o botão direito no ícone para pausar, abrir ou sair.
 
+Só existe um Pomodoro aberto por vez: abrir o app de novo (pelo atalho ou pelo menu Iniciar) traz a janela que já está aberta para frente, mesmo que ela esteja na bandeja.
+
 ## Onde ficam seus dados
 
 Configurações e histórico ficam em `%APPDATA%\Pomodoro\`. Os detalhes estão em [docs/CONFIGURACAO.md](docs/CONFIGURACAO.md).

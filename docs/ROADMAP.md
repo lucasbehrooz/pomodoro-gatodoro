@@ -20,7 +20,7 @@ Regras para todos os itens:
 ## 0.0.12: atualização robusta e uso diário
 
 - [x] **F00 · Verificação por `latest.json`** (já na `main`, commit 6edc9bb). Só falta lançar.
-- [ ] **F01 · Uma instância só** (pequeno)
+- [~] **F01 · Uma instância só** (pequeno) ([#1](https://github.com/lucasbehrooz/pomodoro-gatodoro/pull/1))
   - Abrir o app com outro já aberto traz a janela existente para frente e sai, em vez de criar um segundo Pomodoro.
   - Onde: `instance.py` (o mutex `PomodoroGatodoroRunning` já existe; detectar `ERROR_ALREADY_EXISTS` e sinalizar um evento `PomodoroGatodoroShow`), `__main__.py` (escutar e chamar `window.show_window` via `post`).
   - Aceite: segunda abertura não cria janela nem ícone na bandeja; a primeira aparece e ganha foco, mesmo se estava na bandeja.

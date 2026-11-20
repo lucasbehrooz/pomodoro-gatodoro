@@ -99,6 +99,7 @@ pomodoro/
 - [x] Instalador fecha sozinho o app aberto (mutex/evento + taskkill de reserva). (0.0.11)
 - [x] `latest.json` na release para verificar sem o limite da API do GitHub. (próxima versão)
 - [x] Validar no Windows o fluxo completo de atualização (`docs/TESTE_WINDOWS.md`, item 13).
+- [x] Uma instância só: segunda abertura mostra a janela existente (evento `PomodoroGatodoroShow`). Validação: `docs/TESTE_WINDOWS.md`, item 8.1. (F01)
 
 ## Pontos de atenção
 
