@@ -30,9 +30,12 @@ Se o `config.json` não existir ou estiver corrompido, o app usa os valores padr
 | `start_with_windows` | `false` | Abre o app junto com o Windows |
 | `check_updates` | `true` | Ao abrir, verifica se há versão nova no GitHub |
 | `skipped_version` | `""` | Versão marcada em **Ignorar versão** (não é avisada de novo) |
-| `pre_end_warning_seconds` | `60` | Toca um som curto quando faltar esse tempo (em segundos, de `0` a `300`) para o fim do foco. `0` desliga. Não toca nas pausas, com o timer pausado, com `sound_enabled` desligado nem se o foco for mais curto ou igual ao aviso |
+| `auto_start_breaks` | `true` | Ao terminar um foco, a pausa já começa contando (`false`: espera **Iniciar**) |
+| `auto_start_focus` | `true` | Ao terminar uma pausa, o foco já começa contando (`false`: espera **Iniciar**) |
 
 Alterações de duração feitas com um timer em andamento valem a partir do próximo **Reiniciar**.
+
+Com **Iniciar pausas automaticamente** ou **Iniciar focos automaticamente** desligado, o bloco seguinte aparece com a duração cheia e fica parado até você clicar em **Iniciar** (o som e o toast tocam normalmente). O tempo parado não entra no histórico. As opções valem só para o fim natural do bloco; **Pular** e **Reiniciar** continuam iguais.
 
 ## Meta diária
 

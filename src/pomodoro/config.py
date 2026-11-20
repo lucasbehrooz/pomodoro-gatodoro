@@ -54,6 +54,14 @@ class Config:
     # 0 desliga. Faixa válida: PRE_END_WARNING_RANGE.
     pre_end_warning_seconds: int = 60
 
+    # Ritmo: ao terminar um bloco, o próximo já começa contando (ver ui/controller.py).
+    # Desligado, o próximo bloco fica pausado com a duração cheia esperando Iniciar.
+    auto_start_breaks: bool = True
+    auto_start_focus: bool = True
+
+    # Tarefa atual (opcional, para rótulo no histórico)
+    current_task: str = ""
+
 
 def config_dir() -> Path:
     """Diretório de dados do app. Em Windows usa %APPDATA%; fora dele, ~/.config."""
@@ -94,7 +102,12 @@ def load_config(path: Path | None = None) -> Config:
     if not isinstance(config.skipped_version, str):
         config = replace(config, skipped_version="")
     if not _valid_pre_end_warning(config.pre_end_warning_seconds):
-        config = replace(config, pre_end_warning_seconds=Config.pre_end_warning_seconds)
+        config = replace(config, pre_end_warning_seconds=60)
+    for name in ("auto_start_breaks", "auto_start_focus"):
+        if not isinstance(getattr(config, name), bool):
+            config = replace(config, **{name: True})
+    if not isinstance(config.current_task, str):
+        config = replace(config, current_task="")
     return config
 
 

@@ -501,6 +501,134 @@ def test_shutdown_stops_noise(storage, clock, cfg):
     assert noise.calls[-1] == ("stop", NOISE_FADE_SECONDS)
 
 
+# ---- auto-início dos blocos (F05) --------------------------------------
+
+
+@pytest.mark.parametrize("auto", [True, False])
+def test_focus_end_to_short_break_respects_auto_start_breaks(cfg, storage, clock, auto):
+    c = make(replace(cfg, auto_start_breaks=auto), storage, clock)
+    c.start()
+    clock.advance(60)
+    event = c.tick()
+    assert event is not None and event.next is Phase.SHORT_BREAK
+    assert c.phase is Phase.SHORT_BREAK
+    assert c.is_running is auto
+    assert c.remaining_seconds == 60
+    # Foco concluído é gravado igual nos dois casos.
+    assert rows(storage) == [("focus", 60, 1, BASE.isoformat())]
+    clock.advance(25)
+    assert c.remaining_seconds == (35 if auto else 60)
+
+
+@pytest.mark.parametrize("auto", [True, False])
+def test_focus_end_to_long_break_respects_auto_start_breaks(cfg, storage, clock, auto):
+    c = make(replace(cfg, auto_start_breaks=auto, auto_start_focus=True), storage, clock)
+    c.start()
+    clock.advance(60)
+    c.tick()  # foco -> pausa curta
+    if not auto:
+        c.start()
+    clock.advance(60)
+    c.tick()  # pausa curta -> foco (auto_start_focus ligado)
+    assert c.is_running
+    clock.advance(60)
+    event = c.tick()
+    assert event is not None and event.next is Phase.LONG_BREAK
+    assert c.is_running is auto
+    assert c.remaining_seconds == 120
+
+
+@pytest.mark.parametrize("auto", [True, False])
+def test_break_end_to_focus_respects_auto_start_focus(cfg, storage, clock, auto):
+    c = make(replace(cfg, auto_start_focus=auto), storage, clock)
+    c.start()
+    clock.advance(60)
+    c.tick()
+    clock.advance(60)
+    event = c.tick()
+    assert event is not None and event.next is Phase.FOCUS
+    assert c.phase is Phase.FOCUS
+    assert c.is_running is auto
+    assert c.remaining_seconds == 60
+    assert rows(storage)[-1] == (
+        "short_break",
+        60,
+        1,
+        (BASE + timedelta(seconds=60)).isoformat(),
+    )
+
+
+def test_auto_start_off_records_next_block_from_resume_time(cfg, storage, clock):
+    c = make(replace(cfg, auto_start_breaks=False), storage, clock)
+    c.start()
+    clock.advance(60)
+    c.tick()  # pausa curta fica esperando Iniciar
+    clock.advance(300)  # tempo parado não conta nem vira sessão
+    assert c.tick() is None
+    c.start()  # início marcado aqui: BASE + 360 s
+    clock.advance(60)
+    event = c.tick()
+    assert event is not None and event.finished is Phase.SHORT_BREAK
+    assert rows(storage) == [
+        ("focus", 60, 1, BASE.isoformat()),
+        ("short_break", 60, 1, (BASE + timedelta(seconds=360)).isoformat()),
+    ]
+
+
+def test_auto_start_off_reset_while_waiting_records_nothing_extra(cfg, storage, clock):
+    c = make(replace(cfg, auto_start_breaks=False), storage, clock)
+    c.start()
+    clock.advance(60)
+    c.tick()
+    clock.advance(30)
+    c.reset()
+    assert c.phase is Phase.IDLE
+    assert rows(storage) == [("focus", 60, 1, BASE.isoformat())]
+
+
+def test_auto_start_off_stops_noise_and_resumes_on_start(cfg, storage, clock):
+    noise = FakeNoise()
+    c = make(
+        replace(
+            cfg,
+            brown_noise_enabled=True,
+            brown_noise_focus_only=False,
+            auto_start_breaks=False,
+        ),
+        storage,
+        clock,
+        noise=noise,
+    )
+    c.start()
+    assert c.noise_playing
+    clock.advance(60)
+    c.tick()
+    assert not c.is_running
+    assert not c.noise_playing
+    assert ("stop", NOISE_FADE_SECONDS) in noise.calls
+    c.start()
+    assert c.noise_playing
+    assert noise.names().count("start") == 2
+
+
+def test_auto_start_off_does_not_change_skip(cfg, storage, clock):
+    c = make(replace(cfg, auto_start_breaks=False, auto_start_focus=False), storage, clock)
+    c.start()
+    clock.advance(10)
+    c.skip()
+    assert c.phase is Phase.SHORT_BREAK
+    assert c.is_running  # Pular preserva o estado de execução
+
+
+def test_auto_start_off_still_notifies_transition(cfg, storage, clock, notifier):
+    c = make(replace(cfg, auto_start_breaks=False), storage, clock, notifier=notifier)
+    c.start()
+    clock.advance(60)
+    c.tick()
+    assert notifier.alerts == 1
+    assert notifier.toasts == [("Pomodoro Gatodoro", "Hora da pausa")]
+
+
 # ---- meta diária ------------------------------------------------------
 
 
@@ -704,153 +832,62 @@ def test_unknown_count_after_record_does_not_celebrate(cfg, tmp_path, clock, not
         storage.close()
 
 
-# ---- aviso antes do fim do foco (F06) ---------------------------------
+# ---- auto-início combinado com meta e Pular (F05) ----------------------
 
 
-class WarningNotifier(FakeNotifier):
-    def __init__(self) -> None:
-        super().__init__()
-        self.warnings = 0
-
-    def warning_sound(self) -> None:
-        self.warnings += 1
-
-
-def warn_cfg(cfg: Config, **overrides) -> Config:
-    # foco de 2 min (120 s) com aviso a 30 s do fim
-    values = {"focus_minutes": 2, "pre_end_warning_seconds": 30}
-    values.update(overrides)
-    return replace(cfg, **values)
-
-
-def test_pre_end_warning_fires_once_per_focus(cfg, storage, clock):
-    n = WarningNotifier()
-    c = make(warn_cfg(cfg), storage, clock, notifier=n)
+def test_auto_start_off_focus_reaching_goal_still_celebrates(cfg, storage, clock, notifier):
+    seed_focus(storage, DAY, 1)
+    c = make(
+        replace(cfg, daily_goal=2, auto_start_breaks=False), storage, clock, notifier=notifier
+    )
     c.start()
-    clock.advance(89)
-    c.tick()
-    assert n.warnings == 0
-    clock.advance(1)  # faltam 30 s
-    c.tick()
-    assert n.warnings == 1
-    for _ in range(10):
-        clock.advance(1)
-        c.tick()
-    assert n.warnings == 1
-    assert n.alerts == 0
-
-
-def test_pre_end_warning_not_in_breaks(cfg, storage, clock):
-    n = WarningNotifier()
-    c = make(warn_cfg(cfg, short_break_minutes=2, long_break_minutes=2), storage, clock, notifier=n)
-    c.start()
-    clock.advance(120)
-    c.tick()  # foco -> pausa curta
-    assert c.phase is Phase.SHORT_BREAK
-    n.warnings = 0
-    clock.advance(100)
-    c.tick()
-    assert n.warnings == 0
-
-
-def test_pre_end_warning_rearms_on_next_focus(cfg, storage, clock):
-    n = WarningNotifier()
-    c = make(warn_cfg(cfg), storage, clock, notifier=n)
-    c.start()
-    clock.advance(100)
-    c.tick()
-    assert n.warnings == 1
-    clock.advance(20)
-    c.tick()  # foco -> pausa
     clock.advance(60)
-    c.tick()  # pausa -> foco
+    event = c.tick()
+    assert event is not None and event.finished is Phase.FOCUS
+    assert not c.is_running  # pausa esperando Iniciar
+    assert goal_toasts(notifier) == [(TOAST_TITLE, GOAL_REACHED_MESSAGE.format(goal=2))]
+
+
+def test_auto_start_off_skip_while_waiting_then_start(cfg, storage, clock):
+    c = make(replace(cfg, auto_start_breaks=False), storage, clock)
+    c.start()
+    clock.advance(60)
+    c.tick()  # pausa curta esperando Iniciar
+    clock.advance(40)
+    c.skip()  # pausa que não contou nada: não grava
     assert c.phase is Phase.FOCUS
-    clock.advance(95)
-    c.tick()
-    assert n.warnings == 2
-
-
-@pytest.mark.parametrize("warning", [120, 300])
-def test_pre_end_warning_skipped_when_focus_not_longer(cfg, storage, clock, warning):
-    n = WarningNotifier()
-    c = make(warn_cfg(cfg, pre_end_warning_seconds=warning), storage, clock, notifier=n)
-    c.start()
-    for _ in range(12):
-        clock.advance(10)
-        c.tick()
-    assert n.warnings == 0
-
-
-def test_pre_end_warning_disabled_with_zero(cfg, storage, clock):
-    n = WarningNotifier()
-    c = make(warn_cfg(cfg, pre_end_warning_seconds=0), storage, clock, notifier=n)
-    c.start()
-    clock.advance(119)
-    c.tick()
-    assert n.warnings == 0
-
-
-def test_pre_end_warning_respects_sound_disabled(cfg, storage, clock):
-    n = WarningNotifier()
-    c = make(warn_cfg(cfg, sound_enabled=False), storage, clock, notifier=n)
-    c.start()
-    clock.advance(100)
-    c.tick()
-    assert n.warnings == 0
-
-
-def test_pre_end_warning_not_while_paused(cfg, storage, clock):
-    n = WarningNotifier()
-    c = make(warn_cfg(cfg), storage, clock, notifier=n)
-    c.start()
-    clock.advance(80)
-    c.pause()
-    clock.advance(500)
-    c.tick()
-    assert n.warnings == 0
-    c.start()
-    clock.advance(10)  # faltam 30 s
-    c.tick()
-    assert n.warnings == 1
-
-
-def test_pre_end_warning_rearms_after_reset(cfg, storage, clock):
-    n = WarningNotifier()
-    c = make(warn_cfg(cfg), storage, clock, notifier=n)
-    c.start()
-    clock.advance(100)
-    c.tick()
-    assert n.warnings == 1
-    c.reset()
-    c.start()
-    clock.advance(100)
-    c.tick()
-    assert n.warnings == 2
-
-
-def test_pre_end_warning_rearms_after_skip(cfg, storage, clock):
-    n = WarningNotifier()
-    c = make(warn_cfg(cfg), storage, clock, notifier=n)
-    c.start()
-    clock.advance(100)
-    c.tick()
-    assert n.warnings == 1
-    c.skip()  # foco -> pausa
-    c.skip()  # pausa -> foco
-    assert c.phase is Phase.FOCUS
-    clock.advance(100)
-    c.tick()
-    assert n.warnings == 2
-
-
-def test_pre_end_warning_failure_does_not_break_timer(cfg, storage, clock):
-    class Broken(FakeNotifier):
-        def warning_sound(self) -> None:
-            raise RuntimeError("sem áudio")
-
-    c = make(warn_cfg(cfg), storage, clock, notifier=Broken())
-    c.start()
-    clock.advance(100)
-    c.tick()
+    assert not c.is_running  # Pular preserva o estado parado
+    assert c.remaining_seconds == 60
     clock.advance(20)
-    assert c.tick() is not None
+    c.start()  # início do foco: BASE + 120 s
+    clock.advance(60)
+    event = c.tick()
+    assert event is not None and event.finished is Phase.FOCUS
+    assert rows(storage) == [
+        ("focus", 60, 1, BASE.isoformat()),
+        ("focus", 60, 1, (BASE + timedelta(seconds=120)).isoformat()),
+    ]
+
+
+def test_long_break_end_waits_with_auto_start_focus_off(cfg, storage, clock):
+    c = make(replace(cfg, auto_start_focus=False), storage, clock)
+    c.start()
+    clock.advance(60)
+    c.tick()  # foco -> pausa curta (contando)
+    clock.advance(60)
+    c.tick()  # pausa curta -> foco (esperando)
+    assert not c.is_running
+    c.start()
+    clock.advance(60)
+    event = c.tick()
+    assert event is not None and event.next is Phase.LONG_BREAK
+    assert c.is_running  # pausas automáticas seguem ligadas
+    clock.advance(120)
+    event = c.tick()
+    assert event is not None and event.finished is Phase.LONG_BREAK
+    assert c.phase is Phase.FOCUS
+    assert not c.is_running
+    assert c.remaining_seconds == 60
+    assert c.completed_focus_count == 0
+    clock.advance(30)
+    assert c.remaining_seconds == 60

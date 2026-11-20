@@ -6,7 +6,7 @@ Cada versão publicada por tag usa a seção correspondente como texto da releas
 ## [Não lançado]
 
 ### Adicionado
-- Aviso antes do fim do foco: um som curto e discreto toca uma vez quando falta o tempo escolhido (padrão: 1 minuto) para o foco acabar. O tempo fica em **Configurações** ("Aviso antes do fim do foco", de 0 a 300 s; 0 desliga). Não toca nas pausas nem com o som desligado.
+- Opções **Iniciar pausas automaticamente** e **Iniciar focos automaticamente** (ligadas por padrão, como antes). Desligadas, ao fim de um bloco o próximo fica parado com a duração cheia até você clicar em **Iniciar**.
 
 ## [0.0.12]
 
