@@ -119,3 +119,21 @@ def test_today_and_week_counts(storage: Storage):
     # Se hoje é segunda, os dois registros caem no mesmo dia.
     assert storage.today_count() == (2 if today == monday else 1)
     assert storage.week_count() == 2
+
+
+def test_focus_seconds_includes_interrupted_and_ignores_breaks(storage: Storage):
+    day = date(2026, 11, 10)
+    at = datetime(2026, 11, 10, 10, 0)
+    storage.record_session(Phase.FOCUS, at, 1500, True)
+    storage.record_session(Phase.FOCUS, at, 600, False)
+    storage.record_session(Phase.SHORT_BREAK, at, 300, True)
+    storage.record_session(Phase.FOCUS, datetime(2026, 11, 11, 10, 0), 1500, True)
+    assert storage.focus_seconds_between(day, day) == 2100
+    assert storage.focus_seconds_between(day, day + timedelta(days=1)) == 3600
+
+
+def test_focus_seconds_empty_and_invalid_range(storage: Storage):
+    day = date(2026, 11, 10)
+    assert storage.focus_seconds_between(day, day) == 0
+    with pytest.raises(ValueError):
+        storage.focus_seconds_between(day, day - timedelta(days=1))

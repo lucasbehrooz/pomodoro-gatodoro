@@ -14,7 +14,14 @@ import pytest
 
 from pomodoro.storage import Storage
 from pomodoro.timer import Phase
-from pomodoro.ui.stats import bar_geometry, build_week_series, summarize
+from pomodoro.ui.stats import (
+    bar_geometry,
+    build_week_series,
+    format_duration,
+    period_seconds,
+    stat_line,
+    summarize,
+)
 
 # 2026-11-10 é terça-feira. A semana corrente é seg 09/11 a dom 15/11.
 TODAY = date(2026, 11, 10)
@@ -104,6 +111,9 @@ def test_summarize_today_week_and_last_7_days(storage: Storage):
         "week": 3,  # seg 09 (1) + ter 10 (2); domingo 08 é da semana anterior
         # 04..10: 05 (3) + 08 (1) + 09 (1) + 10 (2); o dia 03 fica de fora
         "last_7_days": 7,
+        # tempo inclui o foco interrompido (600 s); a pausa fica de fora
+        "today_seconds": 1500 + 1500 + 600,
+        "week_seconds": 1500 + 1500 + 1500 + 600,
     }
 
 
@@ -129,7 +139,45 @@ def test_summarize_week_is_monday_to_sunday_when_today_is_sunday(storage: Storag
 
 
 def test_summarize_empty_database(storage: Storage):
-    assert summarize(storage, TODAY) == {"today": 0, "week": 0, "last_7_days": 0}
+    assert summarize(storage, TODAY) == {
+        "today": 0,
+        "week": 0,
+        "last_7_days": 0,
+        "today_seconds": 0,
+        "week_seconds": 0,
+    }
+
+
+# ---- tempo de foco -----------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("seconds", "expected"),
+    [
+        (0, "0 min"),
+        (59, "0 min"),
+        (60, "1 min"),
+        (45 * 60, "45 min"),
+        (3600, "1h"),
+        (3600 + 5 * 60 + 30, "1h 5min"),
+        (10 * 3600 + 59 * 60, "10h 59min"),
+        (-5, "0 min"),
+    ],
+)
+def test_format_duration(seconds, expected):
+    assert format_duration(seconds) == expected
+
+
+def test_stat_line():
+    assert stat_line("Pomodoros hoje", 3, 75 * 60) == "Pomodoros hoje: 3 · 1h 15min de foco"
+
+
+def test_period_seconds(storage: Storage):
+    seed(storage)
+    # 04..10: 05 (3x1500) + 08 (1500) + 09 (1500) + 10 (1500 + 1500 + 600)
+    assert period_seconds(storage, TODAY, "7") == 7 * 1500 + 600
+    # mês: 03 também entra
+    assert period_seconds(storage, TODAY, "month") == 8 * 1500 + 600
 
 
 # ---- bar_geometry ------------------------------------------------------------

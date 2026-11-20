@@ -101,6 +101,21 @@ class Storage:
         ).fetchone()
         return int(row[0])
 
+    def focus_seconds_between(self, start: date, end: date) -> int:
+        """Segundos de foco com dia local em [start, end] (inclusivo).
+
+        Inclui focos interrompidos: conta o tempo realmente focado, não só
+        os pomodoros concluídos.
+        """
+        if start > end:
+            raise ValueError("start deve ser <= end")
+        row = self._db.execute(
+            f"SELECT COALESCE(SUM(duration_seconds), 0) FROM sessions "
+            f"WHERE phase = ? AND {_DAY_SQL} BETWEEN ? AND ?",
+            (Phase.FOCUS.value, start.isoformat(), end.isoformat()),
+        ).fetchone()
+        return int(row[0])
+
     def count_completed_focus(self, day: date) -> int:
         return self.count_completed_focus_between(day, day)
 

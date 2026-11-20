@@ -34,7 +34,7 @@ Alterações de duração feitas com um timer em andamento valem a partir do pr�
 
 ## Histórico
 
-O banco `pomodoro.db` tem a tabela `sessions`, com um registro por bloco. Cada registro guarda a fase (`focus`, `short_break` ou `long_break`), o início em ISO 8601 no horário local, a duração em segundos e se o bloco foi concluído. As estatísticas contam apenas focos concluídos.
+O banco `pomodoro.db` tem a tabela `sessions`, com um registro por bloco. Cada registro guarda a fase (`focus`, `short_break` ou `long_break`), o início em ISO 8601 no horário local, a duração em segundos e se o bloco foi concluído. A quantidade de pomodoros conta apenas focos concluídos. O tempo de foco soma todos os focos, inclusive os interrompidos (pausas não entram).
 
 O histórico é mantido indefinidamente. Para apagá-lo, feche o app e remova o arquivo `pomodoro.db`.
 

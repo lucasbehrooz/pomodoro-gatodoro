@@ -4,6 +4,7 @@ Parte pura (sem Tk, testável): build_week_series, summarize, bar_geometry.
 Parte de janela: StatsWindow (CTkToplevel), aberta sob demanda pela MainWindow.
 
 Contagem: só focos concluídos (completed=True), por dia local.
+Tempo: soma de todo o foco, inclusive focos interrompidos.
 """
 
 from __future__ import annotations
@@ -65,12 +66,24 @@ def build_week_series(
     return [(day, counts[day]) for day in sorted(counts)]
 
 
+def format_duration(seconds: int) -> str:
+    """Tempo legível: '0 min', '45 min', '1h', '2h 5min'. Segundos são descartados."""
+    minutes = max(0, int(seconds)) // 60
+    hours, minutes = divmod(minutes, 60)
+    if hours == 0:
+        return f"{minutes} min"
+    if minutes == 0:
+        return f"{hours}h"
+    return f"{hours}h {minutes}min"
+
+
 def summarize(storage: Storage, today: date) -> dict[str, int]:
     """Totais exibidos na tela.
 
     - today: focos concluídos em `today`.
     - week: focos na semana de `today` (segunda a domingo).
     - last_7_days: focos nos 7 dias terminando em `today`.
+    - today_seconds / week_seconds: tempo de foco nos mesmos intervalos.
     """
     monday = today - timedelta(days=today.weekday())
     sunday = monday + timedelta(days=6)
@@ -79,6 +92,8 @@ def summarize(storage: Storage, today: date) -> dict[str, int]:
         "today": storage.count_completed_focus(today),
         "week": storage.count_completed_focus_between(monday, sunday),
         "last_7_days": sum(count for _, count in series),
+        "today_seconds": storage.focus_seconds_between(today, today),
+        "week_seconds": storage.focus_seconds_between(monday, sunday),
     }
 
 
@@ -108,6 +123,17 @@ def period_total(storage: Storage, today: date, period: str) -> int:
     """Total de focos concluídos no período."""
     start, end = period_range(period, today)
     return storage.count_completed_focus_between(start, end)
+
+
+def period_seconds(storage: Storage, today: date, period: str) -> int:
+    """Tempo total de foco no período, em segundos."""
+    start, end = period_range(period, today)
+    return storage.focus_seconds_between(start, end)
+
+
+def stat_line(title: str, count: int, seconds: int) -> str:
+    """Linha de total: 'Pomodoros hoje: 3 · 1h 15min de foco'."""
+    return f"{title}: {count} · {format_duration(seconds)} de foco"
 
 
 def label_step(count: int, max_labels: int = MAX_X_LABELS) -> int:
@@ -245,12 +271,17 @@ class StatsWindow(ctk.CTkToplevel):
     def refresh(self) -> None:
         today = self._today()
         totals = summarize(self._storage, today)
-        self._today_label.configure(text=f"Pomodoros hoje: {totals['today']}")
-        self._week_label.configure(text=f"Na semana (seg a dom): {totals['week']}")
+        self._today_label.configure(
+            text=stat_line("Pomodoros hoje", totals["today"], totals["today_seconds"])
+        )
+        self._week_label.configure(
+            text=stat_line("Na semana (seg a dom)", totals["week"], totals["week_seconds"])
+        )
 
         period = self._period_key
         total = period_total(self._storage, today, period)
-        self._period_label.configure(text=f"{self._period_title()}: {total}")
+        seconds = period_seconds(self._storage, today, period)
+        self._period_label.configure(text=stat_line(self._period_title(), total, seconds))
         self._caption.configure(text=f"Focos concluídos por dia ({self._period_title().lower()})")
 
         series = build_period_series(self._storage, today, period)
