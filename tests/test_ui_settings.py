@@ -101,3 +101,22 @@ def test_check_updates_is_in_form_and_keeps_skipped_version():
     new = build_config(valid_raw(check_updates=False), base)
     assert new.check_updates is False
     assert new.skipped_version == "0.0.8"
+
+
+def test_update_status_text():
+    from pathlib import Path
+
+    from pomodoro.ui.settings_dialog import update_status_text
+    from pomodoro.updater import UpdateInfo, UpdateManager, UpdateState
+
+    m = UpdateManager(post=lambda fn: fn(), quit_app=lambda: None, start_thread=lambda fn: fn(),
+                      check=lambda current: None, download=lambda info, on_progress: Path("x"))
+    assert update_status_text(m) == ""
+    m.check()
+    assert update_status_text(m) == "Você está na versão mais recente."
+    m.state, m.info = UpdateState.AVAILABLE, UpdateInfo("1.0.0", "u")
+    assert update_status_text(m) == "Nova versão disponível: 1.0.0"
+    m.state, m.progress = UpdateState.DOWNLOADING, (1_000_000, 2_000_000)
+    assert update_status_text(m).startswith("Baixando… 50%")
+    m.state, m.error = UpdateState.ERROR, "deu ruim"
+    assert update_status_text(m) == "deu ruim"

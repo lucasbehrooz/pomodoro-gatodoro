@@ -219,23 +219,30 @@ Obs.: a instalação só para o usuário não pede administrador. Se escolher "p
 
 ---
 
-## 13. Aviso de nova versão
+## 13. Aviso de nova versão e atualização
 
-Precisa de internet. Só aparece em uma versão mais antiga que a última release do GitHub.
+Precisa de internet. Use uma versão instalada mais antiga que a última release do GitHub (ex.: instale a penúltima release). As versões 0.0.9 e anteriores não têm o botão de atualizar; ele existe a partir da versão seguinte.
 
-**Passos:**
-1. Instale uma versão anterior à última publicada (ex.: a penúltima release) e abra o app.
-2. Em alguns segundos deve aparecer, acima dos botões de baixo, "Nova versão disponível: X.Y.Z" com **Baixar** e **Ignorar versão**. A janela fica um pouco mais alta.
-3. Clique em **Baixar**: abre a página da release no navegador e o aviso some.
-4. Feche e abra o app de novo: o aviso volta. Clique em **Ignorar versão**, feche e abra: o aviso não aparece mais para essa versão (`"skipped_version"` no `config.json`).
-5. Em **Configurações**, desmarque **Avisar quando houver nova versão**, salve, apague `"skipped_version"` do `config.json` com o app fechado e abra de novo: nenhum aviso.
-6. Na versão mais recente (ou sem internet), abra o app: nenhum aviso e nenhuma mensagem de erro.
+**Aviso na tela inicial:**
+1. Abra o app. Em alguns segundos aparece, acima dos botões de baixo, "Nova versão disponível: X.Y.Z" com **Atualizar** e **Ignorar versão**. A janela fica um pouco mais alta.
+2. Clique em **Atualizar**: abrem as **Configurações**, com a seção **Atualizações** mostrando a versão nova e o botão **Atualizar para X.Y.Z**.
+3. Feche as Configurações. Clique em **Ignorar versão**, feche e abra o app: o aviso não aparece mais para essa versão (`"skipped_version"` no `config.json`). Em **Configurações → Verificar atualizações** a versão continua aparecendo.
+4. Desmarque **Avisar quando houver nova versão**, salve, apague `"skipped_version"` do `config.json` com o app fechado e abra de novo: nenhum aviso.
 
-- Aviso aparece: ( ) OK  ( ) Falhou  Observação: ______________________
-- Baixar abre a release: ( ) OK  ( ) Falhou  Observação: ______________________
+**Atualizar pelas Configurações:**
+5. Em **Configurações → Atualizações**, confira "Versão instalada: …" e clique em **Verificar atualizações**: aparece "Verificando…" e depois "Nova versão disponível: X.Y.Z".
+6. Clique em **Atualizar para X.Y.Z**. O progresso aparece ("Baixando… 42% (15,0 de 35,7 MB)"), depois "Abrindo o instalador…", e o app fecha.
+7. O instalador abre normalmente (pode aparecer o SmartScreen: **Mais informações** → **Executar mesmo assim**). Conclua com "Abrir o Pomodoro Gatodoro" marcado.
+8. O app reabre na versão nova: **Configurações → Atualizações** mostra a nova "Versão instalada", e **Verificar atualizações** diz "Você está na versão mais recente." Configurações e histórico foram mantidos.
+9. Sem internet, clique em **Verificar atualizações**: aparece "Não foi possível verificar: …" e o app continua funcionando.
+
+- Aviso aparece e Atualizar abre as Configurações: ( ) OK  ( ) Falhou  Observação: ______________________
 - Ignorar versão vale após reabrir: ( ) OK  ( ) Falhou  Observação: ______________________
 - Opção desligada não avisa: ( ) OK  ( ) Falhou  Observação: ______________________
-- Sem internet / versão atual: nada aparece: ( ) OK  ( ) Falhou  Observação: ______________________
+- Verificar atualizações (com e sem versão nova): ( ) OK  ( ) Falhou  Observação: ______________________
+- Download com progresso, instalador abre e app fecha: ( ) OK  ( ) Falhou  Observação: ______________________
+- App reabre atualizado, dados mantidos: ( ) OK  ( ) Falhou  Observação: ______________________
+- Sem internet: mensagem de erro, sem travar: ( ) OK  ( ) Falhou  Observação: ______________________
 
 ---
 
@@ -255,6 +262,6 @@ Precisa de internet. Só aparece em uma versão mais antiga que a última releas
 | 10. Configuração e banco | ( ) OK  ( ) Falhou |
 | 11. Instalador | ( ) OK  ( ) Falhou |
 | 12. SmartScreen e antivírus | ( ) OK  ( ) Falhou |
-| 13. Aviso de nova versão | ( ) OK  ( ) Falhou |
+| 13. Aviso de nova versão e atualização | ( ) OK  ( ) Falhou |
 
 Versão testada: ________  Windows (versão/build): ________  Data: ________

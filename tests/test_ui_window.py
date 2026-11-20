@@ -77,37 +77,48 @@ def test_autostart_failure_shows_warning_without_breaking(tmp_path: Path):
         storage.close()
 
 
-def test_update_banner_download_and_skip(tmp_path: Path):
+def test_update_banner_follows_manager_and_skip(tmp_path: Path):
     try:
         from pomodoro.ui.main_window import MainWindow
-        from pomodoro.updater import UpdateInfo
+        from pomodoro.updater import UpdateInfo, UpdateManager, UpdateState
     except ImportError as exc:  # pragma: no cover
         pytest.skip(f"customtkinter indisponível: {exc}")
 
     storage = Storage(tmp_path / "pomodoro.db")
     controller = PomodoroController(Config(), storage)
     saved: list[Config] = []
-    opened: list[str] = []
+    info = UpdateInfo("9.9.9", "https://example.test/r", "https://example.test/setup.exe")
+    updates = UpdateManager(
+        post=lambda fn: fn(),
+        quit_app=lambda: None,
+        check=lambda current: info,
+        start_thread=lambda fn: fn(),
+    )
     try:
-        window = MainWindow(controller, save=saved.append, open_url=opened.append)
+        window = MainWindow(controller, save=saved.append, updates=updates)
     except Exception as exc:  # sem display
         storage.close()
         pytest.skip(f"sem display para a janela: {exc}")
 
     try:
-        info = UpdateInfo("9.9.9", "https://example.test/r")
-        window.show_update(info)
+        assert not window._update_banner.winfo_manager()
+        updates.check()
+        assert updates.state is UpdateState.AVAILABLE
         assert window._update_banner.winfo_manager() == "pack"
         assert "9.9.9" in window._update_label.cget("text")
 
-        window._on_update_download()
-        assert opened == ["https://example.test/r"]
-        assert not window._update_banner.winfo_manager()
+        # "Atualizar" abre as Configurações, já com o botão de atualizar.
+        window._update_download_btn.invoke()
+        dialog = window._settings_dialog
+        assert dialog is not None and dialog.winfo_exists()
+        assert dialog._install_btn.winfo_manager() == "pack"
+        assert "9.9.9" in dialog._install_btn.cget("text")
+        dialog.destroy()
 
-        window.show_update(info)
         window._on_update_skip()
         assert saved and saved[-1].skipped_version == "9.9.9"
-        assert controller.config.skipped_version == "9.9.9"
+        assert not window._update_banner.winfo_manager()
+        updates.check()  # versão ignorada: o aviso não volta
         assert not window._update_banner.winfo_manager()
     finally:
         window.quit_app()

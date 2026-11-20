@@ -42,11 +42,25 @@ O histórico é mantido indefinidamente. Para apagá-lo, feche o app e remova o 
 
 Quando ativada, a opção grava o caminho do executável em `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`, com o nome `Pomodoro`. Se você mover o `.exe` de pasta, desligue e ligue a opção de novo. Desinstalar pelo instalador remove essa entrada.
 
-## Aviso de nova versão
+## Atualizações
+
+### Aviso na tela inicial
 
 Com `check_updates` ligado, o app consulta a última release publicada no GitHub (`api.github.com`) uma vez a cada abertura. Se houver versão mais nova, aparece um aviso na janela principal:
 
-- **Baixar** abre a página da release no navegador. Baixe o instalador e rode-o normalmente, por cima da versão atual.
+- **Atualizar** abre as **Configurações**, na seção de atualizações.
 - **Ignorar versão** grava essa versão em `skipped_version`. O aviso volta só quando sair uma versão mais nova que ela.
 
-O app não baixa nem instala nada sozinho. Sem internet, a verificação falha em silêncio.
+Sem internet, a verificação ao abrir falha em silêncio.
+
+### Seção "Atualizações" nas Configurações
+
+Mostra a versão instalada e o botão **Verificar atualizações**, que consulta o GitHub na hora (mesmo com `check_updates` desligado ou com a versão ignorada). Havendo versão nova, aparece **Atualizar para X.Y.Z**:
+
+1. O app baixa `pomodoro-gatodoro-x64-setup.exe` da release para a pasta temporária, mostrando o progresso.
+2. Confere o tamanho e o SHA-256 informados pelo GitHub. Se não bater, o arquivo é apagado e nada é executado.
+3. Abre o instalador normal, com as telas de sempre, e fecha o app para os arquivos poderem ser substituídos. No fim da instalação, a opção "Abrir o Pomodoro Gatodoro" reabre o app já atualizado.
+
+O instalador não é assinado digitalmente, então o SmartScreen pode avisar ("O Windows protegeu o computador"): clique em **Mais informações** → **Executar mesmo assim**. Quem usa o `PomodoroGatodoro.exe` sem instalação passa a ter a versão instalada depois de atualizar.
+
+Configurações e histórico ficam em `%APPDATA%\Pomodoro\` e não são afetados pela atualização.

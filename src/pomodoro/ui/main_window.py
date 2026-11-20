@@ -23,7 +23,7 @@ from pomodoro.ui.icon import apply_window_icon
 from pomodoro.ui.controller import ApplyStatus, PomodoroController, format_mmss
 from pomodoro.ui.settings_dialog import SettingsDialog
 from pomodoro.ui.stats import StatsWindow
-from pomodoro.updater import UpdateInfo
+from pomodoro.updater import UpdateManager, UpdateState
 from pomodoro.ui.theme import (
     Palette,
     apply_accent_button,
@@ -62,7 +62,8 @@ class MainWindow(ctk.CTk):
             close_to_tray ligado (evita esconder a janela sem como reabri-la).
         save: função de persistência da configuração. Default: save_config.
         autostart: aplica "Iniciar com o Windows" ao salvar. Pode lançar OSError.
-        open_url: abre a página da nova versão. Default: webbrowser.open.
+        open_url: abre a página da nova versão (quando não há instalador). Default: webbrowser.open.
+        updates: estado das atualizações. Sem ele, não há aviso nem seção nas Configurações.
     """
 
     def __init__(
@@ -76,6 +77,7 @@ class MainWindow(ctk.CTk):
         storage: Storage | None = None,
         autostart: Callable[[bool], None] = set_autostart,
         open_url: Callable[[str], object] = webbrowser.open,
+        updates: UpdateManager | None = None,
     ) -> None:
         super().__init__()
         self._controller = controller
@@ -86,7 +88,7 @@ class MainWindow(ctk.CTk):
         self._apply_autostart = autostart
         self._storage = storage
         self._open_url = open_url
-        self._update_info: UpdateInfo | None = None
+        self._updates = updates
         self._ui_queue: queue.Queue[Callable[[], None]] = queue.Queue()
         self._tick_after_id: str | None = None
         self._settings_dialog: SettingsDialog | None = None
@@ -101,6 +103,8 @@ class MainWindow(ctk.CTk):
         self._build()
         self._apply_palette()
         self.protocol("WM_DELETE_WINDOW", self._on_close_requested)
+        if self._updates is not None:
+            self._updates.subscribe(self._sync_update_banner)
 
         self._refresh()
         self._schedule_tick()
@@ -121,12 +125,12 @@ class MainWindow(ctk.CTk):
         )
         self._stats_btn.grid(row=1, column=0, padx=4)
 
-        # Aviso de nova versão: criado agora, empacotado só em show_update().
+        # Aviso de nova versão: criado agora, empacotado só quando há versão nova.
         self._update_banner = ctk.CTkFrame(self, fg_color="transparent")
         self._update_label = ctk.CTkLabel(self._update_banner, text="")
         self._update_label.grid(row=0, column=0, columnspan=2, pady=(0, 4))
         self._update_download_btn = ctk.CTkButton(
-            self._update_banner, text="Baixar", width=100, command=self._on_update_download
+            self._update_banner, text="Atualizar", width=100, command=self._open_settings
         )
         self._update_download_btn.grid(row=1, column=0, padx=4)
         self._update_skip_btn = ctk.CTkButton(
@@ -211,7 +215,11 @@ class MainWindow(ctk.CTk):
             dialog.focus()
             return
         self._settings_dialog = SettingsDialog(
-            self, self._controller.config, on_save=self._save_settings
+            self,
+            self._controller.config,
+            on_save=self._save_settings,
+            updates=self._updates,
+            open_url=self._open_url,
         )
 
     def _open_stats(self) -> None:
@@ -242,33 +250,33 @@ class MainWindow(ctk.CTk):
 
     # ---- aviso de nova versão -------------------------------------------
 
-    def show_update(self, info: UpdateInfo) -> None:
-        """Mostra o aviso de nova versão. Chamar na thread do Tk (use post())."""
-        self._update_info = info
+    def _sync_update_banner(self) -> None:
+        """Mostra o aviso enquanto houver versão nova não ignorada (ouvinte do UpdateManager)."""
+        updates = self._updates
+        info = updates.info if updates is not None else None
+        visible = (
+            info is not None
+            and updates is not None
+            and updates.state is not UpdateState.LAUNCHING
+            and info.version != self._controller.config.skipped_version
+        )
+        if not visible:
+            self._hide_update_banner()
+            return
+        assert info is not None
         self._update_label.configure(text=MSG_UPDATE_AVAILABLE.format(version=info.version))
         if not self._update_banner.winfo_manager():
             # side="bottom" depois do rodapé: fica logo acima dos botões de baixo.
             self._update_banner.pack(side="bottom", pady=(0, 4))
             self.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT + UPDATE_BANNER_HEIGHT}")
 
-    def hide_update(self) -> None:
-        self._update_info = None
+    def _hide_update_banner(self) -> None:
         if self._update_banner.winfo_manager():
             self._update_banner.pack_forget()
             self.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}")
 
-    def _on_update_download(self) -> None:
-        info = self._update_info
-        if info is None:
-            return
-        try:
-            self._open_url(info.url)
-        except Exception:
-            logger.warning("Falha ao abrir a página da nova versão", exc_info=True)
-        self.hide_update()
-
     def _on_update_skip(self) -> None:
-        info = self._update_info
+        info = self._updates.info if self._updates is not None else None
         if info is None:
             return
         new = replace(self._controller.config, skipped_version=info.version)
@@ -278,7 +286,7 @@ class MainWindow(ctk.CTk):
             self._status_label.configure(text=f"{MSG_UPDATE_SKIP_FAILED}: {exc}")
             return
         self._controller.apply_config(new)
-        self.hide_update()
+        self._hide_update_banner()
 
     def _on_close_requested(self) -> None:
         if self._controller.config.close_to_tray and self._can_hide_to_tray:
@@ -307,6 +315,8 @@ class MainWindow(ctk.CTk):
         if self._quitting:
             return
         self._quitting = True
+        if self._updates is not None:
+            self._updates.unsubscribe(self._sync_update_banner)
         if self._tick_after_id is not None:
             self.after_cancel(self._tick_after_id)
             self._tick_after_id = None

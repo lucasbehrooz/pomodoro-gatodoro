@@ -10,7 +10,7 @@ from pomodoro.storage import Storage
 from pomodoro.tray import TrayIcon
 from pomodoro.ui.controller import NoiseControl, PomodoroController
 from pomodoro.ui.main_window import MainWindow
-from pomodoro.updater import check_in_background
+from pomodoro.updater import UpdateManager
 
 logger = logging.getLogger(__name__)
 
@@ -50,14 +50,18 @@ def main() -> None:
             on_quit=lambda: window.post(window.quit_app),
         )
         tray.start()
+        # Threads do updater falam com a UI só via window.post().
+        updates = UpdateManager(
+            post=lambda fn: window.post(fn),
+            quit_app=lambda: window.quit_app(),
+        )
         # Sem bandeja disponível, "fechar para a bandeja" esconderia a janela sem volta.
-        window = MainWindow(controller, can_hide_to_tray=tray.is_available, storage=storage)
+        window = MainWindow(
+            controller, can_hide_to_tray=tray.is_available, storage=storage, updates=updates
+        )
         _start_tray_loop(window, controller, tray)
         if config.check_updates:
-            check_in_background(
-                lambda info: window.post(lambda: window.show_update(info)),
-                skipped=config.skipped_version,
-            )
+            updates.check(silent=True)
         try:
             window.mainloop()
         finally:

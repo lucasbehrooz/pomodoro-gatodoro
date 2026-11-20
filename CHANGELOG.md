@@ -6,10 +6,13 @@ Cada versão publicada por tag usa a seção correspondente como texto da releas
 ## [Não lançado]
 
 ### Adicionado
+- Seção **Atualizações** nas Configurações: mostra a versão instalada, verifica na hora e tem o botão **Atualizar para X.Y.Z**, que baixa o instalador, confere o SHA-256 e abre a instalação.
 
 ### Alterado
+- O botão do aviso de nova versão na tela inicial agora é **Atualizar** e leva às Configurações.
 
 ### Corrigido
+- Acentos quebrados nas notas das releases no GitHub.
 
 ## [0.0.9]
 
