@@ -5,7 +5,7 @@ import pytest
 
 from pomodoro.instance import QUIT_EVENT_NAME, RUNNING_MUTEX_NAME, InstanceSignals
 
-ISS = Path(__file__).resolve().parents[1] / "packaging" / "pomodoro.iss"
+ISS = Path(__file__).resolve().parents[1] / "docs" / "packaging" / "pomodoro.iss"
 
 
 def test_names_match_installer_script():

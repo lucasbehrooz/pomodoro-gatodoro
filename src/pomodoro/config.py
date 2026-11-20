@@ -12,6 +12,9 @@ from pomodoro.ui.theme import DEFAULT_THEME, is_valid_theme
 DEFAULT_DAILY_GOAL = 8
 DAILY_GOAL_RANGE = (0, 24)  # inclusivo; 0 desliga a meta
 
+# Faixa válida (inclusive) do aviso antes do fim do foco, em segundos.
+PRE_END_WARNING_RANGE: tuple[int, int] = (0, 300)
+
 
 @dataclass
 class Config:
@@ -46,6 +49,15 @@ class Config:
     check_updates: bool = True
     # Versão que o usuário pediu para não ser avisado de novo (ex.: "0.0.8")
     skipped_version: str = ""
+
+    # Aviso antes do fim do foco: som curto quando faltar este tempo (segundos).
+    # 0 desliga. Faixa válida: PRE_END_WARNING_RANGE.
+    pre_end_warning_seconds: int = 60
+
+    # Ritmo: ao terminar um bloco, o próximo já começa contando (ver ui/controller.py).
+    # Desligado, o próximo bloco fica pausado com a duração cheia esperando Iniciar.
+    auto_start_breaks: bool = True
+    auto_start_focus: bool = True
 
     # Tarefa atual (opcional, para rótulo no histórico)
     current_task: str = ""
@@ -91,7 +103,17 @@ def load_config(path: Path | None = None) -> Config:
         config = replace(config, skipped_version="")
     if not isinstance(config.current_task, str):
         config = replace(config, current_task="")
+    if not _valid_pre_end_warning(config.pre_end_warning_seconds):
+        config = replace(config, pre_end_warning_seconds=60)
+    for name in ("auto_start_breaks", "auto_start_focus"):
+        if not isinstance(getattr(config, name), bool):
+            config = replace(config, **{name: True})
     return config
+
+
+def _valid_pre_end_warning(value: object) -> bool:
+    lo, hi = PRE_END_WARNING_RANGE
+    return isinstance(value, int) and not isinstance(value, bool) and lo <= value <= hi
 
 
 def save_config(config: Config, path: Path | None = None) -> None:
