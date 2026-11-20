@@ -4,7 +4,9 @@ import pytest
 
 from pomodoro.ui.shortcuts import (
     HINT_TEXT,
+    REPEAT_GAP_MS,
     STATE_CONTROL,
+    KeyRepeatFilter,
     ShortcutAction,
     shortcut_action,
 )
@@ -65,3 +67,79 @@ def test_shift_and_caps_lock_do_not_block():
 def test_hint_mentions_every_key():
     for key in ("Espaço", "R", "S"):
         assert key in HINT_TEXT
+
+
+# ---- repetição automática ---------------------------------------------------
+
+TOGGLE = ShortcutAction.TOGGLE
+SKIP = ShortcutAction.SKIP
+
+
+def test_first_press_is_accepted():
+    assert KeyRepeatFilter().press(TOGGLE, 1000) is True
+
+
+def test_windows_autorepeat_only_presses_is_ignored():
+    f = KeyRepeatFilter()
+    assert f.press(SKIP, 1000) is True
+    # Segurando S no Windows: só KeyPress repetidos, sem soltura.
+    assert [f.press(SKIP, 1000 + 33 * i) for i in range(1, 30)] == [False] * 29
+    f.release("s", 2000)
+    assert f.press(SKIP, 2300) is True
+
+
+def test_x11_autorepeat_release_press_pairs_are_ignored():
+    f = KeyRepeatFilter()
+    assert f.press(TOGGLE, 1000) is True
+    for t in range(1500, 3000, 33):  # pares com o mesmo horário
+        f.release("space", t)
+        assert f.press(TOGGLE, t) is False
+    f.release("space", 3100)
+    assert f.press(TOGGLE, 3100 + REPEAT_GAP_MS + 100) is True
+
+
+def test_quick_real_taps_are_accepted():
+    f = KeyRepeatFilter()
+    assert f.press(TOGGLE, 1000) is True
+    f.release("space", 1080)
+    assert f.press(TOGGLE, 1180) is True
+    f.release("space", 1250)
+    assert f.press(TOGGLE, 1400) is True
+
+
+def test_upper_and_lower_case_are_the_same_key():
+    f = KeyRepeatFilter()
+    assert f.press(SKIP, 1000) is True
+    assert f.press(SKIP, 1033) is False  # Caps Lock trocado no meio não libera
+    f.release("S", 1100)
+    assert f.press(SKIP, 1500) is True
+
+
+def test_different_keys_are_independent():
+    f = KeyRepeatFilter()
+    assert f.press(TOGGLE, 1000) is True
+    assert f.press(SKIP, 1010) is True
+    assert f.press(ShortcutAction.RESET, 1020) is True
+    assert f.press(SKIP, 1050) is False
+
+
+def test_release_of_unrelated_key_does_nothing():
+    f = KeyRepeatFilter()
+    assert f.press(SKIP, 1000) is True
+    f.release("x", 1010)
+    f.release("space", 1010)
+    assert f.press(SKIP, 1050) is False
+
+
+def test_reset_forgets_held_keys():
+    f = KeyRepeatFilter()
+    assert f.press(SKIP, 1000) is True
+    f.reset()  # soltura perdida (janela perdeu o foco)
+    assert f.press(SKIP, 5000) is True
+
+
+def test_time_wraparound_does_not_block():
+    f = KeyRepeatFilter()
+    assert f.press(TOGGLE, 2**32 - 10) is True
+    f.release("space", 2**32 - 5)
+    assert f.press(TOGGLE, 3) is True  # contador de 32 bits voltou a zero

@@ -168,8 +168,14 @@ def _make_window(tmp_path: Path):
     return window, controller, storage
 
 
+_clock = iter(range(10_000, 10_000_000, 500))  # horário dos eventos, em ms
+
+
 def _press(widget, key: str) -> None:
-    widget.event_generate(f"<KeyPress-{key}>")
+    """Aperta e solta a tecla, como um toque normal."""
+    t = next(_clock)
+    widget.event_generate(f"<KeyPress-{key}>", time=t)
+    widget.event_generate(f"<KeyRelease-{key}>", time=t + 80)
     widget.update()
 
 
@@ -253,8 +259,52 @@ def test_hint_follows_theme(tmp_path: Path, theme: str):
         window._set_theme(theme)
         window.update()
         palette = get_palette(theme)
-        if palette.muted is not None:
-            assert window._hint_label.cget("text_color") == palette.muted
+        expected = palette.muted
+        if expected is None:  # tema padrao: cor padrão do CustomTkinter
+            import customtkinter as ctk
+
+            expected = ctk.ThemeManager.theme["CTkLabel"]["text_color"]
+        assert window._hint_label.cget("text_color") == expected
+    finally:
+        window.quit_app()
+        storage.close()
+
+
+def test_held_key_does_not_repeat(tmp_path: Path):
+    window, controller, storage = _make_window(tmp_path)
+    calls: list[str] = []
+    try:
+        for name in ("_on_toggle", "_on_skip"):
+            original = getattr(window, name)
+
+            def wrapper(original=original, name=name):
+                calls.append(name)
+                original()
+
+            setattr(window, name, wrapper)
+        window.update()
+        target = window._time_label
+
+        # Windows: segurar S gera só KeyPress repetidos.
+        start = next(_clock)
+        for i in range(10):
+            target.event_generate("<KeyPress-s>", time=start + 33 * i)
+        target.event_generate("<KeyRelease-s>", time=start + 400)
+        target.update()
+        assert calls == ["_on_skip"]
+        _press(target, "s")  # novo toque pula de novo
+        assert calls == ["_on_skip", "_on_skip"]
+
+        # X11: segurar Espaço gera pares KeyRelease/KeyPress no mesmo instante.
+        t = next(_clock)
+        target.event_generate("<KeyPress-space>", time=t)
+        for i in range(1, 10):
+            target.event_generate("<KeyRelease-space>", time=t + 33 * i)
+            target.event_generate("<KeyPress-space>", time=t + 33 * i)
+        target.event_generate("<KeyRelease-space>", time=t + 400)
+        target.update()
+        assert calls == ["_on_skip", "_on_skip", "_on_toggle"]
+        assert controller.is_running
     finally:
         window.quit_app()
         storage.close()

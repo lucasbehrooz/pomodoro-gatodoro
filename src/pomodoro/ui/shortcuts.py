@@ -58,3 +58,46 @@ def shortcut_action(
     if state & (STATE_CONTROL | alt_mask):
         return None
     return KEY_ACTIONS.get(keysym)
+
+
+# No X11 a repetição automática gera pares KeyRelease/KeyPress com o mesmo
+# horário (ou quase). Uma soltura seguida de um aperto em até este intervalo
+# é tratada como repetição, não como um novo aperto.
+REPEAT_GAP_MS = 20
+
+
+class KeyRepeatFilter:
+    """Aceita só o primeiro aperto de cada tecla de atalho até ela ser solta.
+
+    Segurar Espaço ou S não pode alternar ou pular várias vezes. No Windows a
+    repetição automática manda só KeyPress repetidos (a tecla continua
+    "segurada"); no X11 manda KeyRelease + KeyPress no mesmo instante.
+    ``time`` é o ``event.time`` do Tk, em milissegundos.
+    """
+
+    def __init__(self, repeat_gap_ms: int = REPEAT_GAP_MS) -> None:
+        self._repeat_gap_ms = repeat_gap_ms
+        self._held: set[ShortcutAction] = set()
+        self._released_at: dict[ShortcutAction, int] = {}
+
+    def press(self, action: ShortcutAction, time: int) -> bool:
+        """True se o aperto deve executar a ação; False se é repetição."""
+        if action in self._held:
+            return False
+        self._held.add(action)
+        released_at = self._released_at.pop(action, None)
+        if released_at is not None and 0 <= time - released_at <= self._repeat_gap_ms:
+            return False
+        return True
+
+    def release(self, keysym: str, time: int) -> None:
+        action = KEY_ACTIONS.get(keysym)
+        if action is None or action not in self._held:
+            return
+        self._held.discard(action)
+        self._released_at[action] = time
+
+    def reset(self) -> None:
+        """Esquece as teclas seguradas (ex.: a janela perdeu o foco antes da soltura)."""
+        self._held.clear()
+        self._released_at.clear()

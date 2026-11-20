@@ -23,7 +23,7 @@ from pomodoro.ui.cat import CatAnimation
 from pomodoro.ui.icon import apply_window_icon
 from pomodoro.ui.controller import ApplyStatus, PomodoroController, format_mmss
 from pomodoro.ui.settings_dialog import SettingsDialog
-from pomodoro.ui.shortcuts import HINT_TEXT, ShortcutAction, shortcut_action
+from pomodoro.ui.shortcuts import HINT_TEXT, KeyRepeatFilter, ShortcutAction, shortcut_action
 from pomodoro.ui.stats import StatsWindow
 from pomodoro.updater import UpdateManager, UpdateState
 from pomodoro.ui.theme import (
@@ -105,7 +105,10 @@ class MainWindow(ctk.CTk):
         self._build()
         self._apply_palette()
         self.protocol("WM_DELETE_WINDOW", self._on_close_requested)
+        self._key_repeat = KeyRepeatFilter()
         self.bind("<KeyPress>", self._on_key, add="+")
+        self.bind("<KeyRelease>", self._on_key_release, add="+")
+        self.bind("<FocusOut>", self._on_focus_out, add="+")
         if self._updates is not None:
             self._updates.subscribe(self._sync_update_banner)
 
@@ -233,6 +236,8 @@ class MainWindow(ctk.CTk):
         )
         if action is None:
             return None
+        if not self._key_repeat.press(action, _event_time(event)):
+            return "break"  # tecla segurada: repetição automática
         handlers = {
             ShortcutAction.TOGGLE: self._on_toggle,
             ShortcutAction.RESET: self._on_reset,
@@ -240,6 +245,14 @@ class MainWindow(ctk.CTk):
         }
         handlers[action]()
         return "break"
+
+    def _on_key_release(self, event: tkinter.Event) -> None:
+        self._key_repeat.release(event.keysym, _event_time(event))
+
+    def _on_focus_out(self, event: tkinter.Event) -> None:
+        # A soltura pode ir para outra janela; sem isso a tecla ficaria "segurada".
+        # Vale para qualquer widget da janela: o Tk entrega o FocusOut ao widget focado.
+        self._key_repeat.reset()
 
     def _open_settings(self) -> None:
         dialog = self._settings_dialog
@@ -408,3 +421,8 @@ class MainWindow(ctk.CTk):
         self._toggle_btn.configure(text="Pausar" if c.is_running else "Iniciar")
         self._cat.set_running(c.is_running)
         self._pending_label.configure(text=MSG_PENDING_NOTICE if c.timer_config_pending else "")
+
+
+def _event_time(event: tkinter.Event) -> int:
+    """``event.time`` em ms; 0 quando o Tk não informa (ex.: "??")."""
+    return event.time if isinstance(event.time, int) else 0
