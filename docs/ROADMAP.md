@@ -46,7 +46,7 @@ Regras para todos os itens:
 
 ## 0.0.14: no que eu foquei
 
-- [ ] **F08 · Rótulo da tarefa** (médio)
+- [~] **F08 · Rótulo da tarefa** ([#9](https://github.com/lucasbehrooz/pomodoro-gatodoro/pull/9)) (médio)
   - Campo "Em que você está focando?" na tela inicial (opcional). Gravado na sessão (coluna `task` em `sessions`, com migração para bancos existentes). Estatísticas ganham "Tempo por tarefa" no período.
   - Onde: `storage.py` (migração `ALTER TABLE` idempotente), `ui/controller.py`, `ui/main_window.py`, `ui/stats.py`.
   - Testes: migração de banco antigo, gravação com e sem tarefa, agregação por tarefa.
