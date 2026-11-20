@@ -6,14 +6,20 @@ Cada versão publicada por tag usa a seção correspondente como texto da releas
 ## [Não lançado]
 
 ### Adicionado
+
+### Alterado
+
+### Corrigido
+
+## [0.0.9]
+
+### Adicionado
 - Estatísticas mostram o tempo de foco junto com a quantidade de pomodoros (hoje, semana e período escolhido). O tempo inclui focos interrompidos.
 - Gráfico das estatísticas pode mostrar **Pomodoros** ou **Tempo** por dia.
 
 ### Alterado
 - A janela de estatísticas aberta se atualiza sozinha quando um bloco termina ou ao usar Pular/Reiniciar.
 - Seletor de período das estatísticas segue as cores do tema.
-
-### Corrigido
 
 ## [0.0.8]
 
