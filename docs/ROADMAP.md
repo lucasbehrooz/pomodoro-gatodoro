@@ -19,31 +19,18 @@ Regras para todos os itens:
 
 ## 0.0.12: atualização robusta e uso diário
 
-- [x] **F00 · Verificação por `latest.json`** (já na `main`, commit 6edc9bb). Só falta lançar.
-- [x] **F01 · Uma instância só** (pequeno) ([#1](https://github.com/lucasbehrooz/pomodoro-gatodoro/pull/1), ajustes em [#4](https://github.com/lucasbehrooz/pomodoro-gatodoro/pull/4))
+- [v] **F00 · Verificação por `latest.json`** (commit 6edc9bb; actions com Node 24). Lançado em 0.0.12.
+- [v] **F01 · Uma instância só** ([#1](https://github.com/lucasbehrooz/pomodoro-gatodoro/pull/1), ajustes em [#4](https://github.com/lucasbehrooz/pomodoro-gatodoro/pull/4)). Lançado em 0.0.12.
   - Abrir o app com outro já aberto traz a janela existente para frente e sai, em vez de criar um segundo Pomodoro.
-  - Onde: `instance.py` (o mutex `PomodoroGatodoroRunning` já existe; detectar `ERROR_ALREADY_EXISTS` e sinalizar um evento `PomodoroGatodoroShow`), `__main__.py` (escutar e chamar `window.show_window` via `post`).
-  - Aceite: segunda abertura não cria janela nem ícone na bandeja; a primeira aparece e ganha foco, mesmo se estava na bandeja.
-  - Testes: lógica de "já existe" com kernel32 falso; nomes batendo com o `.iss` continuam passando.
   - Windows: abrir duas vezes pelo atalho; abrir com o app na bandeja.
-- [~] **F02 · Atalhos de teclado** (pequeno) (#2)
-  - Espaço = Iniciar/Pausar, R = Reiniciar, S = Pular, na janela principal. Não disparar quando o foco estiver em campo de texto (diálogos).
-  - Onde: `ui/main_window.py` (bind na janela, chamando os mesmos handlers dos botões).
-  - Aceite: atalhos funcionam com a janela em foco; botões mostram a dica (ex.: tooltip ou texto "Espaço").
-  - Testes: smoke com `event_generate` chamando os handlers.
+- [v] **F02 · Atalhos de teclado** ([#2](https://github.com/lucasbehrooz/pomodoro-gatodoro/pull/2)). Lançado em 0.0.12.
+  - Espaço = Iniciar/Pausar, R = Reiniciar, S = Pular, na janela principal. Não disparam em campos de texto nem nos diálogos.
+- [v] **F03 · Meta diária** ([#3](https://github.com/lucasbehrooz/pomodoro-gatodoro/pull/3)). Lançado em 0.0.12.
+  - Opção `daily_goal` (0 = desligada, padrão 8). Tela inicial mostra "Hoje: 3/8"; notificação ao bater a meta (uma vez por dia); linha da meta no gráfico.
+- [v] **F04 · Sequência de dias** ([#5](https://github.com/lucasbehrooz/pomodoro-gatodoro/pull/5)). Lançado em 0.0.12.
+  - Estatísticas mostram "Sequência: N dias" e o recorde.
 
-## 0.0.13: motivação
-
-- [~] **F03 · Meta diária** (pequeno) (#3)
-  - Opção `daily_goal` (0 = desligada, padrão 8, faixa 0 a 24). Tela inicial mostra "Hoje: 3/8"; ao bater a meta, uma notificação comemorativa (uma vez por dia).
-  - Onde: `config.py`, `ui/settings.py`, `ui/settings_dialog.py`, `ui/controller.py` (contagem do dia e "meta batida"), `ui/main_window.py`, `ui/stats.py` (linha da meta no gráfico de quantidade).
-  - Testes: contagem do dia, notificação só uma vez, linha da meta na geometria.
-- [~] **F04 · Sequência de dias** (pequeno) (#5)
-  - Estatísticas mostram "Sequência: 5 dias" (dias seguidos com pelo menos 1 foco concluído, contando hoje se já houver, senão até ontem) e o recorde.
-  - Onde: `storage.py` (consulta de dias com foco), `ui/stats.py` (função pura `streak(days, today)`).
-  - Testes: sequência com buraco, hoje sem foco ainda, recorde.
-
-## 0.0.14: ritmo dos blocos
+## 0.0.13: ritmo dos blocos
 
 - [ ] **F05 · Iniciar blocos automaticamente** (pequeno)
   - Opções `auto_start_breaks` e `auto_start_focus` (padrão: desligadas). Ao terminar um bloco, o próximo já começa contando.
@@ -57,14 +44,14 @@ Regras para todos os itens:
   - A notificação de início de pausa traz uma dica aleatória ("Beba água", "Alongue o pescoço"...). Lista em `ui/tips.py` ou `tips.py`.
   - Testes: a mensagem da pausa contém uma dica da lista; foco não recebe dica.
 
-## 0.0.15: no que eu foquei
+## 0.0.14: no que eu foquei
 
 - [ ] **F08 · Rótulo da tarefa** (médio)
   - Campo "Em que você está focando?" na tela inicial (opcional). Gravado na sessão (coluna `task` em `sessions`, com migração para bancos existentes). Estatísticas ganham "Tempo por tarefa" no período.
   - Onde: `storage.py` (migração `ALTER TABLE` idempotente), `ui/controller.py`, `ui/main_window.py`, `ui/stats.py`.
   - Testes: migração de banco antigo, gravação com e sem tarefa, agregação por tarefa.
 
-## 0.0.16: meus dados
+## 0.0.15: meus dados
 
 - [ ] **F09 · Exportar histórico para CSV** (pequeno)
   - Botão "Exportar CSV" nas Estatísticas: salva `pomodoro-historico.csv` (data, hora, fase, duração em minutos, concluída, tarefa) com diálogo "Salvar como". UTF-8 com BOM para abrir certo no Excel.
@@ -74,7 +61,7 @@ Regras para todos os itens:
   - Onde: `ui/stats.py` (funções puras de grade e faixa) e `ui/theme.py` (escala de cor por tema).
   - Testes: posição de cada dia, faixas, ano bissexto.
 
-## 0.0.17: conforto
+## 0.0.16: conforto
 
 - [ ] **F11 · Modo compacto sempre no topo** (médio)
   - Botão para alternar para uma janela pequena só com o tempo e Iniciar/Pausar, sempre por cima (`-topmost`). Lembra a posição.

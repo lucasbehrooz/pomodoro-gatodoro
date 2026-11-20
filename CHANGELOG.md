@@ -5,6 +5,8 @@ Cada versão publicada por tag usa a seção correspondente como texto da releas
 
 ## [Não lançado]
 
+## [0.0.12]
+
 ### Adicionado
 - Aviso antes do fim do foco: um som curto e discreto toca uma vez quando falta 1 minuto para o foco acabar. O tempo fica em **Configurações** ("Aviso antes do fim do foco", de 0 a 300 s; 0 desliga). Não toca nas pausas nem com o som desligado.
 - Sequência de dias nas Estatísticas: "Sequência: N dias" conta os dias seguidos com pelo menos um foco concluído (inclui hoje se já houver foco, senão vai até ontem), ao lado do "Recorde".
