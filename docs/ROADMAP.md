@@ -49,7 +49,7 @@ Regras para todos os itens:
   - Opções `auto_start_breaks` e `auto_start_focus` (padrão: desligadas). Ao terminar um bloco, o próximo já começa contando.
   - Onde: `config.py`, formulário, `ui/controller.py` (após transição).
   - Testes: transição com e sem auto-início; sessão gravada corretamente.
-- [~] **F06 · Aviso antes do fim** (pequeno)
+- [~] **F06 · Aviso antes do fim** (pequeno) (#7)
   - Opção `pre_end_warning_seconds` (0 = desligado, padrão 60). Som discreto quando faltar esse tempo no foco.
   - Onde: `config.py`, `notifier.py` (som curto), `ui/controller.py` (disparar uma vez por bloco).
   - Testes: dispara uma vez, não dispara em pausa, não dispara se o bloco for menor que o aviso.
