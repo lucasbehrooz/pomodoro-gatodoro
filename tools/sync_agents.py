@@ -12,11 +12,15 @@ O que é gerado:
 - CLAUDE.md  só importa o AGENTS.md (``@AGENTS.md``) para o Claude Code.
 - .claude/rules/<nome>.md  steering com ``inclusion: fileMatch``, com ``paths:`` para o
   Claude Code carregar só ao mexer nesses arquivos. O AGENTS.md aponta para eles.
+- Agentes (fonte: .kiro/agents/<nome>.md, com name e description no frontmatter):
+  .claude/agents/<nome>.md (Claude Code), .opencode/agents/<nome>.md (OpenCode,
+  mode: subagent) e .kiro/agents/<nome>.json (Kiro CLI).
 """
 
 from __future__ import annotations
 
 import filecmp
+import json
 import shutil
 import sys
 from pathlib import Path
@@ -24,6 +28,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 KIRO = ROOT / ".kiro"
 CLAUDE_DIR = ROOT / ".claude"
+OPENCODE_DIR = ROOT / ".opencode"
 GENERATED = "<!-- Gerado por tools/sync_agents.py a partir de .kiro/. Não edite aqui. -->"
 
 # Ordem das seções do AGENTS.md; arquivos fora da lista vão no fim, em ordem alfabética.
@@ -98,6 +103,27 @@ def build_outputs() -> dict[Path, str]:
         patterns = meta.get("fileMatchPattern") or []
         paths = "\n".join(f'  - "{p}"' for p in patterns) if isinstance(patterns, list) else ""
         outputs[CLAUDE_DIR / "rules" / name] = f"---\npaths:\n{paths}\n---\n\n{GENERATED}\n\n{body}"
+
+    for source in sorted((KIRO / "agents").glob("*.md")):
+        meta, body = split_frontmatter(source.read_text(encoding="utf-8"))
+        name = str(meta.get("name") or source.stem)
+        description = json.dumps(str(meta.get("description") or ""), ensure_ascii=False)
+        outputs[CLAUDE_DIR / "agents" / f"{name}.md"] = (
+            f"---\nname: {name}\ndescription: {description}\n---\n\n{GENERATED}\n\n{body}"
+        )
+        outputs[OPENCODE_DIR / "agents" / f"{name}.md"] = (
+            f"---\ndescription: {description}\nmode: subagent\n---\n\n{GENERATED}\n\n{body}"
+        )
+        kiro_agent = {
+            "name": name,
+            "description": json.loads(description),
+            "prompt": body,
+            "tools": ["*"],
+            "resources": ["file://AGENTS.md"],
+        }
+        outputs[KIRO / "agents" / f"{name}.json"] = (
+            json.dumps(kiro_agent, ensure_ascii=False, indent=2) + "\n"
+        )
     return outputs
 
 

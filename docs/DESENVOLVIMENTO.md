@@ -102,8 +102,32 @@ O script gera:
 | `CLAUDE.md` (importa o `AGENTS.md`) | Claude Code |
 | `.claude/rules/*.md` (regras com `fileMatch`, viram `paths:`) | Claude Code |
 | `.claude/skills/*` (cópia das skills) | Claude Code e OpenCode |
+| `.claude/agents/*.md` | Claude Code |
+| `.opencode/agents/*.md` (`mode: subagent`) | OpenCode |
+| `.kiro/agents/*.json` (gerado a partir de `.kiro/agents/*.md`) | Kiro CLI |
 
 Não edite os arquivos gerados. `tests/test_agents_sync.py` falha se eles estiverem diferentes do que o script geraria.
+
+## Roadmap e agentes
+
+O plano das próximas versões fica em `docs/ROADMAP.md`. Três agentes automatizam o ciclo, cada um com uma tarefa:
+
+| Agente | Faz | Não faz |
+|---|---|---|
+| `feature-builder` | Pega um item (ex.: F03), cria `feat/<id>-<slug>`, implementa com testes e docs, abre o PR e acompanha o CI | merge, tag, release |
+| `pr-reviewer` | Roda os testes do branch numa worktree, confere convenções e critérios de aceite e publica a revisão no PR | alterar código, aprovar, merge |
+| `release-manager` | Com os itens da versão mesclados: sobe a versão, fecha o `CHANGELOG.md`, cria a tag, acompanha o build e confere a release | lançar sem confirmação; mover tag |
+
+Ciclo de uma versão:
+
+1. "Use o agente feature-builder para implementar o próximo item do roadmap" (repita para cada item).
+2. "Use o agente pr-reviewer no PR #N".
+3. Você mescla o PR no GitHub (`gh pr merge N --squash`, por exemplo).
+4. Com todos os itens da versão mesclados: "Use o agente release-manager para lançar a versão".
+
+No Claude Code os agentes aparecem em `/agents`; no OpenCode, como subagentes; no Kiro CLI, em `.kiro/agents/`. O CI roda testes e build nos pull requests, então o PR mostra se o instalador ainda compila.
+
+Os agentes usam o `gh` autenticado (`gh auth login`).
 
 ## Publicar uma versão
 

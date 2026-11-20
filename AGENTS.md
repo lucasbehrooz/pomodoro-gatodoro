@@ -127,7 +127,13 @@ pomodoro/
 - Novo som ou notificação: `notifier.py`.
 - Mudança no executável: `release-windows.yml` (PyInstaller) e `packaging/pomodoro.iss`.
 - Atualizações: `updater.py` (lógica testável) e a seção em `ui/settings_dialog.py`. Os nomes do mutex/evento em `instance.py` precisam bater com o `[Code]` do `.iss` (`tests/test_instance.py` confere).
-- Regras e skills dos agentes: edite em `.kiro/` e rode `python tools/sync_agents.py`.
+- Regras, skills e agentes de IA: edite em `.kiro/` (`steering/`, `skills/`, `agents/*.md`) e rode `python tools/sync_agents.py`.
+
+### Fluxo de trabalho
+- Próximas features: `docs/ROADMAP.md` (itens F01, F02... agrupados por versão).
+- Cada item: branch `feat/<id>-<slug>` e pull request (agente `feature-builder`), revisão (agente `pr-reviewer`), merge feito pelo usuário.
+- Versão lançada quando todos os itens dela estão mesclados (agente `release-manager`).
+- Correções pequenas e documentação podem ir direto na `main` quando o usuário pedir.
 
 ### Versão
 A versão aparece em três lugares e deve ficar igual:

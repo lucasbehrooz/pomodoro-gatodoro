@@ -3,7 +3,8 @@ name: Build Windows
 # Gera PomodoroGatodoro.exe em uma máquina Windows.
 # - Em push de tag v* (ex.: v0.0.1): gera o .exe e publica uma GitHub Release com ele.
 # - Manualmente (workflow_dispatch): gera o .exe e disponibiliza como artefato da execução.
-# - Em push na main que mexa em código/empacotamento: só valida o build (sem release).
+# - Em push na main ou em pull request que mexa em código/empacotamento: só valida
+#   o build (testes, .exe e instalador como artefato, sem release).
 
 on:
   push:
@@ -15,6 +16,17 @@ on:
       - "src/**"
       - "packaging/**"
       - "pyproject.toml"
+      - ".github/workflows/release-windows.yml"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "src/**"
+      - "tests/**"
+      - "tools/**"
+      - "packaging/**"
+      - "pyproject.toml"
+      - ".kiro/**"
       - ".github/workflows/release-windows.yml"
   workflow_dispatch:
 
