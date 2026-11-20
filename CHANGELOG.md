@@ -5,6 +5,8 @@ Cada versão publicada por tag usa a seção correspondente como texto da releas
 
 ## [Não lançado]
 
+## [0.0.12]
+
 ### Adicionado
 - Sequência de dias nas Estatísticas: "Sequência: N dias" conta os dias seguidos com pelo menos um foco concluído (inclui hoje se já houver foco, senão vai até ontem), ao lado do "Recorde".
 - Meta diária de focos (padrão 8, 0 desliga): a tela inicial mostra "Hoje: 3/8", uma notificação comemora a meta uma vez por dia e o gráfico de Pomodoros ganha a linha da meta.
