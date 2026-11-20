@@ -86,7 +86,8 @@ jobs:
         shell: bash
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
-          python tools/extract_changelog.py "$VERSION" > release-notes.md
+          # --output grava em UTF-8; "> arquivo" no Windows sairia em cp1252 (acentos quebrados).
+          python tools/extract_changelog.py "$VERSION" --output release-notes.md
           echo "--- notas da release:"
           cat release-notes.md
 
