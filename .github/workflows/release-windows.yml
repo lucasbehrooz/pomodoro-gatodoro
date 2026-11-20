@@ -14,7 +14,7 @@ on:
       - main
     paths:
       - "src/**"
-      - "packaging/**"
+      - "docs/packaging/**"
       - "pyproject.toml"
       - ".github/workflows/release-windows.yml"
   pull_request:
@@ -24,7 +24,7 @@ on:
       - "src/**"
       - "tests/**"
       - "tools/**"
-      - "packaging/**"
+      - "docs/packaging/**"
       - "pyproject.toml"
       - ".kiro/**"
       - ".github/workflows/release-windows.yml"
@@ -76,7 +76,7 @@ jobs:
           --paths src
           --collect-all customtkinter
           --add-data "assets;assets"
-          packaging/run_pomodoro.py
+          docs/packaging/run_pomodoro.py
 
       - name: Instalar Inno Setup
         run: choco install innosetup -y --no-progress
