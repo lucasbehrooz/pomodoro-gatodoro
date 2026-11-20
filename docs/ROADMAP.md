@@ -40,7 +40,7 @@ Regras para todos os itens:
   - Opção `pre_end_warning_seconds` (0 = desligado, padrão 60). Som discreto quando faltar esse tempo no foco.
   - Onde: `config.py`, `notifier.py` (som curto), `ui/controller.py` (disparar uma vez por bloco).
   - Testes: dispara uma vez, não dispara em pausa, não dispara se o bloco for menor que o aviso.
-- [ ] **F07 · Dica na pausa** (pequeno)
+- [~] **F07 · Dica na pausa** ([#8](https://github.com/lucasbehrooz/pomodoro-gatodoro/pull/8)) (pequeno)
   - A notificação de início de pausa traz uma dica aleatória ("Beba água", "Alongue o pescoço"...). Lista em `ui/tips.py` ou `tips.py`.
   - Testes: a mensagem da pausa contém uma dica da lista; foco não recebe dica.
 
