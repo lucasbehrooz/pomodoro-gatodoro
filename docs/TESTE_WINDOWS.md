@@ -77,6 +77,13 @@ Obs.: se o toast não aparecer, verifique se as notificações do Windows estão
 - Gráfico Pomodoros/Tempo: ( ) OK  ( ) Falhou  Observação: ______________________
 - Atualiza sozinha: ( ) OK  ( ) Falhou  Observação: ______________________
 
+**Sequência de dias:**
+1. Abra as **Estatísticas** e confira a linha "Sequência: N dias · Recorde: M dias". Se ainda não houver foco concluído hoje, a sequência vai até ontem (não zera só porque o dia começou).
+2. Conclua um foco hoje (primeiro do dia) com a janela aberta: a sequência sobe 1 sozinha. Um foco interrompido (**Pular**) não muda a sequência.
+3. Com 1 dia, o texto fica no singular ("1 dia").
+
+- Sequência e recorde: ( ) OK  ( ) Falhou  Observação: ______________________
+
 ---
 
 ## 5. Gato animado
