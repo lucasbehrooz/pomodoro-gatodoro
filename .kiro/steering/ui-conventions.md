@@ -16,7 +16,7 @@ fileMatchPattern: ["src/pomodoro/ui/**/*.py", "src/pomodoro/tray.py", "src/pomod
 
 ## Tema
 - Toda cor nova passa por `ui/theme.py`. Não coloque cores fixas em widgets.
-- Os três temas (`padrao`, `feminino`, `escuro`) precisam de todos os campos preenchidos, e o texto precisa manter contraste mínimo de 4,5:1.
+- Os três temas (`padrao`, `feminino` exibido como "Rosa", `escuro`) precisam de todos os campos preenchidos, e o texto precisa manter contraste mínimo de 4,5:1.
 - O tema `padrao` usa `None` nos campos de cor para seguir o modo claro/escuro do sistema.
 - Ao criar um widget novo, aplique a paleta atual e garanta que trocar o tema em execução atualize o widget.
 

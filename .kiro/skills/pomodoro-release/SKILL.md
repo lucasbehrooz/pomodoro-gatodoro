@@ -9,7 +9,7 @@ Use este procedimento para gerar um novo `PomodoroGatodoro.exe` e instalador par
 
 ## Pré-requisitos
 - Trabalhe na branch `main`, com a árvore limpa (`git status`).
-- Use a chave SSH do repositório: `GIT_SSH_COMMAND="ssh -i <caminho-da-sua-chave> -o IdentitiesOnly=yes"`. Exporte essa variável antes dos comandos `git push`.
+- `git push` usa o SSH já configurado para o remoto `origin`. O `gh` autenticado serve para acompanhar o build e mexer em releases.
 
 ## Passos
 
@@ -48,17 +48,20 @@ Use este procedimento para gerar um novo `PomodoroGatodoro.exe` e instalador par
    ```
    O push da tag dispara `.github/workflows/release-windows.yml`, que:
    - roda os testes em Windows;
+   - confere se a tag bate com `pyproject.toml` e `__init__.py` (senão, falha);
    - gera `dist/PomodoroGatodoro.exe` com PyInstaller (`--icon assets/gato.ico`);
    - gera `dist/pomodoro-gatodoro-x64-setup.exe` com Inno Setup (`packaging/pomodoro.iss`);
-   - publica os dois arquivos na release da tag.
+   - gera `dist/latest.json` (versão, tamanho e SHA-256 do instalador), lido pelo app para atualizar;
+   - publica os três arquivos na release, com a seção do `CHANGELOG.md` como texto.
 
-7. **Confirme o resultado.** Verifique `git ls-remote --tags origin` e informe ao usuário o endereço:
+7. **Confirme o resultado.** Acompanhe com `gh run watch <id> --interval 60` (não faça polling da API sem login). Depois confira com `gh release view vX.Y.Z` que há os três arquivos e as notas com acentos corretos, e informe o endereço:
    `https://github.com/lucasbehrooz/pomodoro-gatodoro/releases/tag/vX.Y.Z`
-   Se o build falhar, o log fica em **Actions → Build Windows**.
+   Se o build falhar, veja o log com `gh run view <id> --log-failed`. Falha de rede ao publicar ("other side closed") se resolve com `gh run rerun <id> --failed`.
 
 ## Regras
 - **Nunca** mova ou reutilize uma tag que já foi publicada. Para corrigir, publique uma nova versão.
 - **Não** faça `git push --force`.
+- Commits sem linha `Co-Authored-By` de IA.
 - A publicação é visível para o usuário, então confirme antes de criar a tag, a menos que ele já tenha pedido a versão explicitamente.
 - O `.exe` não é assinado. O SmartScreen pode avisar na primeira execução; isso é esperado para uso pessoal.
 

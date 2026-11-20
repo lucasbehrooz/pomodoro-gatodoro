@@ -91,6 +91,15 @@ pomodoro/
 - [x] Iniciar com o Windows (`autostart.py`, valor HKCU\...\Run; opção em Configurações). Validação no Windows: `docs/TESTE_WINDOWS.md`, item 9.
 - [x] Instalador com Inno Setup (`packaging/pomodoro.iss`, gerado pelo workflow). Não compilado localmente; validação: `docs/TESTE_WINDOWS.md`, item 11.
 
+### Fase 10: Estatísticas e atualizações
+- [x] Tempo de foco nas estatísticas (inclui focos interrompidos) e gráfico Pomodoros/Tempo. (0.0.9)
+- [x] Janela de estatísticas atualiza sozinha ao fim de bloco, Pular e Reiniciar. (0.0.9)
+- [x] Aviso de nova versão via GitHub Releases, com "Ignorar versão". (0.0.8)
+- [x] Seção "Atualizações" nas Configurações: baixa o instalador, confere SHA-256 e abre a instalação. (0.0.10)
+- [x] Instalador fecha sozinho o app aberto (mutex/evento + taskkill de reserva). (0.0.11)
+- [x] `latest.json` na release para verificar sem o limite da API do GitHub. (próxima versão)
+- [ ] Validar no Windows o fluxo completo de atualização (`docs/TESTE_WINDOWS.md`, item 13).
+
 ## Pontos de atenção
 
 - **Ambiente de desenvolvimento:** o projeto está sendo desenvolvido em Linux. `winsound`, `winotify` e a bandeja precisam ser validados em Windows. Essas partes ficarão isoladas atrás de interfaces para que a lógica possa ser testada em qualquer sistema.

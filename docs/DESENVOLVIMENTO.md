@@ -86,6 +86,25 @@ pomodoro/
 └── pyproject.toml
 ```
 
+## Instruções para agentes de IA (Kiro, Claude Code, OpenCode)
+
+A fonte única fica em `.kiro/`: regras em `.kiro/steering/` e skills em `.kiro/skills/`. Depois de editar, rode:
+
+```bash
+.venv/bin/python tools/sync_agents.py
+```
+
+O script gera:
+
+| Arquivo gerado | Usado por |
+|---|---|
+| `AGENTS.md` (regras sempre ativas) | OpenCode (e Kiro) |
+| `CLAUDE.md` (importa o `AGENTS.md`) | Claude Code |
+| `.claude/rules/*.md` (regras com `fileMatch`, viram `paths:`) | Claude Code |
+| `.claude/skills/*` (cópia das skills) | Claude Code e OpenCode |
+
+Não edite os arquivos gerados. `tests/test_agents_sync.py` falha se eles estiverem diferentes do que o script geraria.
+
 ## Publicar uma versão
 
 O build e a release são feitos pelo GitHub Actions (`.github/workflows/release-windows.yml`). Ao enviar uma tag `vX.Y.Z`, o workflow:
