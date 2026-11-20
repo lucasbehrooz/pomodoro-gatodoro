@@ -85,7 +85,7 @@ pomodoro/
 
 ### Fase 8: Empacotamento e testes no Windows
 - [x] `PyInstaller --onefile --windowed`, incluindo assets (feito pelo workflow `release-windows.yml`). A DLL do PortAudio vem do pacote `sounddevice`; confirmar no teste que o áudio funciona no `.exe`.
-- [ ] Teste manual em Windows: áudio, toast, bandeja, inicialização. (Feito pelo usuário, ver `docs/TESTE_WINDOWS.md`.)
+- [x] Teste manual em Windows: áudio, toast, bandeja, inicialização. (Feito pelo usuário, ver `docs/TESTE_WINDOWS.md`.)
 
 ### Fase 9 (opcional)
 - [x] Iniciar com o Windows (`autostart.py`, valor HKCU\...\Run; opção em Configurações). Validação no Windows: `docs/TESTE_WINDOWS.md`, item 9.
@@ -98,7 +98,7 @@ pomodoro/
 - [x] Seção "Atualizações" nas Configurações: baixa o instalador, confere SHA-256 e abre a instalação. (0.0.10)
 - [x] Instalador fecha sozinho o app aberto (mutex/evento + taskkill de reserva). (0.0.11)
 - [x] `latest.json` na release para verificar sem o limite da API do GitHub. (próxima versão)
-- [ ] Validar no Windows o fluxo completo de atualização (`docs/TESTE_WINDOWS.md`, item 13).
+- [x] Validar no Windows o fluxo completo de atualização (`docs/TESTE_WINDOWS.md`, item 13).
 
 ## Pontos de atenção
 
