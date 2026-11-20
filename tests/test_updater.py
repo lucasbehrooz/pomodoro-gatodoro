@@ -236,7 +236,7 @@ def test_manager_check_error_visible_or_silent():
 
     h = Harness(check=fail)
     h.manager.check()
-    assert h.manager.state is UpdateState.ERROR and "sem internet" in h.manager.error
+    assert h.manager.state is UpdateState.ERROR and "sem conexão" in h.manager.error
 
     h = Harness(check=fail)
     h.manager.check(silent=True)
@@ -295,3 +295,123 @@ def test_manager_listener_errors_do_not_break_others():
     h.manager.subscribe(lambda: 1 / 0)  # ouvinte com erro não derruba os outros
     h.manager.check()
     assert h.states[-1] is UpdateState.UP_TO_DATE
+
+
+# ---- latest.json e limite da API ----------------------------------------------------
+
+import email.message
+import importlib.util
+import urllib.error
+
+from pomodoro import updater
+from pomodoro.updater import (
+    RateLimitError,
+    describe_check_error,
+    fetch_api,
+    fetch_latest_release,
+    manifest_to_release,
+)
+
+_ROOT = Path(__file__).resolve().parents[1]
+_spec = importlib.util.spec_from_file_location("make_latest_json", _ROOT / "tools" / "make_latest_json.py")
+make_latest_json = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(make_latest_json)
+
+
+def test_manifest_from_tool_gives_same_info_as_api(tmp_path: Path):
+    installer = tmp_path / INSTALLER_NAME
+    installer.write_bytes(PAYLOAD)
+    out = tmp_path / "latest.json"
+    make_latest_json.main(["v0.0.12", str(installer), "--output", str(out)])
+
+    import json
+
+    manifest = json.loads(out.read_text(encoding="utf-8"))
+    assert manifest["version"] == "0.0.12" and manifest["tag"] == "v0.0.12"
+    info = check_for_update("0.0.11", fetch=lambda: manifest_to_release(manifest))
+    assert info == UpdateInfo(
+        version="0.0.12",
+        url="https://github.com/lucasbehrooz/pomodoro-gatodoro/releases/tag/v0.0.12",
+        installer_url=(
+            "https://github.com/lucasbehrooz/pomodoro-gatodoro/releases/download/"
+            f"v0.0.12/{INSTALLER_NAME}"
+        ),
+        installer_size=len(PAYLOAD),
+        installer_sha256=PAYLOAD_SHA,
+    )
+
+
+def test_make_latest_json_bad_args():
+    with pytest.raises(SystemExit):
+        make_latest_json.main(["0.0.1"])
+
+
+def test_fetch_prefers_manifest_and_falls_back_to_api():
+    calls = []
+
+    def manifest(timeout):
+        calls.append("manifest")
+        return {"tag_name": "v1.0.0"}
+
+    def api(timeout):
+        calls.append("api")
+        return {"tag_name": "v0.9.0"}
+
+    assert fetch_latest_release(manifest=manifest, api=api)["tag_name"] == "v1.0.0"
+    assert calls == ["manifest"]
+
+    def missing(timeout):
+        raise urllib.error.HTTPError("u", 404, "Not Found", None, None)
+
+    calls.clear()
+    assert fetch_latest_release(manifest=missing, api=api)["tag_name"] == "v0.9.0"
+    assert calls == ["api"]
+
+
+def _http_error(code: int, **headers: str) -> urllib.error.HTTPError:
+    msg = email.message.Message()
+    for k, v in headers.items():
+        msg[k.replace("_", "-")] = v
+    return urllib.error.HTTPError("u", code, "erro", msg, None)
+
+
+def test_fetch_api_turns_rate_limit_into_rate_limit_error(monkeypatch):
+    def urlopen(*a, **k):
+        raise _http_error(403, x_ratelimit_remaining="0", x_ratelimit_reset="1795213942")
+
+    monkeypatch.setattr(updater.urllib.request, "urlopen", urlopen)
+    with pytest.raises(RateLimitError) as info:
+        fetch_api()
+    assert info.value.reset == 1795213942
+
+
+def test_fetch_api_other_403_is_not_rate_limit(monkeypatch):
+    def urlopen(*a, **k):
+        raise _http_error(403, x_ratelimit_remaining="12")
+
+    monkeypatch.setattr(updater.urllib.request, "urlopen", urlopen)
+    with pytest.raises(urllib.error.HTTPError):
+        fetch_api()
+
+
+def test_describe_check_error():
+    from datetime import datetime
+
+    reset = datetime(2026, 11, 20, 19, 32).timestamp()
+    text = describe_check_error(RateLimitError(reset), now=lambda: reset - 600)
+    assert text == "O GitHub limitou as consultas desta rede por um tempo. Tente de novo depois das 19:32."
+    assert "alguns minutos" in describe_check_error(RateLimitError(None))
+    assert describe_check_error(urllib.error.URLError("dns")) == (
+        "Não foi possível verificar: sem conexão com o GitHub."
+    )
+    assert describe_check_error(KeyError("tag_name")) == "Não foi possível verificar: 'tag_name'"
+
+
+def test_manager_shows_friendly_rate_limit_message():
+    def check(current):
+        raise RateLimitError(None)
+
+    h = Harness(check=check)
+    h.manager.check()
+    assert h.manager.state is UpdateState.ERROR
+    assert h.manager.error.startswith("O GitHub limitou as consultas")

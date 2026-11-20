@@ -2,6 +2,8 @@
 
 Fluxo:
 1. ``check_for_update`` consulta a última release e diz se há versão nova.
+   Lê primeiro o ``latest.json`` publicado na release (link de download, sem
+   limite de consultas) e só usa a API do GitHub como reserva.
 2. ``download_installer`` baixa o ``pomodoro-gatodoro-x64-setup.exe`` para a
    pasta temporária e confere o SHA-256 informado pelo GitHub.
 3. ``launch_installer`` abre o instalador normal (com as telas de sempre). O
@@ -24,9 +26,12 @@ import subprocess
 import sys
 import tempfile
 import threading
+import time
+import urllib.error
 import urllib.request
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 
 from pomodoro import __version__
@@ -37,6 +42,10 @@ REPO = "lucasbehrooz/pomodoro-gatodoro"
 API_URL = f"https://api.github.com/repos/{REPO}/releases/latest"
 RELEASES_URL = f"https://github.com/{REPO}/releases/latest"
 INSTALLER_NAME = "pomodoro-gatodoro-x64-setup.exe"
+MANIFEST_NAME = "latest.json"
+# Download de arquivo da release: servido pelo CDN, fora do limite da API
+# (60 consultas/hora por IP sem login, compartilhado por toda a rede).
+MANIFEST_URL = f"https://github.com/{REPO}/releases/latest/download/{MANIFEST_NAME}"
 USER_AGENT = "pomodoro-gatodoro-updater"
 TIMEOUT_SECONDS = 5.0
 DOWNLOAD_TIMEOUT_SECONDS = 30.0
@@ -48,6 +57,27 @@ _SHA256_RE = re.compile(r"^sha256:([0-9a-f]{64})$")
 
 class UpdateError(Exception):
     """Falha ao baixar ou abrir a atualização. A mensagem é exibível ao usuário."""
+
+
+class RateLimitError(Exception):
+    """A API do GitHub recusou por limite de consultas. reset: quando libera (epoch)."""
+
+    def __init__(self, reset: float | None) -> None:
+        super().__init__("limite de consultas do GitHub")
+        self.reset = reset
+
+
+def describe_check_error(exc: BaseException, now: Callable[[], float] = time.time) -> str:
+    """Mensagem amigável para falhas de verificação."""
+    if isinstance(exc, RateLimitError):
+        base = "O GitHub limitou as consultas desta rede por um tempo."
+        if exc.reset and exc.reset > now():
+            hour = datetime.fromtimestamp(exc.reset).strftime("%H:%M")
+            return f"{base} Tente de novo depois das {hour}."
+        return f"{base} Tente de novo em alguns minutos."
+    if isinstance(exc, (urllib.error.URLError, OSError)):
+        return "Não foi possível verificar: sem conexão com o GitHub."
+    return f"Não foi possível verificar: {exc}"
 
 
 @dataclass(frozen=True)
@@ -80,14 +110,62 @@ def is_newer(candidate: str, current: str) -> bool:
 # ---- consulta --------------------------------------------------------------
 
 
-def fetch_latest_release(timeout: float = TIMEOUT_SECONDS) -> dict:
-    """JSON da última release publicada (rascunhos e pré-releases ficam de fora)."""
-    request = urllib.request.Request(
-        API_URL,
-        headers={"Accept": "application/vnd.github+json", "User-Agent": USER_AGENT},
-    )
+def manifest_to_release(manifest: dict) -> dict:
+    """Converte o latest.json para o formato da API de releases usado aqui."""
+    installer = manifest.get("installer") or {}
+    sha = str(installer.get("sha256") or "")
+    return {
+        "tag_name": str(manifest["tag"]),
+        "html_url": manifest.get("url"),
+        "assets": [
+            {
+                "name": installer.get("name"),
+                "size": installer.get("size"),
+                "digest": f"sha256:{sha}" if sha else None,
+                "browser_download_url": installer.get("url"),
+            }
+        ],
+    }
+
+
+def _get_json(url: str, timeout: float, headers: dict[str, str] | None = None) -> dict:
+    request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, **(headers or {})})
     with urllib.request.urlopen(request, timeout=timeout) as response:
         return json.load(response)
+
+
+def fetch_manifest(timeout: float = TIMEOUT_SECONDS) -> dict:
+    """latest.json da última release, já no formato da API."""
+    return manifest_to_release(_get_json(MANIFEST_URL, timeout))
+
+
+def fetch_api(timeout: float = TIMEOUT_SECONDS) -> dict:
+    """Última release pela API do GitHub. Limite de consultas vira RateLimitError."""
+    try:
+        return _get_json(API_URL, timeout, {"Accept": "application/vnd.github+json"})
+    except urllib.error.HTTPError as exc:
+        remaining = exc.headers.get("x-ratelimit-remaining") if exc.headers else None
+        if exc.code in (403, 429) and (remaining == "0" or exc.code == 429):
+            reset = exc.headers.get("x-ratelimit-reset")
+            raise RateLimitError(float(reset) if reset and reset.isdigit() else None) from exc
+        raise
+
+
+def fetch_latest_release(
+    timeout: float = TIMEOUT_SECONDS,
+    manifest: Callable[[float], dict] = fetch_manifest,
+    api: Callable[[float], dict] = fetch_api,
+) -> dict:
+    """Última release publicada: latest.json primeiro, API como reserva.
+
+    A reserva cobre releases antigas, que não têm latest.json, e falhas no
+    download do manifesto.
+    """
+    try:
+        return manifest(timeout)
+    except Exception:
+        logger.info("latest.json indisponível; usando a API do GitHub", exc_info=True)
+    return api(timeout)
 
 
 def _installer_asset(data: dict) -> tuple[str | None, int | None, str | None]:
@@ -285,7 +363,7 @@ class UpdateManager:
                 if silent:
                     self._post(lambda: self._set(UpdateState.IDLE))
                 else:
-                    msg = f"Não foi possível verificar: {exc}"
+                    msg = describe_check_error(exc)
                     self._post(lambda: self._set(UpdateState.ERROR, error=msg))
                 return
             if info is None:

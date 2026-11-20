@@ -94,7 +94,8 @@ O build e a release são feitos pelo GitHub Actions (`.github/workflows/release-
 2. confere se a tag bate com a versão em `pyproject.toml` e `src/pomodoro/__init__.py` (se não bater, o build falha);
 3. gera `PomodoroGatodoro.exe` com PyInstaller;
 4. gera `pomodoro-gatodoro-x64-setup.exe` com Inno Setup;
-5. publica os dois arquivos na release, com o texto da seção `[X.Y.Z]` do `CHANGELOG.md`.
+5. gera `latest.json` (versão, tamanho e SHA-256 do instalador) com `tools/make_latest_json.py`;
+6. publica o `.exe`, o instalador e o `latest.json` na release, com o texto da seção `[X.Y.Z]` do `CHANGELOG.md`.
 
 Passos:
 

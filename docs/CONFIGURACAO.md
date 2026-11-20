@@ -53,6 +53,8 @@ Com `check_updates` ligado, o app consulta a última release publicada no GitHub
 
 Sem internet, a verificação ao abrir falha em silêncio.
 
+A consulta usa o arquivo `latest.json` publicado em cada release, baixado pelo link `releases/latest/download/latest.json`. Esse link não tem o limite de 60 consultas por hora da API do GitHub, que vale para toda a rede (mesmo IP). A API só é usada como reserva, para releases antigas sem o arquivo. Se ela também estiver no limite, as Configurações mostram "O GitHub limitou as consultas desta rede por um tempo. Tente de novo depois das HH:MM."
+
 ### Seção "Atualizações" nas Configurações
 
 Mostra a versão instalada e o botão **Verificar atualizações**, que consulta o GitHub na hora (mesmo com `check_updates` desligado ou com a versão ignorada). Havendo versão nova, aparece **Atualizar para X.Y.Z**:

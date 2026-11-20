@@ -99,6 +99,14 @@ jobs:
           echo "--- notas da release:"
           cat release-notes.md
 
+      - name: Gerar latest.json
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        run: |
+          # Lido pelo app para verificar/baixar atualizações sem usar a API do GitHub.
+          python tools/make_latest_json.py "${GITHUB_REF_NAME#v}" dist/pomodoro-gatodoro-x64-setup.exe --output dist/latest.json
+          cat dist/latest.json
+
       - name: Publicar release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v3
@@ -106,4 +114,5 @@ jobs:
           files: |
             dist/PomodoroGatodoro.exe
             dist/pomodoro-gatodoro-x64-setup.exe
+            dist/latest.json
           body_path: release-notes.md

@@ -6,10 +6,13 @@ Cada versão publicada por tag usa a seção correspondente como texto da releas
 ## [Não lançado]
 
 ### Adicionado
+- Cada release publica um `latest.json` com versão, tamanho e SHA-256 do instalador. O app verifica atualizações por ele, sem gastar o limite da API do GitHub.
 
 ### Alterado
+- Workflow usa actions com Node 24 (checkout v7, setup-python v7, upload-artifact v7, action-gh-release v3).
 
 ### Corrigido
+- "Verificar atualizações" falhava com "HTTP Error 403: rate limit exceeded" quando a rede esgotava as 60 consultas/hora da API do GitHub. Agora usa o `latest.json` e, se ainda assim cair no limite, mostra a partir de que horas tentar de novo.
 
 ## [0.0.11]
 
