@@ -26,6 +26,7 @@ RUNNING_MUTEX_NAME = "PomodoroGatodoroRunning"
 QUIT_EVENT_NAME = "PomodoroGatodoroQuit"
 SHOW_EVENT_NAME = "PomodoroGatodoroShow"
 
+ERROR_ACCESS_DENIED = 5
 ERROR_ALREADY_EXISTS = 183
 _INFINITE = 0xFFFFFFFF
 _WAIT_OBJECT_0 = 0
@@ -59,9 +60,19 @@ def _allow_any_foreground() -> None:  # pragma: no cover - só no Windows
     segunda abertura (que acabou de receber o clique do usuário) libera.
     """
     import ctypes
+    from ctypes import wintypes
 
-    asfw_any = -1
-    ctypes.WinDLL("user32").AllowSetForegroundWindow(asfw_any)
+    asfw_any = wintypes.DWORD(0xFFFFFFFF).value  # ASFW_ANY = (DWORD)-1
+    user32 = ctypes.WinDLL("user32", use_last_error=True)
+    user32.AllowSetForegroundWindow.restype = wintypes.BOOL
+    user32.AllowSetForegroundWindow.argtypes = (wintypes.DWORD,)
+    if not user32.AllowSetForegroundWindow(asfw_any):
+        # Comum no .exe onefile: quem chama é o filho do bootloader, que pode não
+        # ter o direito de foreground. A janela aparece, mas talvez atrás.
+        logger.info(
+            "AllowSetForegroundWindow falhou (erro %s); a janela pode não ganhar o foco",
+            ctypes.get_last_error(),
+        )
 
 
 class InstanceSignals:
@@ -115,13 +126,26 @@ class InstanceSignals:
         # Ler o erro logo depois da chamada: é ele que diz se o mutex já existia.
         last_error = self._get_last_error()
         if not self._mutex:
-            logger.warning("CreateMutexW falhou (erro %s); seguindo sem instância única", last_error)
+            if last_error == ERROR_ACCESS_DENIED:
+                # O mutex existe, mas foi criado por uma instância com outros
+                # privilégios (ex.: aberta como administrador pelo instalador).
+                logger.info("Mutex de outra instância sem acesso (elevada?); tratando como aberta")
+                self._already_running = True
+            else:
+                logger.warning(
+                    "CreateMutexW falhou (erro %s); seguindo sem instância única", last_error
+                )
             return
         self._already_running = last_error == ERROR_ALREADY_EXISTS
         if not self._already_running:
             # Reset automático: cada SetEvent acorda a espera uma vez e ela volta
             # a esperar, então dá para reabrir a janela quantas vezes quiser.
             self._show_event = k32.CreateEventW(None, False, False, SHOW_EVENT_NAME)
+            if not self._show_event:
+                logger.warning(
+                    "Evento de mostrar indisponível (erro %s); reabrir não trará a janela",
+                    self._get_last_error(),
+                )
 
     @property
     def already_running(self) -> bool:
@@ -143,7 +167,10 @@ class InstanceSignals:
             # criou, cria com os mesmos parâmetros e ela o encontra sinalizado.
             event = k32.CreateEventW(None, False, False, SHOW_EVENT_NAME)
             if not event:
-                logger.warning("Não foi possível abrir o evento de mostrar a janela")
+                logger.warning(
+                    "Não foi possível abrir o evento de mostrar a janela (erro %s)",
+                    self._get_last_error(),
+                )
                 return False
             ok = bool(k32.SetEvent(event))
             k32.CloseHandle(event)

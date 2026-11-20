@@ -40,6 +40,16 @@ Preparação:
 
 - Resultado: (X) OK  ( ) Falhou  Observação: ______________________
 
+**Atalhos de teclado:**
+1. Com a janela principal em foco, aperte **Espaço** duas vezes: inicia e pausa, como o botão.
+2. Aperte **S** e depois **R** (teste também com Caps Lock ligado): pula e reinicia.
+3. Confira a dica "Espaço: iniciar/pausar · R: reiniciar · S: pular" abaixo dos botões, legível nos três temas.
+4. Abra **Configurações**, clique num campo de duração e digite espaço, `r` e `s`: o texto entra no campo e o timer não muda. Faça o mesmo com a janela de **Estatísticas** em foco.
+5. Teste **Espaço** com Num Lock ligado e desligado.
+6. Segure **Espaço** e depois **S** por uns 2 s: cada um age uma vez só (alterna uma vez; pula um bloco só).
+
+- Atalhos: ( ) OK  ( ) Falhou  Observação: ______________________
+
 ---
 
 ## 3. Bloco concluído: som e toast
@@ -89,6 +99,13 @@ Obs.: se o toast não aparecer, verifique se as notificações do Windows estão
 - Tempo de foco (inclui interrompido): ( ) OK  ( ) Falhou  Observação: ______________________
 - Gráfico Pomodoros/Tempo: ( ) OK  ( ) Falhou  Observação: ______________________
 - Atualiza sozinha: ( ) OK  ( ) Falhou  Observação: ______________________
+
+**Sequência de dias:**
+1. Abra as **Estatísticas** e confira a linha "Sequência: N dias · Recorde: M dias". Se ainda não houver foco concluído hoje, a sequência vai até ontem (não zera só porque o dia começou).
+2. Conclua um foco hoje (primeiro do dia) com a janela aberta: a sequência sobe 1 sozinha. Um foco interrompido (**Pular**) não muda a sequência.
+3. Com 1 dia, o texto fica no singular ("1 dia").
+
+- Sequência e recorde: ( ) OK  ( ) Falhou  Observação: ______________________
 
 ---
 
@@ -161,13 +178,13 @@ Obs.: a pausa do ruído só acontece com o som de alerta ligado (comportamento a
 2. Minimize a janela e abra o app de novo. A janela volta e ganha o foco.
 3. Feche a janela para a bandeja (**X**), clique em outro programa e abra o app de novo. A janela reaparece na frente e com foco, e o timer continua de onde estava.
 4. Repita o passo 3 mais duas vezes: deve funcionar todas as vezes.
-5. Confira no Gerenciador de Tarefas que só há um processo `PomodoroGatodoro.exe` depois das aberturas.
+5. Confira que continua só **um** ícone do gato na bandeja e no Gerenciador de Tarefas só um grupo do Pomodoro. O `.exe` de arquivo único aparece como **dois** processos `PomodoroGatodoro.exe` (o inicializador e o app); isso é normal. Não deve haver quatro.
 
 - Segunda abertura não cria janela nem ícone: ( ) OK  ( ) Falhou  Observação: ______________________
 - Janela minimizada volta: ( ) OK  ( ) Falhou  Observação: ______________________
 - Janela na bandeja volta com foco: ( ) OK  ( ) Falhou  Observação: ______________________
 - Funciona várias vezes seguidas: ( ) OK  ( ) Falhou  Observação: ______________________
-- Um processo só: ( ) OK  ( ) Falhou  Observação: ______________________
+- Um app só (um ícone; no máximo dois processos `PomodoroGatodoro.exe`): ( ) OK  ( ) Falhou  Observação: ______________________
 
 ---
 

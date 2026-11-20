@@ -20,13 +20,13 @@ Regras para todos os itens:
 ## 0.0.12: atualização robusta e uso diário
 
 - [x] **F00 · Verificação por `latest.json`** (já na `main`, commit 6edc9bb). Só falta lançar.
-- [~] **F01 · Uma instância só** (pequeno) ([#1](https://github.com/lucasbehrooz/pomodoro-gatodoro/pull/1))
+- [x] **F01 · Uma instância só** (pequeno) ([#1](https://github.com/lucasbehrooz/pomodoro-gatodoro/pull/1), ajustes em [#4](https://github.com/lucasbehrooz/pomodoro-gatodoro/pull/4))
   - Abrir o app com outro já aberto traz a janela existente para frente e sai, em vez de criar um segundo Pomodoro.
   - Onde: `instance.py` (o mutex `PomodoroGatodoroRunning` já existe; detectar `ERROR_ALREADY_EXISTS` e sinalizar um evento `PomodoroGatodoroShow`), `__main__.py` (escutar e chamar `window.show_window` via `post`).
   - Aceite: segunda abertura não cria janela nem ícone na bandeja; a primeira aparece e ganha foco, mesmo se estava na bandeja.
   - Testes: lógica de "já existe" com kernel32 falso; nomes batendo com o `.iss` continuam passando.
   - Windows: abrir duas vezes pelo atalho; abrir com o app na bandeja.
-- [ ] **F02 · Atalhos de teclado** (pequeno)
+- [~] **F02 · Atalhos de teclado** (pequeno) (#2)
   - Espaço = Iniciar/Pausar, R = Reiniciar, S = Pular, na janela principal. Não disparar quando o foco estiver em campo de texto (diálogos).
   - Onde: `ui/main_window.py` (bind na janela, chamando os mesmos handlers dos botões).
   - Aceite: atalhos funcionam com a janela em foco; botões mostram a dica (ex.: tooltip ou texto "Espaço").
@@ -38,7 +38,7 @@ Regras para todos os itens:
   - Opção `daily_goal` (0 = desligada, padrão 8, faixa 0 a 24). Tela inicial mostra "Hoje: 3/8"; ao bater a meta, uma notificação comemorativa (uma vez por dia).
   - Onde: `config.py`, `ui/settings.py`, `ui/settings_dialog.py`, `ui/controller.py` (contagem do dia e "meta batida"), `ui/main_window.py`, `ui/stats.py` (linha da meta no gráfico de quantidade).
   - Testes: contagem do dia, notificação só uma vez, linha da meta na geometria.
-- [ ] **F04 · Sequência de dias** (pequeno)
+- [~] **F04 · Sequência de dias** (pequeno) (#5)
   - Estatísticas mostram "Sequência: 5 dias" (dias seguidos com pelo menos 1 foco concluído, contando hoje se já houver, senão até ontem) e o recorde.
   - Onde: `storage.py` (consulta de dias com foco), `ui/stats.py` (função pura `streak(days, today)`).
   - Testes: sequência com buraco, hoje sem foco ainda, recorde.
