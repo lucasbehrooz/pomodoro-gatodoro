@@ -6,12 +6,16 @@ Cada versão publicada por tag usa a seção correspondente como texto da releas
 ## [Não lançado]
 
 ### Adicionado
-- Aviso de nova versão: ao abrir, o app consulta o GitHub e mostra "Baixar" / "Ignorar versão" quando há uma release mais nova. Pode ser desligado nas configurações.
-- Build da release falha se a tag não bater com a versão do app.
 
 ### Alterado
 
 ### Corrigido
+
+## [0.0.8]
+
+### Adicionado
+- Aviso de nova versão: ao abrir, o app consulta o GitHub e mostra "Baixar" / "Ignorar versão" quando há uma release mais nova. Pode ser desligado nas configurações.
+- Build da release falha se a tag não bater com a versão do app.
 
 ## [0.0.7]
 
