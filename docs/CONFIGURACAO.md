@@ -37,7 +37,7 @@ Alterações de duração feitas com um timer em andamento valem a partir do pr�
 
 Com `daily_goal` maior que zero, a tela inicial mostra quantos focos você concluiu hoje e a meta, por exemplo "Hoje: 3/8" (com "· meta batida" depois de alcançá-la). Só contam focos concluídos, pelo dia local em que começaram. Com `0`, nada aparece.
 
-No foco que alcança a meta, o app mostra uma notificação comemorativa (se a notificação do Windows estiver ligada). Ela aparece uma vez por dia: o app compara a contagem do dia antes e depois de cada foco concluído, então fechar e abrir o app não repete o aviso. Nas **Estatísticas**, o gráfico de **Pomodoros** ganha uma linha tracejada "Meta N" na altura da meta.
+No foco que alcança a meta, o app mostra uma notificação comemorativa (se a notificação do Windows estiver ligada). Ela aparece uma vez por dia: o app compara a contagem do dia antes e depois de cada foco concluído, então fechar e abrir o app não repete o aviso. Nas **Estatísticas**, o gráfico de **Pomodoros** ganha uma linha tracejada na altura da meta, explicada pela legenda "Meta diária: N" abaixo do gráfico. Mudar a meta nas Configurações atualiza o gráfico aberto na hora.
 
 ## Histórico
 

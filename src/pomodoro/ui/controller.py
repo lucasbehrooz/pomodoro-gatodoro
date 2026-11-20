@@ -141,7 +141,8 @@ class PomodoroController:
         self._block_started_at: Optional[datetime] = None
         self._noise_on = False
         # Focos concluídos hoje: (dia local, contagem). None força nova consulta.
-        self._today_cache: Optional[tuple[date, int]] = None
+        # Contagem None = consulta falhou (desconhecida): a tela mostra 0 e não há comemoração.
+        self._today_cache: Optional[tuple[date, Optional[int]]] = None
         self._goal_celebrated_on: Optional[date] = None
 
     # ---- estado para a UI -----------------------------------------------
@@ -184,16 +185,26 @@ class PomodoroController:
 
     @property
     def today_focus_count(self) -> int:
-        """Focos concluídos hoje (dia local), com cache até o próximo registro ou virada do dia."""
+        """Focos concluídos hoje (dia local); 0 se a consulta falhou."""
+        count = self._today_count_or_none()
+        return 0 if count is None else count
+
+    def _today_count_or_none(self) -> Optional[int]:
+        """Contagem do dia com cache até o próximo registro ou virada do dia.
+
+        None quando a consulta falhou. A falha também fica em cache, para não
+        repetir a consulta (e o log) a cada tick.
+        """
         today = self._now().date()
         cached = self._today_cache
         if cached is not None and cached[0] == today:
             return cached[1]
+        count: Optional[int]
         try:
             count = self._storage.count_completed_focus(today)
         except Exception:
             logger.exception("Falha ao contar os focos de hoje")
-            count = 0
+            count = None
         self._today_cache = (today, count)
         return count
 
@@ -251,7 +262,7 @@ class PomodoroController:
         # O próximo bloco começa contando imediatamente neste instante.
         self._block_started_at = self._now()
         check_goal = event.finished is Phase.FOCUS and finished_started is not None
-        goal_before = self.today_focus_count if check_goal else 0
+        goal_before = self._today_count_or_none() if check_goal else None
         if finished_started is not None:
             self._record(
                 event.finished,
@@ -345,13 +356,18 @@ class PomodoroController:
             message = NEXT_STEP_MESSAGES[event.next]
             self._call("toast", lambda: self._notifier.toast(TOAST_TITLE, message))
 
-    def _maybe_celebrate_goal(self, before: int) -> None:
-        """Comemora a meta diária quando o foco recém-gravado a alcança (uma vez por dia)."""
+    def _maybe_celebrate_goal(self, before: Optional[int]) -> None:
+        """Comemora a meta diária quando o foco recém-gravado a alcança (uma vez por dia).
+
+        Contagem desconhecida (falha do banco) antes ou depois não comemora:
+        sem saber o valor anterior, a meta pode já ter sido batida.
+        """
         goal = self._config.daily_goal
         today = self._now().date()
-        if self._goal_celebrated_on == today:
+        if self._goal_celebrated_on == today or before is None:
             return
-        if not goal_just_reached(before, self.today_focus_count, goal):
+        after = self._today_count_or_none()
+        if after is None or not goal_just_reached(before, after, goal):
             return
         self._goal_celebrated_on = today
         if self._config.toast_enabled:

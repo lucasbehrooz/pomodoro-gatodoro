@@ -157,7 +157,7 @@ class MainWindow(ctk.CTk):
 
         # "Hoje: 3/8"; fica vazio com a meta diária desligada.
         self._goal_label = ctk.CTkLabel(self, text="")
-        self._goal_label.pack(pady=(0, 4))
+        self._goal_label.pack(pady=0)
 
         self._cat = CatAnimation(self)
         self._cat.pack(pady=(0, 0))
@@ -304,6 +304,7 @@ class MainWindow(ctk.CTk):
         self._status_label.configure(text=message)
         self._set_theme(new.theme)
         self._refresh()
+        self._refresh_stats_if_open()  # a linha da meta acompanha a meta nova na hora
 
     # ---- aviso de nova versão -------------------------------------------
 

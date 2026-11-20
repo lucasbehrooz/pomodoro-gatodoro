@@ -661,3 +661,44 @@ def test_goal_count_failure_does_not_break_timer(cfg, clock, notifier):
     finish_focus(c, clock)
     assert c.phase is Phase.SHORT_BREAK
     assert goal_toasts(notifier) == []
+
+
+class FlakyCountStorage(Storage):
+    """Storage real cuja contagem falha enquanto ``broken`` for True."""
+
+    broken = False
+
+    def count_completed_focus(self, day):
+        if self.broken:
+            raise sqlite3.OperationalError("banco travado")
+        return super().count_completed_focus(day)
+
+
+def test_unknown_count_does_not_trigger_false_celebration(cfg, tmp_path, clock, notifier):
+    storage = FlakyCountStorage(tmp_path / "flaky.db")
+    try:
+        seed_focus(storage, DAY, 3)  # meta 3 já batida em outra execução
+        storage.broken = True
+        c = make(replace(cfg, daily_goal=3), storage, clock, notifier=notifier)
+        assert c.daily_goal_text == "Hoje: 0/3"  # desconhecida: mostra 0
+        storage.broken = False  # o banco volta antes do foco terminar
+        finish_focus(c, clock)
+        assert goal_toasts(notifier) == []
+        assert c.daily_goal_text == "Hoje: 4/3 · meta batida"
+    finally:
+        storage.close()
+
+
+def test_unknown_count_after_record_does_not_celebrate(cfg, tmp_path, clock, notifier):
+    storage = FlakyCountStorage(tmp_path / "flaky.db")
+    try:
+        c = make(replace(cfg, daily_goal=1), storage, clock, notifier=notifier)
+        assert c.today_focus_count == 0
+        c.start()
+        clock.advance(c.remaining_seconds)
+        storage.broken = True
+        c.tick()
+        assert goal_toasts(notifier) == []
+        assert c.phase is Phase.SHORT_BREAK
+    finally:
+        storage.close()

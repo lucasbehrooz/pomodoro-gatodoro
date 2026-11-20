@@ -86,6 +86,13 @@ ESCURO = Palette(
 CHART_GOAL_LIGHT = "#8A4B00"
 CHART_GOAL_DARK = "#F0AD4E"
 
+def goal_line_color(p: Palette) -> str | tuple[str, str]:
+    """Cor da meta para widgets CTk: a da paleta, ou o par (claro, escuro) no tema padrão."""
+    if p.goal_line is not None:
+        return p.goal_line
+    return (CHART_GOAL_LIGHT, CHART_GOAL_DARK)
+
+
 THEMES: dict[str, Palette] = {
     "padrao": PADRAO,
     "feminino": FEMININO,

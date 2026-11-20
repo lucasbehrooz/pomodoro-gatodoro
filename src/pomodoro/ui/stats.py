@@ -24,6 +24,7 @@ from pomodoro.ui.theme import (
     CHART_GOAL_LIGHT,
     DEFAULT_THEME,
     Palette,
+    goal_line_color,
     apply_accent_button,
     apply_card,
     apply_option_menu,
@@ -237,6 +238,17 @@ def show_goal_line(metric: str, goal: int) -> bool:
     return metric == "count" and goal > 0
 
 
+def goal_legend_text(metric: str, goal: int) -> str:
+    """Legenda da linha da meta, exibida abaixo do gráfico (fora da área das barras).
+
+    Fica fora do canvas para nunca cobrir o número em cima de uma barra que
+    bateu a meta. Vazia quando a linha não aparece.
+    """
+    if not show_goal_line(metric, goal):
+        return ""
+    return f"- - -  Meta diária: {goal}"
+
+
 # ---- janela -----------------------------------------------------------------
 
 _LIGHT = {"bg": "#dbdbdb", "bar": "#3b8ed0", "text": "#000000", "goal": CHART_GOAL_LIGHT}
@@ -338,6 +350,8 @@ class StatsWindow(ctk.CTkToplevel):
             bd=0,
         )
         self._canvas.pack()
+        # Legenda da linha da meta: empacotada só quando a linha aparece.
+        self._goal_legend = ctk.CTkLabel(frame, text="", anchor="w")
 
         self._close_btn = ctk.CTkButton(frame, text="Fechar", width=90, command=self.destroy)
         self._close_btn.pack(anchor="e", pady=(12, 0))
@@ -352,6 +366,7 @@ class StatsWindow(ctk.CTkToplevel):
         for label in (self._today_label, self._week_label, self._period_label):
             apply_text(label, palette)
         apply_text(self._caption, palette, muted=True)
+        self._goal_legend.configure(text_color=goal_line_color(palette))
         apply_option_menu(self._period_menu, palette)
         apply_option_menu(self._metric_menu, palette)
         apply_accent_button(self._close_btn, palette)
@@ -377,6 +392,7 @@ class StatsWindow(ctk.CTkToplevel):
 
         series = build_period_series(self._storage, today, period, self._metric_key)
         self._draw_chart(series)
+        self._sync_goal_legend()
 
     # ---- internos ---------------------------------------------------------
 
@@ -395,6 +411,14 @@ class StatsWindow(ctk.CTkToplevel):
     def _on_metric_selected(self, label: str) -> None:
         self._metric_key = METRIC_LABELS[label]
         self.refresh()
+
+    def _sync_goal_legend(self) -> None:
+        text = goal_legend_text(self._metric_key, self._goal())
+        self._goal_legend.configure(text=text)
+        if text and not self._goal_legend.winfo_manager():
+            self._goal_legend.pack(anchor="w", pady=(4, 0), before=self._close_btn)
+        elif not text and self._goal_legend.winfo_manager():
+            self._goal_legend.pack_forget()
 
     def _draw_chart(self, series: list[tuple[date, int]]) -> None:
         dark = ctk.get_appearance_mode() == "Dark"
@@ -417,6 +441,21 @@ class StatsWindow(ctk.CTkToplevel):
             base,
             fill=colors["text"],
         )
+        goal_y = goal_line_y(goal, scale, CANVAS_HEIGHT, CANVAS_PADDING)
+        if goal_y is not None:
+            # Tracejada e explicada pela legenda abaixo do gráfico (não só pela cor).
+            # Desenhada antes das barras e dos números, que ficam por cima dela.
+            # Sem texto no canvas: nada cobre o número das barras.
+            canvas.create_line(
+                CANVAS_PADDING // 2,
+                goal_y,
+                CANVAS_WIDTH - CANVAS_PADDING // 2,
+                goal_y,
+                fill=colors["goal"],
+                dash=(4, 3),
+                width=2,
+                tags=("goal_line",),
+            )
 
         step = label_step(len(series))
         for index, ((day, count), (x0, y0, x1, y1)) in enumerate(zip(series, rects, strict=True)):
@@ -434,22 +473,3 @@ class StatsWindow(ctk.CTkToplevel):
                     cx, base + 12, text=f"{day:%d/%m}", anchor="center", fill=colors["text"]
                 )
 
-        goal_y = goal_line_y(goal, scale, CANVAS_HEIGHT, CANVAS_PADDING)
-        if goal_y is not None:
-            # Tracejada e com rótulo: não depende só da cor para ser entendida.
-            canvas.create_line(
-                CANVAS_PADDING // 2,
-                goal_y,
-                CANVAS_WIDTH - CANVAS_PADDING // 2,
-                goal_y,
-                fill=colors["goal"],
-                dash=(4, 3),
-                width=2,
-            )
-            canvas.create_text(
-                CANVAS_WIDTH - CANVAS_PADDING // 2,
-                goal_y - 2,
-                text=f"Meta {goal}",
-                anchor="se",
-                fill=colors["goal"],
-            )

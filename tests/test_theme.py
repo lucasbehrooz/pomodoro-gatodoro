@@ -26,8 +26,11 @@ from pomodoro.ui.theme import (
     PADRAO,
     THEME_LABELS,
     THEMES,
+    CHART_GOAL_DARK,
+    CHART_GOAL_LIGHT,
     Palette,
     get_palette,
+    goal_line_color,
     is_valid_theme,
     theme_key_from_label,
     theme_label,
@@ -303,3 +306,9 @@ def test_windows_build_in_every_theme(tmp_path: Path):
     finally:
         window.destroy()
         storage.close()
+
+
+def test_goal_line_color_for_widgets():
+    assert goal_line_color(PADRAO) == (CHART_GOAL_LIGHT, CHART_GOAL_DARK)
+    assert goal_line_color(FEMININO) == FEMININO.goal_line
+    assert goal_line_color(ESCURO) == ESCURO.goal_line
