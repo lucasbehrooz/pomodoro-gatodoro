@@ -27,6 +27,7 @@ Um timer Pomodoro para Windows com um gatinho que faz pãozinho enquanto você e
 - **Pausar:** clique em **Pausar** e depois em **Iniciar** para continuar.
 - **Reiniciar:** volta o bloco atual ao começo.
 - **Pular:** passa para o próximo bloco.
+- **Atalhos de teclado:** com a janela em foco, **Espaço** inicia/pausa, **R** reinicia e **S** pula.
 - **Configurações:** ajuste os tempos, os sons, o ruído, o tema e a inicialização com o Windows.
 - **Estatísticas:** veja os pomodoros concluídos e o tempo de foco por dia, na semana ou no mês.
 

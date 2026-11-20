@@ -40,6 +40,16 @@ Preparação:
 
 - Resultado: (X) OK  ( ) Falhou  Observação: ______________________
 
+**Atalhos de teclado:**
+1. Com a janela principal em foco, aperte **Espaço** duas vezes: inicia e pausa, como o botão.
+2. Aperte **S** e depois **R** (teste também com Caps Lock ligado): pula e reinicia.
+3. Confira a dica "Espaço: iniciar/pausar · R: reiniciar · S: pular" abaixo dos botões, legível nos três temas.
+4. Abra **Configurações**, clique num campo de duração e digite espaço, `r` e `s`: o texto entra no campo e o timer não muda. Faça o mesmo com a janela de **Estatísticas** em foco.
+5. Teste **Espaço** com Num Lock ligado e desligado.
+6. Segure **Espaço** e depois **S** por uns 2 s: cada um age uma vez só (alterna uma vez; pula um bloco só).
+
+- Atalhos: ( ) OK  ( ) Falhou  Observação: ______________________
+
 ---
 
 ## 3. Bloco concluído: som e toast
