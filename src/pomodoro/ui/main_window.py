@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import logging
 import queue
+import tkinter
 import webbrowser
 from collections.abc import Callable
 from dataclasses import replace
@@ -22,6 +23,7 @@ from pomodoro.ui.cat import CatAnimation
 from pomodoro.ui.icon import apply_window_icon
 from pomodoro.ui.controller import ApplyStatus, PomodoroController, format_mmss
 from pomodoro.ui.settings_dialog import SettingsDialog
+from pomodoro.ui.shortcuts import HINT_TEXT, ShortcutAction, shortcut_action
 from pomodoro.ui.stats import StatsWindow
 from pomodoro.updater import UpdateManager, UpdateState
 from pomodoro.ui.theme import (
@@ -37,7 +39,7 @@ logger = logging.getLogger(__name__)
 
 TICK_MS = 200
 WINDOW_WIDTH = 340
-WINDOW_HEIGHT = 500
+WINDOW_HEIGHT = 520
 UPDATE_BANNER_HEIGHT = 76  # altura extra da janela enquanto o aviso de versão aparece
 
 MSG_SETTINGS_APPLIED = "Configurações salvas e aplicadas."
@@ -103,6 +105,7 @@ class MainWindow(ctk.CTk):
         self._build()
         self._apply_palette()
         self.protocol("WM_DELETE_WINDOW", self._on_close_requested)
+        self.bind("<KeyPress>", self._on_key, add="+")
         if self._updates is not None:
             self._updates.subscribe(self._sync_update_banner)
 
@@ -158,6 +161,10 @@ class MainWindow(ctk.CTk):
         self._reset_btn.grid(row=0, column=1, padx=4)
         self._skip_btn = ctk.CTkButton(buttons, text="Pular", width=100, command=self._on_skip)
         self._skip_btn.grid(row=0, column=2, padx=4)
+        self._hint_label = ctk.CTkLabel(
+            buttons, text=HINT_TEXT, height=18, font=ctk.CTkFont(size=11)
+        )
+        self._hint_label.grid(row=1, column=0, columnspan=3, pady=(4, 0))
 
         self._pending_label = ctk.CTkLabel(self, text="", text_color="#f0ad4e")
         self._pending_label.pack(pady=(4, 0))
@@ -172,6 +179,7 @@ class MainWindow(ctk.CTk):
         apply_text(self._time_label, p)
         apply_text(self._cycle_label, p, muted=True)
         apply_text(self._status_label, p, muted=True)
+        apply_text(self._hint_label, p, muted=True)
         self._pending_label.configure(text_color=p.warning)
         apply_text(self._update_label, p)
         for btn in (
@@ -208,6 +216,30 @@ class MainWindow(ctk.CTk):
         self._controller.skip()
         self._refresh()
         self._refresh_stats_if_open()
+
+    def _on_key(self, event: tkinter.Event) -> str | None:
+        """Atalhos de teclado: chamam os mesmos handlers dos botões."""
+        widget = event.widget
+        try:
+            widget_class = widget.winfo_class()
+            in_main_window = widget.winfo_toplevel() is self
+        except (AttributeError, tkinter.TclError):  # widget destruído ou nome em texto
+            return None
+        action = shortcut_action(
+            event.keysym,
+            widget_class=widget_class,
+            in_main_window=in_main_window,
+            state=int(event.state) if isinstance(event.state, int) else 0,
+        )
+        if action is None:
+            return None
+        handlers = {
+            ShortcutAction.TOGGLE: self._on_toggle,
+            ShortcutAction.RESET: self._on_reset,
+            ShortcutAction.SKIP: self._on_skip,
+        }
+        handlers[action]()
+        return "break"
 
     def _open_settings(self) -> None:
         dialog = self._settings_dialog

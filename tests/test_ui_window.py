@@ -13,6 +13,7 @@ import pytest
 from pomodoro.config import Config
 from pomodoro.storage import Storage
 from pomodoro.ui.controller import PomodoroController
+from pomodoro.ui.shortcuts import HINT_TEXT
 
 pytestmark = pytest.mark.skipif(
     os.environ.get("POMODORO_UI_SMOKE") != "1",
@@ -147,6 +148,113 @@ def test_open_stats_refresh_after_skip(tmp_path: Path):
         window._on_skip()
         window._on_reset()
         assert refreshed == [True, True]
+    finally:
+        window.quit_app()
+        storage.close()
+
+
+def _make_window(tmp_path: Path):
+    try:
+        from pomodoro.ui.main_window import MainWindow
+    except ImportError as exc:  # pragma: no cover
+        pytest.skip(f"customtkinter indisponível: {exc}")
+    storage = Storage(tmp_path / "pomodoro.db")
+    controller = PomodoroController(Config(), storage)
+    try:
+        window = MainWindow(controller, save=lambda c: None)
+    except Exception as exc:  # sem display
+        storage.close()
+        pytest.skip(f"sem display para a janela: {exc}")
+    return window, controller, storage
+
+
+def _press(widget, key: str) -> None:
+    widget.event_generate(f"<KeyPress-{key}>")
+    widget.update()
+
+
+def test_keyboard_shortcuts_call_button_handlers(tmp_path: Path):
+    window, controller, storage = _make_window(tmp_path)
+    calls: list[str] = []
+    try:
+        for name in ("_on_toggle", "_on_reset", "_on_skip"):
+            original = getattr(window, name)
+
+            def wrapper(original=original, name=name):
+                calls.append(name)
+                original()
+
+            setattr(window, name, wrapper)
+        window.update()
+        target = window._time_label  # widget comum da janela principal
+
+        _press(target, "space")
+        assert controller.is_running
+        assert window._toggle_btn.cget("text") == "Pausar"
+        _press(target, "space")
+        assert not controller.is_running
+        _press(target, "s")
+        _press(target, "S")
+        _press(target, "r")
+        _press(target, "R")
+        _press(target, "x")  # sem atalho
+        assert calls == [
+            "_on_toggle",
+            "_on_toggle",
+            "_on_skip",
+            "_on_skip",
+            "_on_reset",
+            "_on_reset",
+        ]
+        assert window._hint_label.cget("text") == HINT_TEXT
+    finally:
+        window.quit_app()
+        storage.close()
+
+
+def test_keyboard_shortcuts_ignored_in_text_fields_and_child_windows(tmp_path: Path):
+    import customtkinter as ctk
+
+    window, controller, storage = _make_window(tmp_path)
+    try:
+        entry = ctk.CTkEntry(window)
+        entry.pack()
+        child = ctk.CTkToplevel(window)
+        child_label = ctk.CTkLabel(child, text="filha")
+        child_label.pack()
+        child_entry = ctk.CTkEntry(child)
+        child_entry.pack()
+        window.update()
+
+        for widget in (entry._entry, child_label, child_entry._entry, child):
+            _press(widget, "space")
+            _press(widget, "s")
+            _press(widget, "r")
+        assert not controller.is_running
+        assert controller.completed_focus_count == 0
+        assert window._toggle_btn.cget("text") == "Iniciar"
+
+        # Digitar no campo continua funcionando.
+        entry._entry.focus_force()
+        entry._entry.insert("end", "rs ")
+        assert entry.get() == "rs "
+        child.destroy()
+    finally:
+        window.quit_app()
+        storage.close()
+
+
+@pytest.mark.parametrize("theme", ["padrao", "feminino", "escuro"])
+def test_hint_follows_theme(tmp_path: Path, theme: str):
+    from pomodoro.ui.theme import get_palette
+
+    window, controller, storage = _make_window(tmp_path)
+    try:
+        window._set_theme(theme)
+        window.update()
+        palette = get_palette(theme)
+        if palette.muted is not None:
+            assert window._hint_label.cget("text_color") == palette.muted
     finally:
         window.quit_app()
         storage.close()
