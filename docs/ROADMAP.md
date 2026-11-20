@@ -45,8 +45,8 @@ Regras para todos os itens:
 
 ## 0.0.14: ritmo dos blocos
 
-- [ ] **F05 · Iniciar blocos automaticamente** (pequeno)
-  - Opções `auto_start_breaks` e `auto_start_focus` (padrão: desligadas). Ao terminar um bloco, o próximo já começa contando.
+- [~] **F05 · Iniciar blocos automaticamente** (pequeno)
+  - Opções `auto_start_breaks` e `auto_start_focus` (padrão: ligadas, que é o comportamento atual: ao terminar um bloco, o próximo já começa contando). Desligada, após o fim natural do bloco o próximo fica pausado com a duração cheia esperando **Iniciar**; o início da sessão é marcado nesse clique. Pular e Reiniciar não mudam.
   - Onde: `config.py`, formulário, `ui/controller.py` (após transição).
   - Testes: transição com e sem auto-início; sessão gravada corretamente.
 - [ ] **F06 · Aviso antes do fim** (pequeno)

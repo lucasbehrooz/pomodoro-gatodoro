@@ -71,3 +71,39 @@ def test_invalid_update_fields_fall_back_to_defaults(tmp_path):
     cfg = load_config(p)
     assert cfg.check_updates is True
     assert cfg.skipped_version == ""
+
+
+# ---- auto-início dos blocos (F05) --------------------------------------
+
+
+def test_auto_start_defaults_preserve_current_behavior():
+    cfg = Config()
+    assert cfg.auto_start_breaks is True
+    assert cfg.auto_start_focus is True
+
+
+def test_auto_start_roundtrip(tmp_path):
+    p = tmp_path / "config.json"
+    save_config(Config(auto_start_breaks=False, auto_start_focus=False), p)
+    cfg = load_config(p)
+    assert cfg.auto_start_breaks is False
+    assert cfg.auto_start_focus is False
+
+
+def test_auto_start_missing_uses_default(tmp_path):
+    p = tmp_path / "config.json"
+    p.write_text('{"focus_minutes": 30}', encoding="utf-8")
+    cfg = load_config(p)
+    assert cfg.auto_start_breaks is True
+    assert cfg.auto_start_focus is True
+
+
+@pytest.mark.parametrize("value", ['"sim"', "1", "null", "[]"])
+def test_auto_start_invalid_uses_default(tmp_path, value):
+    p = tmp_path / "config.json"
+    p.write_text(
+        '{"auto_start_breaks": %s, "auto_start_focus": %s}' % (value, value), encoding="utf-8"
+    )
+    cfg = load_config(p)
+    assert cfg.auto_start_breaks is True
+    assert cfg.auto_start_focus is True

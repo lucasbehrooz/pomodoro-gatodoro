@@ -59,6 +59,19 @@ Repita com os toggles desligados (um por vez, com o mesmo minuto de espera) e co
 
 Obs.: se o toast não aparecer, verifique se as notificações do Windows estão ativas (Configurações → Sistema → Notificações) e se o modo "Não perturbe" está desligado.
 
+### 3.1. Iniciar blocos automaticamente
+
+**Passos:** com foco e pausa curta em `1` min, ligue o **Ruído marrom**. Em **Configurações**, desmarque **Iniciar pausas automaticamente** e deixe **Iniciar focos automaticamente** marcado. Salve, clique em **Reiniciar** e **Iniciar**. Aguarde o fim natural do foco. Espere uns 20 s e clique em **Iniciar**. Aguarde o fim da pausa. Depois marque as duas opções de novo e repita.
+
+**Esperado:**
+- Desmarcada: ao fim do foco tocam som e toast, a fase muda para "Pausa curta" mostrando `01:00` parado, o botão volta para **Iniciar**, o gato para e o ruído some. Ao clicar em **Iniciar**, a pausa conta normalmente.
+- Ao fim da pausa (focos automáticos ligados), o foco já começa contando sozinho.
+- Nas **Estatísticas**, a pausa aparece com início no horário do clique em **Iniciar**, não no fim do foco.
+- Com as duas marcadas (padrão), tudo funciona como antes: o próximo bloco sempre começa contando.
+
+- Pausa esperando Iniciar: ( ) OK  ( ) Falhou  Observação: ______________________
+- Padrão (tudo automático): ( ) OK  ( ) Falhou  Observação: ______________________
+
 ---
 
 ## 4. Histórico e estatísticas

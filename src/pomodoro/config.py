@@ -42,6 +42,11 @@ class Config:
     # Versão que o usuário pediu para não ser avisado de novo (ex.: "0.0.8")
     skipped_version: str = ""
 
+    # Ritmo: ao terminar um bloco, o próximo já começa contando (ver ui/controller.py).
+    # Desligado, o próximo bloco fica pausado com a duração cheia esperando Iniciar.
+    auto_start_breaks: bool = True
+    auto_start_focus: bool = True
+
 
 def config_dir() -> Path:
     """Diretório de dados do app. Em Windows usa %APPDATA%; fora dele, ~/.config."""
@@ -77,6 +82,9 @@ def load_config(path: Path | None = None) -> Config:
         config = replace(config, check_updates=True)
     if not isinstance(config.skipped_version, str):
         config = replace(config, skipped_version="")
+    for name in ("auto_start_breaks", "auto_start_focus"):
+        if not isinstance(getattr(config, name), bool):
+            config = replace(config, **{name: True})
     return config
 
 

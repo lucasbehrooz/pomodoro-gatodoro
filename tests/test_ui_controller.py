@@ -495,3 +495,131 @@ def test_shutdown_stops_noise(storage, clock, cfg):
     c.start()
     c.shutdown()
     assert noise.calls[-1] == ("stop", NOISE_FADE_SECONDS)
+
+
+# ---- auto-início dos blocos (F05) --------------------------------------
+
+
+@pytest.mark.parametrize("auto", [True, False])
+def test_focus_end_to_short_break_respects_auto_start_breaks(cfg, storage, clock, auto):
+    c = make(replace(cfg, auto_start_breaks=auto), storage, clock)
+    c.start()
+    clock.advance(60)
+    event = c.tick()
+    assert event is not None and event.next is Phase.SHORT_BREAK
+    assert c.phase is Phase.SHORT_BREAK
+    assert c.is_running is auto
+    assert c.remaining_seconds == 60
+    # Foco concluído é gravado igual nos dois casos.
+    assert rows(storage) == [("focus", 60, 1, BASE.isoformat())]
+    clock.advance(25)
+    assert c.remaining_seconds == (35 if auto else 60)
+
+
+@pytest.mark.parametrize("auto", [True, False])
+def test_focus_end_to_long_break_respects_auto_start_breaks(cfg, storage, clock, auto):
+    c = make(replace(cfg, auto_start_breaks=auto, auto_start_focus=True), storage, clock)
+    c.start()
+    clock.advance(60)
+    c.tick()  # foco -> pausa curta
+    if not auto:
+        c.start()
+    clock.advance(60)
+    c.tick()  # pausa curta -> foco (auto_start_focus ligado)
+    assert c.is_running
+    clock.advance(60)
+    event = c.tick()
+    assert event is not None and event.next is Phase.LONG_BREAK
+    assert c.is_running is auto
+    assert c.remaining_seconds == 120
+
+
+@pytest.mark.parametrize("auto", [True, False])
+def test_break_end_to_focus_respects_auto_start_focus(cfg, storage, clock, auto):
+    c = make(replace(cfg, auto_start_focus=auto), storage, clock)
+    c.start()
+    clock.advance(60)
+    c.tick()
+    clock.advance(60)
+    event = c.tick()
+    assert event is not None and event.next is Phase.FOCUS
+    assert c.phase is Phase.FOCUS
+    assert c.is_running is auto
+    assert c.remaining_seconds == 60
+    assert rows(storage)[-1] == (
+        "short_break",
+        60,
+        1,
+        (BASE + timedelta(seconds=60)).isoformat(),
+    )
+
+
+def test_auto_start_off_records_next_block_from_resume_time(cfg, storage, clock):
+    c = make(replace(cfg, auto_start_breaks=False), storage, clock)
+    c.start()
+    clock.advance(60)
+    c.tick()  # pausa curta fica esperando Iniciar
+    clock.advance(300)  # tempo parado não conta nem vira sessão
+    assert c.tick() is None
+    c.start()  # início marcado aqui: BASE + 360 s
+    clock.advance(60)
+    event = c.tick()
+    assert event is not None and event.finished is Phase.SHORT_BREAK
+    assert rows(storage) == [
+        ("focus", 60, 1, BASE.isoformat()),
+        ("short_break", 60, 1, (BASE + timedelta(seconds=360)).isoformat()),
+    ]
+
+
+def test_auto_start_off_reset_while_waiting_records_nothing_extra(cfg, storage, clock):
+    c = make(replace(cfg, auto_start_breaks=False), storage, clock)
+    c.start()
+    clock.advance(60)
+    c.tick()
+    clock.advance(30)
+    c.reset()
+    assert c.phase is Phase.IDLE
+    assert rows(storage) == [("focus", 60, 1, BASE.isoformat())]
+
+
+def test_auto_start_off_stops_noise_and_resumes_on_start(cfg, storage, clock):
+    noise = FakeNoise()
+    c = make(
+        replace(
+            cfg,
+            brown_noise_enabled=True,
+            brown_noise_focus_only=False,
+            auto_start_breaks=False,
+        ),
+        storage,
+        clock,
+        noise=noise,
+    )
+    c.start()
+    assert c.noise_playing
+    clock.advance(60)
+    c.tick()
+    assert not c.is_running
+    assert not c.noise_playing
+    assert ("stop", NOISE_FADE_SECONDS) in noise.calls
+    c.start()
+    assert c.noise_playing
+    assert noise.names().count("start") == 2
+
+
+def test_auto_start_off_does_not_change_skip(cfg, storage, clock):
+    c = make(replace(cfg, auto_start_breaks=False, auto_start_focus=False), storage, clock)
+    c.start()
+    clock.advance(10)
+    c.skip()
+    assert c.phase is Phase.SHORT_BREAK
+    assert c.is_running  # Pular preserva o estado de execução
+
+
+def test_auto_start_off_still_notifies_transition(cfg, storage, clock, notifier):
+    c = make(replace(cfg, auto_start_breaks=False), storage, clock, notifier=notifier)
+    c.start()
+    clock.advance(60)
+    c.tick()
+    assert notifier.alerts == 1
+    assert notifier.toasts == [("Pomodoro Gatodoro", "Hora da pausa")]

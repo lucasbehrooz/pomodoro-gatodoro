@@ -120,3 +120,18 @@ def test_update_status_text():
     assert update_status_text(m).startswith("Baixando… 50%")
     m.state, m.error = UpdateState.ERROR, "deu ruim"
     assert update_status_text(m) == "deu ruim"
+
+
+def test_auto_start_checkboxes_are_built_and_parsed():
+    from pomodoro.ui.settings import BOOL_FIELDS, LABELS
+
+    assert "auto_start_breaks" in BOOL_FIELDS
+    assert "auto_start_focus" in BOOL_FIELDS
+    assert LABELS["auto_start_breaks"] == "Iniciar pausas automaticamente"
+    assert LABELS["auto_start_focus"] == "Iniciar focos automaticamente"
+    values = form_values(Config(auto_start_breaks=False))
+    assert values["auto_start_breaks"] is False
+    assert values["auto_start_focus"] is True
+    new = build_config(valid_raw(auto_start_breaks=False, auto_start_focus=False), Config())
+    assert new.auto_start_breaks is False
+    assert new.auto_start_focus is False
