@@ -62,6 +62,9 @@ class Config:
     # Tarefa atual (opcional, para rótulo no histórico)
     current_task: str = ""
 
+    # Mostrar campo de entrada de tarefa na tela inicial
+    show_task_field: bool = False
+
 
 def config_dir() -> Path:
     """Diretório de dados do app. Em Windows usa %APPDATA%; fora dele, ~/.config."""
@@ -103,6 +106,8 @@ def load_config(path: Path | None = None) -> Config:
         config = replace(config, skipped_version="")
     if not isinstance(config.current_task, str):
         config = replace(config, current_task="")
+    if not isinstance(config.show_task_field, bool):
+        config = replace(config, show_task_field=False)
     if not _valid_pre_end_warning(config.pre_end_warning_seconds):
         config = replace(config, pre_end_warning_seconds=60)
     for name in ("auto_start_breaks", "auto_start_focus"):
