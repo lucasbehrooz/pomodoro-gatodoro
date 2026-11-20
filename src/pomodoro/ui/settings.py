@@ -28,6 +28,7 @@ BOOL_FIELDS: tuple[str, ...] = (
     "check_updates",
     "auto_start_breaks",
     "auto_start_focus",
+    "show_task_field",
 )
 
 LABELS: dict[str, str] = {
@@ -48,6 +49,7 @@ LABELS: dict[str, str] = {
     "auto_start_breaks": "Iniciar pausas automaticamente",
     "auto_start_focus": "Iniciar focos automaticamente",
     "pre_end_warning_seconds": "Aviso antes do fim do foco (s, 0 = desligado)",
+    "show_task_field": "Mostrar campo de tarefa na tela inicial",
 }
 
 
