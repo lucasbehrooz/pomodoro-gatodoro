@@ -8,6 +8,7 @@ Um timer Pomodoro para Windows com um gatinho que faz pãozinho enquanto você e
 - **Ruído marrom de fundo:** para ajudar a manter a concentração.
 - **Avisos:** som e notificação do Windows quando um bloco termina, e um som curto opcional pouco antes do fim do foco.
 - **Histórico:** veja quantos pomodoros você fez hoje, na semana ou no mês.
+- **Meta diária:** acompanhe "Hoje: 3/8" na tela inicial e ganhe uma comemoração ao bater a meta.
 - **Bandeja:** o app pode ficar minimizado no canto da tela.
 - **Temas:** Padrão, Rosa e Escuro.
 

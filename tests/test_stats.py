@@ -17,6 +17,10 @@ from pomodoro.timer import Phase
 from pomodoro.ui.stats import (
     bar_geometry,
     bar_label,
+    chart_scale,
+    goal_legend_text,
+    goal_line_y,
+    show_goal_line,
     build_period_series,
     format_duration_short,
     build_week_series,
@@ -256,6 +260,59 @@ def test_negative_values_are_treated_as_zero():
     assert heights(rects) == [0, 80]
 
 
+# ---- linha da meta diária ----------------------------------------------------
+
+
+def test_chart_scale_includes_goal():
+    assert chart_scale([2, 5, 3]) == 5
+    assert chart_scale([2, 5, 3], goal=8) == 8
+    assert chart_scale([2, 9, 3], goal=8) == 9
+    assert chart_scale([], goal=0) == 0
+
+
+def test_goal_line_shares_scale_with_bars():
+    # base em 100, área interna 90 px; escala 10 -> meta 5 na metade (y = 100 - 45)
+    values = [0, 5, 10]
+    scale = chart_scale(values, goal=5)
+    rects = bar_geometry(values, width=100, height=110, padding=10, scale=scale)
+    y = goal_line_y(5, scale, height=110, padding=10)
+
+    assert y == 55
+    assert rects[1][1] == y  # a barra que bateu a meta encosta na linha
+
+
+def test_goal_above_all_bars_sets_top_of_chart():
+    values = [2, 4]
+    scale = chart_scale(values, goal=8)
+    rects = bar_geometry(values, width=100, height=110, padding=10, scale=scale)
+
+    assert goal_line_y(8, scale, height=110, padding=10) == 10  # topo da área
+    assert heights(rects) == [22, 45]  # barras ficam proporcionais à meta
+
+
+def test_goal_line_absent_without_goal():
+    assert goal_line_y(0, 10, height=110, padding=10) is None
+    assert goal_line_y(5, 0, height=110, padding=10) is None
+
+
+def test_bar_geometry_without_scale_is_unchanged():
+    assert bar_geometry([1, 2], 100, 110, 10) == bar_geometry([1, 2], 100, 110, 10, scale=0)
+
+
+def test_goal_legend_text():
+    assert goal_legend_text("count", 8) == "- - -  Meta diária: 8"
+    assert goal_legend_text("count", 0) == ""
+    assert goal_legend_text("time", 8) == ""
+
+
+@pytest.mark.parametrize(
+    "metric, goal, expected",
+    [("count", 8, True), ("count", 0, False), ("time", 8, False)],
+)
+def test_goal_line_only_in_count_chart_with_goal(metric, goal, expected):
+    assert show_goal_line(metric, goal) is expected
+
+
 # ---- janela (smoke opt-in) ---------------------------------------------------
 
 
@@ -289,6 +346,54 @@ def test_stats_window_smoke(storage: Storage):
         window._on_period_selected("Mês atual")
         window._on_metric_selected("Pomodoros")
         assert "Focos concluídos" in window._caption.cget("text")
+        window.destroy()
+    finally:
+        root.destroy()
+
+
+def _boxes_cross(a, b) -> bool:
+    return a[0] < b[2] and b[0] < a[2] and a[1] < b[3] and b[1] < a[3]
+
+
+@pytest.mark.skipif(
+    os.environ.get("POMODORO_UI_SMOKE") != "1",
+    reason="smoke test de UI: defina POMODORO_UI_SMOKE=1 para executar",
+)
+@pytest.mark.parametrize("goal", [2, 3], ids=["hoje-bate-a-meta", "maior-barra-bate-a-meta"])
+def test_goal_line_never_covers_bar_values(storage: Storage, goal: int):
+    """Com uma barra exatamente na meta (inclusive a de hoje, na ponta direita),
+    nenhum texto do gráfico cruza outro e a legenda da meta fica fora do canvas."""
+    try:
+        import customtkinter as ctk
+
+        from pomodoro.ui.stats import StatsWindow
+    except ImportError as exc:  # pragma: no cover
+        pytest.skip(f"customtkinter indisponível: {exc}")
+
+    seed(storage)  # hoje: 2 focos; maior dia: 3
+    try:
+        root = ctk.CTk()
+    except Exception as exc:  # sem display
+        pytest.skip(f"sem display para a janela: {exc}")
+
+    try:
+        window = StatsWindow(root, storage, today=lambda: TODAY, goal=lambda: goal)
+        root.update()
+        canvas = window._canvas
+        assert canvas.find_withtag("goal_line")
+        texts = [i for i in canvas.find_all() if canvas.type(i) == "text"]
+        assert not any(canvas.itemcget(i, "text").startswith("Meta") for i in texts)
+        boxes = [canvas.bbox(i) for i in texts]
+        for n, a in enumerate(boxes):
+            for b in boxes[n + 1 :]:
+                assert not _boxes_cross(a, b), (a, b)
+        assert window._goal_legend.winfo_manager() == "pack"
+        assert window._goal_legend.cget("text") == f"- - -  Meta diária: {goal}"
+
+        window._on_metric_selected("Tempo")
+        root.update()
+        assert not canvas.find_withtag("goal_line")
+        assert not window._goal_legend.winfo_manager()
         window.destroy()
     finally:
         root.destroy()

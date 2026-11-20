@@ -31,6 +31,7 @@ class Palette:
     accent_hover: str | None  # botões em hover
     button_text: str | None  # texto sobre o accent
     entry_bg: str | None  # fundo de campos de entrada
+    goal_line: str | None  # linha da meta diária no gráfico (padrão: CHART_GOAL_LIGHT/DARK)
     warning: str  # aviso (ex.: configurações pendentes)
     error: str  # erro de validação
 
@@ -45,6 +46,7 @@ PADRAO = Palette(
     accent_hover=None,
     button_text=None,
     entry_bg=None,
+    goal_line=None,
     warning="#f0ad4e",
     error="#d9534f",
 )
@@ -59,6 +61,7 @@ FEMININO = Palette(
     accent_hover="#C94C86",
     button_text="#000000",
     entry_bg="#FFFFFF",
+    goal_line="#6B2C91",
     warning="#9A5B00",
     error="#A4262C",
 )
@@ -73,9 +76,22 @@ ESCURO = Palette(
     accent_hover="#5FA3E6",
     button_text="#0B1A2A",
     entry_bg="#14171C",
+    goal_line="#F0AD4E",
     warning="#F0AD4E",
     error="#FF7B72",
 )
+
+# Linha da meta no gráfico do tema padrão, que segue o modo claro/escuro do sistema.
+# Contraste >= 4,5:1 com o fundo do gráfico em cada modo (#dbdbdb e #2b2b2b).
+CHART_GOAL_LIGHT = "#8A4B00"
+CHART_GOAL_DARK = "#F0AD4E"
+
+def goal_line_color(p: Palette) -> str | tuple[str, str]:
+    """Cor da meta para widgets CTk: a da paleta, ou o par (claro, escuro) no tema padrão."""
+    if p.goal_line is not None:
+        return p.goal_line
+    return (CHART_GOAL_LIGHT, CHART_GOAL_DARK)
+
 
 THEMES: dict[str, Palette] = {
     "padrao": PADRAO,

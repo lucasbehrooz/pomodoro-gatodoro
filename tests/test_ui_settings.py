@@ -66,6 +66,9 @@ def test_build_config_does_not_mutate_base():
         ("short_break_minutes", "61", "Pausa curta (min): informe um valor entre 1 e 60."),
         ("long_break_minutes", "", "Pausa longa (min): informe um número inteiro."),
         ("cycles_before_long_break", "13", "Focos até a pausa longa: informe um valor entre 1 e 12."),
+        ("daily_goal", "25", "Meta diária de focos (0 = sem meta): informe um valor entre 0 e 24."),
+        ("daily_goal", "-1", "Meta diária de focos (0 = sem meta): informe um valor entre 0 e 24."),
+        ("daily_goal", "oito", "Meta diária de focos (0 = sem meta): informe um número inteiro."),
     ],
 )
 def test_build_config_rejects_invalid_int(field, value, message):
@@ -120,6 +123,12 @@ def test_update_status_text():
     assert update_status_text(m).startswith("Baixando… 50%")
     m.state, m.error = UpdateState.ERROR, "deu ruim"
     assert update_status_text(m) == "deu ruim"
+
+
+def test_daily_goal_is_in_form_and_accepts_zero():
+    assert form_values(Config(daily_goal=6))["daily_goal"] == 6
+    assert build_config({"daily_goal": "0"}, Config()).daily_goal == 0
+    assert build_config({"daily_goal": " 12 "}, Config()).daily_goal == 12
 
 
 def test_pre_end_warning_is_in_form():
