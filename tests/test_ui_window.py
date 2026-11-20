@@ -308,3 +308,100 @@ def test_held_key_does_not_repeat(tmp_path: Path):
     finally:
         window.quit_app()
         storage.close()
+
+
+# ---- meta diária e altura da janela ------------------------------------------
+
+
+def test_daily_goal_label_and_stats_goal_line(tmp_path: Path):
+    try:
+        from pomodoro.ui.main_window import MainWindow
+    except ImportError as exc:  # pragma: no cover
+        pytest.skip(f"customtkinter indisponível: {exc}")
+
+    from dataclasses import replace
+
+    storage = Storage(tmp_path / "pomodoro.db")
+    controller = PomodoroController(Config(daily_goal=8), storage)
+    try:
+        window = MainWindow(controller, save=lambda c: None, storage=storage)
+    except Exception as exc:  # sem display
+        storage.close()
+        pytest.skip(f"sem display para a janela: {exc}")
+
+    try:
+        window.update()
+        assert window._goal_label.cget("text") == "Hoje: 0/8"
+        window._open_stats()
+        window.update()
+        stats = window._stats_window
+        assert stats._canvas.find_withtag("goal_line")
+        assert stats._goal_legend.cget("text").endswith("Meta diária: 8")
+
+        # Salvar a meta nova redesenha as Estatísticas abertas na hora.
+        window._save_settings(replace(controller.config, daily_goal=5))
+        window.update()
+        assert window._goal_label.cget("text") == "Hoje: 0/5"
+        assert stats._goal_legend.cget("text").endswith("Meta diária: 5")
+
+        window._save_settings(replace(controller.config, daily_goal=0))
+        window.update()
+        assert window._goal_label.cget("text") == ""
+        assert not stats._canvas.find_withtag("goal_line")
+        assert not stats._goal_legend.winfo_manager()
+    finally:
+        window.quit_app()
+        storage.close()
+
+
+def _content_height(window) -> int:
+    """Altura pedida pelos widgets empacotados na janela (todos empilhados na vertical)."""
+    total = 0
+    for child in window.pack_slaves():
+        pady = child.pack_info()["pady"]
+        pad = sum(int(p) for p in pady) if isinstance(pady, tuple) else 2 * int(pady)
+        total += child.winfo_reqheight() + pad
+    return total
+
+
+def test_window_content_fits_height_with_and_without_update_banner(tmp_path: Path):
+    """Protege a soma das linhas (dica dos atalhos, "Hoje: x/y"...) contra WINDOW_HEIGHT."""
+    try:
+        from pomodoro.ui.main_window import UPDATE_BANNER_HEIGHT, WINDOW_HEIGHT, MainWindow
+        from pomodoro.updater import UpdateInfo, UpdateManager
+    except ImportError as exc:  # pragma: no cover
+        pytest.skip(f"customtkinter indisponível: {exc}")
+
+    storage = Storage(tmp_path / "pomodoro.db")
+    controller = PomodoroController(Config(daily_goal=8), storage)
+    info = UpdateInfo("9.9.9", "https://example.test/r", "https://example.test/setup.exe")
+    updates = UpdateManager(
+        post=lambda fn: fn(),
+        quit_app=lambda: None,
+        check=lambda current: info,
+        start_thread=lambda fn: fn(),
+    )
+    try:
+        window = MainWindow(controller, save=lambda c: None, updates=updates)
+    except Exception as exc:  # sem display
+        storage.close()
+        pytest.skip(f"sem display para a janela: {exc}")
+
+    try:
+        controller.apply_config(Config(daily_goal=8))
+        window._pending_label.configure(text="Novas durações serão aplicadas ao reiniciar.")
+        window._status_label.configure(text="Configurações salvas e aplicadas.")
+        window.update()
+        assert window._goal_label.cget("text") == "Hoje: 0/8"
+        assert window._hint_label.cget("text") == HINT_TEXT
+        limit = window._apply_window_scaling(WINDOW_HEIGHT)
+        assert _content_height(window) <= limit
+
+        updates.check()
+        window.update()
+        assert window._update_banner.winfo_manager() == "pack"
+        limit = window._apply_window_scaling(WINDOW_HEIGHT + UPDATE_BANNER_HEIGHT)
+        assert _content_height(window) <= limit
+    finally:
+        window.quit_app()
+        storage.close()

@@ -12,9 +12,13 @@ from pomodoro.timer import Phase
 from pomodoro.ui.controller import (
     ALERT_PAUSE_SECONDS,
     NOISE_FADE_SECONDS,
+    GOAL_REACHED_MESSAGE,
+    TOAST_TITLE,
     ApplyStatus,
     PomodoroController,
     format_mmss,
+    goal_just_reached,
+    goal_progress_text,
 )
 
 BASE = datetime(2026, 11, 10, 10, 0, 0)
@@ -495,3 +499,206 @@ def test_shutdown_stops_noise(storage, clock, cfg):
     c.start()
     c.shutdown()
     assert noise.calls[-1] == ("stop", NOISE_FADE_SECONDS)
+
+
+# ---- meta diária ------------------------------------------------------
+
+
+def finish_focus(c: PomodoroController, clock: FakeClock) -> None:
+    """Avança o relógio até o próximo foco ser concluído (passando pelas pausas)."""
+    if not c.is_running:
+        c.start()
+    for _ in range(10):
+        clock.advance(c.remaining_seconds)
+        event = c.tick()
+        if event is not None and event.finished is Phase.FOCUS:
+            return
+    raise AssertionError("nenhum foco concluído")
+
+
+def goal_toasts(notifier: FakeNotifier) -> list[tuple[str, str]]:
+    return [t for t in notifier.toasts if "Meta do dia" in t[1]]
+
+
+def seed_focus(storage: Storage, day: date, n: int) -> None:
+    for i in range(n):
+        storage.record_session(Phase.FOCUS, datetime(day.year, day.month, day.day, 8, i), 1500, True)
+
+
+@pytest.mark.parametrize(
+    "count, goal, expected",
+    [
+        (3, 8, "Hoje: 3/8"),
+        (0, 8, "Hoje: 0/8"),
+        (8, 8, "Hoje: 8/8 · meta batida"),
+        (10, 8, "Hoje: 10/8 · meta batida"),
+        (5, 0, ""),
+    ],
+)
+def test_goal_progress_text(count, goal, expected):
+    assert goal_progress_text(count, goal) == expected
+
+
+@pytest.mark.parametrize(
+    "before, after, goal, expected",
+    [
+        (7, 8, 8, True),
+        (8, 9, 8, False),  # já tinha batido
+        (6, 7, 8, False),
+        (0, 1, 0, False),  # meta desligada
+        (3, 3, 3, False),  # nada novo hoje
+    ],
+)
+def test_goal_just_reached(before, after, goal, expected):
+    assert goal_just_reached(before, after, goal) is expected
+
+
+def test_daily_goal_text_counts_only_today_and_updates_on_focus(cfg, storage, clock):
+    seed_focus(storage, DAY, 2)
+    seed_focus(storage, DAY - timedelta(days=1), 5)
+    storage.record_session(Phase.FOCUS, datetime(2026, 11, 10, 9, 0), 300, False)  # interrompido
+    c = make(replace(cfg, daily_goal=8), storage, clock)
+
+    assert c.today_focus_count == 2
+    assert c.daily_goal_text == "Hoje: 2/8"
+    finish_focus(c, clock)
+    assert c.daily_goal_text == "Hoje: 3/8"
+
+
+def test_daily_goal_text_empty_when_goal_off(cfg, storage, clock):
+    seed_focus(storage, DAY, 2)
+    c = make(replace(cfg, daily_goal=0), storage, clock)
+    assert c.daily_goal_text == ""
+
+
+def test_daily_goal_text_follows_new_goal(cfg, storage, clock):
+    seed_focus(storage, DAY, 2)
+    c = make(replace(cfg, daily_goal=8), storage, clock)
+    c.apply_config(replace(cfg, daily_goal=2))
+    assert c.daily_goal_text == "Hoje: 2/2 · meta batida"
+
+
+def test_goal_celebrated_once_when_reached(cfg, storage, clock, notifier):
+    c = make(replace(cfg, daily_goal=2), storage, clock, notifier=notifier)
+
+    finish_focus(c, clock)
+    assert goal_toasts(notifier) == []
+    finish_focus(c, clock)
+    assert goal_toasts(notifier) == [(TOAST_TITLE, GOAL_REACHED_MESSAGE.format(goal=2))]
+    finish_focus(c, clock)
+    finish_focus(c, clock)
+    assert len(goal_toasts(notifier)) == 1
+
+
+def test_goal_not_celebrated_again_after_restart(cfg, storage, clock, notifier):
+    seed_focus(storage, DAY, 2)  # meta 2 já batida mais cedo, em outra execução
+    c = make(replace(cfg, daily_goal=2), storage, clock, notifier=notifier)
+    finish_focus(c, clock)
+    assert goal_toasts(notifier) == []
+
+
+def test_goal_celebrated_after_restart_when_still_pending(cfg, storage, clock, notifier):
+    seed_focus(storage, DAY, 1)
+    c = make(replace(cfg, daily_goal=2), storage, clock, notifier=notifier)
+    finish_focus(c, clock)
+    assert len(goal_toasts(notifier)) == 1
+
+
+def test_goal_not_celebrated_twice_when_goal_is_raised(cfg, storage, clock, notifier):
+    c = make(replace(cfg, daily_goal=1), storage, clock, notifier=notifier)
+    finish_focus(c, clock)
+    assert len(goal_toasts(notifier)) == 1
+    c.apply_config(replace(cfg, daily_goal=2))
+    finish_focus(c, clock)
+    assert len(goal_toasts(notifier)) == 1
+
+
+def test_goal_celebrated_again_on_next_day(cfg, storage, clock, notifier):
+    current = {"now": BASE}
+    c = PomodoroController(
+        replace(cfg, daily_goal=1),
+        storage,
+        notifier=notifier,
+        clock=clock,
+        now=lambda: current["now"],
+    )
+    finish_focus(c, clock)
+    assert c.daily_goal_text == "Hoje: 1/1 · meta batida"
+
+    c.reset()
+    current["now"] = BASE + timedelta(days=1)
+    assert c.daily_goal_text == "Hoje: 0/1"
+    finish_focus(c, clock)
+    assert len(goal_toasts(notifier)) == 2
+
+
+def test_goal_toast_respects_toast_setting(cfg, storage, clock, notifier):
+    c = make(replace(cfg, daily_goal=1, toast_enabled=False), storage, clock, notifier=notifier)
+    finish_focus(c, clock)
+    assert notifier.toasts == []
+    assert c.daily_goal_text == "Hoje: 1/1 · meta batida"
+
+
+def test_goal_off_never_celebrates(cfg, storage, clock, notifier):
+    c = make(replace(cfg, daily_goal=0), storage, clock, notifier=notifier)
+    finish_focus(c, clock)
+    finish_focus(c, clock)
+    assert goal_toasts(notifier) == []
+
+
+def test_interrupted_focus_does_not_count_for_goal(cfg, storage, clock, notifier):
+    c = make(replace(cfg, daily_goal=1), storage, clock, notifier=notifier)
+    c.start()
+    clock.advance(30)
+    c.skip()
+    assert c.daily_goal_text == "Hoje: 0/1"
+    assert goal_toasts(notifier) == []
+
+
+def test_goal_count_failure_does_not_break_timer(cfg, clock, notifier):
+    c = make(replace(cfg, daily_goal=2), BrokenStorage(), clock, notifier=notifier)
+    assert c.daily_goal_text == "Hoje: 0/2"
+    finish_focus(c, clock)
+    assert c.phase is Phase.SHORT_BREAK
+    assert goal_toasts(notifier) == []
+
+
+class FlakyCountStorage(Storage):
+    """Storage real cuja contagem falha enquanto ``broken`` for True."""
+
+    broken = False
+
+    def count_completed_focus(self, day):
+        if self.broken:
+            raise sqlite3.OperationalError("banco travado")
+        return super().count_completed_focus(day)
+
+
+def test_unknown_count_does_not_trigger_false_celebration(cfg, tmp_path, clock, notifier):
+    storage = FlakyCountStorage(tmp_path / "flaky.db")
+    try:
+        seed_focus(storage, DAY, 3)  # meta 3 já batida em outra execução
+        storage.broken = True
+        c = make(replace(cfg, daily_goal=3), storage, clock, notifier=notifier)
+        assert c.daily_goal_text == "Hoje: 0/3"  # desconhecida: mostra 0
+        storage.broken = False  # o banco volta antes do foco terminar
+        finish_focus(c, clock)
+        assert goal_toasts(notifier) == []
+        assert c.daily_goal_text == "Hoje: 4/3 · meta batida"
+    finally:
+        storage.close()
+
+
+def test_unknown_count_after_record_does_not_celebrate(cfg, tmp_path, clock, notifier):
+    storage = FlakyCountStorage(tmp_path / "flaky.db")
+    try:
+        c = make(replace(cfg, daily_goal=1), storage, clock, notifier=notifier)
+        assert c.today_focus_count == 0
+        c.start()
+        clock.advance(c.remaining_seconds)
+        storage.broken = True
+        c.tick()
+        assert goal_toasts(notifier) == []
+        assert c.phase is Phase.SHORT_BREAK
+    finally:
+        storage.close()

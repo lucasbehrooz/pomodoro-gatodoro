@@ -94,6 +94,14 @@ Obs.: se o toast não aparecer, verifique se as notificações do Windows estão
 
 - Sequência e recorde: ( ) OK  ( ) Falhou  Observação: ______________________
 
+**Meta diária:**
+1. Em **Configurações**, ponha **Meta diária de focos** em 2 (use foco de 1 min para agilizar) e salve. A tela inicial mostra "Hoje: N/2" logo abaixo de "Focos no ciclo".
+2. Conclua focos até bater a meta: o contador sobe a cada foco concluído e, no foco que alcança a meta, aparece a notificação "Meta do dia batida: 2 pomodoros!" e o texto vira "Hoje: 2/2 · meta batida". Conclua mais um foco e feche e abra o app: a notificação da meta não aparece de novo hoje.
+3. Em **Estatísticas**, no gráfico **Pomodoros**, aparece uma linha tracejada na altura da meta e, abaixo do gráfico, a legenda "Meta diária: 2", legível nos três temas. No dia em que a meta é batida, o número em cima da barra de hoje continua visível (nada o cobre). Em **Tempo** a linha e a legenda somem. Com as Estatísticas abertas, mude a meta e salve: a linha muda na hora.
+4. Ponha a meta em 0 e salve: "Hoje: …" some da tela inicial e a linha some do gráfico.
+
+- Meta diária (contador, notificação única, linha no gráfico, desligar): ( ) OK  ( ) Falhou  Observação: ______________________
+
 ---
 
 ## 5. Gato animado
