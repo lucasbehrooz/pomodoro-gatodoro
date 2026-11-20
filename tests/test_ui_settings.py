@@ -93,3 +93,11 @@ def test_start_with_windows_checkbox_is_built_and_parsed():
     new = build_config({"start_with_windows": True}, Config())
     assert new.start_with_windows is True
     assert build_config({"start_with_windows": False}, new).start_with_windows is False
+
+
+def test_check_updates_is_in_form_and_keeps_skipped_version():
+    base = Config(check_updates=True, skipped_version="0.0.8")
+    assert form_values(base)["check_updates"] is True
+    new = build_config(valid_raw(check_updates=False), base)
+    assert new.check_updates is False
+    assert new.skipped_version == "0.0.8"

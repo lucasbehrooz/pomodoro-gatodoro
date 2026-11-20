@@ -9,7 +9,9 @@ from __future__ import annotations
 
 import logging
 import queue
+import webbrowser
 from collections.abc import Callable
+from dataclasses import replace
 
 import customtkinter as ctk
 
@@ -21,6 +23,7 @@ from pomodoro.ui.icon import apply_window_icon
 from pomodoro.ui.controller import ApplyStatus, PomodoroController, format_mmss
 from pomodoro.ui.settings_dialog import SettingsDialog
 from pomodoro.ui.stats import StatsWindow
+from pomodoro.updater import UpdateInfo
 from pomodoro.ui.theme import (
     Palette,
     apply_accent_button,
@@ -33,6 +36,9 @@ from pomodoro.ui.theme import (
 logger = logging.getLogger(__name__)
 
 TICK_MS = 200
+WINDOW_WIDTH = 340
+WINDOW_HEIGHT = 500
+UPDATE_BANNER_HEIGHT = 76  # altura extra da janela enquanto o aviso de versão aparece
 
 MSG_SETTINGS_APPLIED = "Configurações salvas e aplicadas."
 MSG_SETTINGS_DEFERRED = (
@@ -41,6 +47,8 @@ MSG_SETTINGS_DEFERRED = (
 MSG_PENDING_NOTICE = "Novas durações serão aplicadas ao reiniciar."
 MSG_STATS_UNAVAILABLE = "Estatísticas indisponíveis: armazenamento não informado."
 MSG_AUTOSTART_FAILED = "Não foi possível atualizar 'Iniciar com o Windows'."
+MSG_UPDATE_AVAILABLE = "Nova versão disponível: {version}"
+MSG_UPDATE_SKIP_FAILED = "Não foi possível salvar a escolha"
 
 
 class MainWindow(ctk.CTk):
@@ -54,6 +62,7 @@ class MainWindow(ctk.CTk):
             close_to_tray ligado (evita esconder a janela sem como reabri-la).
         save: função de persistência da configuração. Default: save_config.
         autostart: aplica "Iniciar com o Windows" ao salvar. Pode lançar OSError.
+        open_url: abre a página da nova versão. Default: webbrowser.open.
     """
 
     def __init__(
@@ -66,6 +75,7 @@ class MainWindow(ctk.CTk):
         save: Callable[[Config], None] = save_config,
         storage: Storage | None = None,
         autostart: Callable[[bool], None] = set_autostart,
+        open_url: Callable[[str], object] = webbrowser.open,
     ) -> None:
         super().__init__()
         self._controller = controller
@@ -75,6 +85,8 @@ class MainWindow(ctk.CTk):
         self._save = save
         self._apply_autostart = autostart
         self._storage = storage
+        self._open_url = open_url
+        self._update_info: UpdateInfo | None = None
         self._ui_queue: queue.Queue[Callable[[], None]] = queue.Queue()
         self._tick_after_id: str | None = None
         self._settings_dialog: SettingsDialog | None = None
@@ -84,7 +96,7 @@ class MainWindow(ctk.CTk):
 
         self.title("Pomodoro Gatodoro")
         apply_window_icon(self)
-        self.geometry("340x500")
+        self.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}")
         self.resizable(False, False)
         self._build()
         self._apply_palette()
@@ -108,6 +120,19 @@ class MainWindow(ctk.CTk):
             footer, text="Estatísticas", width=160, command=self._open_stats
         )
         self._stats_btn.grid(row=1, column=0, padx=4)
+
+        # Aviso de nova versão: criado agora, empacotado só em show_update().
+        self._update_banner = ctk.CTkFrame(self, fg_color="transparent")
+        self._update_label = ctk.CTkLabel(self._update_banner, text="")
+        self._update_label.grid(row=0, column=0, columnspan=2, pady=(0, 4))
+        self._update_download_btn = ctk.CTkButton(
+            self._update_banner, text="Baixar", width=100, command=self._on_update_download
+        )
+        self._update_download_btn.grid(row=1, column=0, padx=4)
+        self._update_skip_btn = ctk.CTkButton(
+            self._update_banner, text="Ignorar versão", width=120, command=self._on_update_skip
+        )
+        self._update_skip_btn.grid(row=1, column=1, padx=4)
 
         self._phase_label = ctk.CTkLabel(self, text="", font=ctk.CTkFont(size=20, weight="bold"))
         self._phase_label.pack(pady=(24, 4))
@@ -144,12 +169,15 @@ class MainWindow(ctk.CTk):
         apply_text(self._cycle_label, p, muted=True)
         apply_text(self._status_label, p, muted=True)
         self._pending_label.configure(text_color=p.warning)
+        apply_text(self._update_label, p)
         for btn in (
             self._toggle_btn,
             self._reset_btn,
             self._skip_btn,
             self._settings_btn,
             self._stats_btn,
+            self._update_download_btn,
+            self._update_skip_btn,
         ):
             apply_accent_button(btn, p)
         refresh_transparent_bg(self)
@@ -209,6 +237,46 @@ class MainWindow(ctk.CTk):
         self._status_label.configure(text=message)
         self._set_theme(new.theme)
         self._refresh()
+
+    # ---- aviso de nova versão -------------------------------------------
+
+    def show_update(self, info: UpdateInfo) -> None:
+        """Mostra o aviso de nova versão. Chamar na thread do Tk (use post())."""
+        self._update_info = info
+        self._update_label.configure(text=MSG_UPDATE_AVAILABLE.format(version=info.version))
+        if not self._update_banner.winfo_manager():
+            # side="bottom" depois do rodapé: fica logo acima dos botões de baixo.
+            self._update_banner.pack(side="bottom", pady=(0, 4))
+            self.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT + UPDATE_BANNER_HEIGHT}")
+
+    def hide_update(self) -> None:
+        self._update_info = None
+        if self._update_banner.winfo_manager():
+            self._update_banner.pack_forget()
+            self.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}")
+
+    def _on_update_download(self) -> None:
+        info = self._update_info
+        if info is None:
+            return
+        try:
+            self._open_url(info.url)
+        except Exception:
+            logger.warning("Falha ao abrir a página da nova versão", exc_info=True)
+        self.hide_update()
+
+    def _on_update_skip(self) -> None:
+        info = self._update_info
+        if info is None:
+            return
+        new = replace(self._controller.config, skipped_version=info.version)
+        try:
+            self._save(new)
+        except OSError as exc:
+            self._status_label.configure(text=f"{MSG_UPDATE_SKIP_FAILED}: {exc}")
+            return
+        self._controller.apply_config(new)
+        self.hide_update()
 
     def _on_close_requested(self) -> None:
         if self._controller.config.close_to_tray and self._can_hide_to_tray:

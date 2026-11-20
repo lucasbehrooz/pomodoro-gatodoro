@@ -37,6 +37,11 @@ class Config:
     # Tema visual: "padrao", "feminino" ou "escuro" (ver pomodoro.ui.theme)
     theme: str = DEFAULT_THEME
 
+    # Atualizações: avisar quando houver versão nova (ver pomodoro.updater)
+    check_updates: bool = True
+    # Versão que o usuário pediu para não ser avisado de novo (ex.: "0.0.8")
+    skipped_version: str = ""
+
 
 def config_dir() -> Path:
     """Diretório de dados do app. Em Windows usa %APPDATA%; fora dele, ~/.config."""
@@ -68,6 +73,10 @@ def load_config(path: Path | None = None) -> Config:
         config = replace(config, theme=DEFAULT_THEME)
     if not isinstance(config.start_with_windows, bool):
         config = replace(config, start_with_windows=False)
+    if not isinstance(config.check_updates, bool):
+        config = replace(config, check_updates=True)
+    if not isinstance(config.skipped_version, str):
+        config = replace(config, skipped_version="")
     return config
 
 

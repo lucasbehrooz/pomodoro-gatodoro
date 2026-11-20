@@ -35,6 +35,19 @@ jobs:
       - name: Testes
         run: python -m pytest -q
 
+      # O aviso de nova versão compara a tag da release com __version__.
+      # Se não baterem, o app instalado se acharia desatualizado para sempre.
+      - name: Conferir versão da tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        run: |
+          APP=$(python -c "import pomodoro; print(pomodoro.__version__)")
+          PROJ=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
+          if [ "v$APP" != "$GITHUB_REF_NAME" ] || [ "v$PROJ" != "$GITHUB_REF_NAME" ]; then
+            echo "Tag $GITHUB_REF_NAME não bate: __init__.py=$APP, pyproject.toml=$PROJ"
+            exit 1
+          fi
+
       - name: Gerar executável
         run: >
           python -m PyInstaller --noconfirm --onefile --windowed

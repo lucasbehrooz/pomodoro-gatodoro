@@ -27,6 +27,8 @@ Se o `config.json` não existir ou estiver corrompido, o app usa os valores padr
 | `close_to_tray` | `true` | Fechar a janela envia o app para a bandeja |
 | `theme` | `padrao` | Tema: `padrao`, `feminino` (Rosa) ou `escuro` |
 | `start_with_windows` | `false` | Abre o app junto com o Windows |
+| `check_updates` | `true` | Ao abrir, verifica se há versão nova no GitHub |
+| `skipped_version` | `""` | Versão marcada em **Ignorar versão** (não é avisada de novo) |
 
 Alterações de duração feitas com um timer em andamento valem a partir do próximo **Reiniciar**.
 
@@ -39,3 +41,12 @@ O histórico é mantido indefinidamente. Para apagá-lo, feche o app e remova o 
 ## Iniciar com o Windows
 
 Quando ativada, a opção grava o caminho do executável em `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`, com o nome `Pomodoro`. Se você mover o `.exe` de pasta, desligue e ligue a opção de novo. Desinstalar pelo instalador remove essa entrada.
+
+## Aviso de nova versão
+
+Com `check_updates` ligado, o app consulta a última release publicada no GitHub (`api.github.com`) uma vez a cada abertura. Se houver versão mais nova, aparece um aviso na janela principal:
+
+- **Baixar** abre a página da release no navegador. Baixe o instalador e rode-o normalmente, por cima da versão atual.
+- **Ignorar versão** grava essa versão em `skipped_version`. O aviso volta só quando sair uma versão mais nova que ela.
+
+O app não baixa nem instala nada sozinho. Sem internet, a verificação falha em silêncio.
