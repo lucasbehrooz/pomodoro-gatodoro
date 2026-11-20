@@ -148,3 +148,27 @@ def test_null_notifier_satisfaz_protocolo():
     assert callable(getattr(n, "toast", None))
     assert n.alert_sound() is None
     assert n.toast("t", "m") is None
+
+
+def test_warning_sound_usa_alias_diferente_do_alerta(fake_winsound):
+    from pomodoro.notifier import SYSTEM_WARNING_SOUND
+
+    assert SYSTEM_WARNING_SOUND != SYSTEM_ALERT_SOUND
+    WindowsNotifier(sound_enabled=True).warning_sound()
+    assert fake_winsound.calls == [(SYSTEM_WARNING_SOUND, SND_ALIAS | SND_ASYNC)]
+
+
+def test_warning_sound_desligado_nao_chama_winsound(fake_winsound):
+    WindowsNotifier(sound_enabled=False).warning_sound()
+    assert fake_winsound.calls == []
+
+
+def test_warning_sound_sem_winsound_nao_levanta(monkeypatch, caplog):
+    monkeypatch.setitem(sys.modules, "winsound", None)
+    with caplog.at_level(logging.WARNING, logger=notifier_mod.logger.name):
+        WindowsNotifier(sound_enabled=True).warning_sound()
+    assert any("aviso" in r.getMessage() for r in caplog.records)
+
+
+def test_null_notifier_warning_sound_e_noop():
+    assert NullNotifier().warning_sound() is None

@@ -10,6 +10,11 @@ Regras de registro de sessões:
   decorrida. Blocos sem nenhum segundo decorrido não são gravados.
 - Pausar não encerra o bloco.
 
+Auto-início (auto_start_breaks / auto_start_focus): ao concluir um bloco
+naturalmente, o próximo só continua contando se a opção da fase seguinte
+estiver ligada; senão fica pausado com a duração cheia, e o início da sessão é
+marcado no próximo Iniciar. Pular e Reiniciar não dependem dessas opções.
+
 Meta diária (``Config.daily_goal``, 0 = desligada):
 - A contagem do dia vem do Storage (focos concluídos com dia local de hoje).
 - A comemoração dispara quando um foco concluído faz a contagem do dia
@@ -17,6 +22,11 @@ Meta diária (``Config.daily_goal``, 0 = desligada):
   do dia, isso acontece uma vez por dia e sobrevive a reinícios do app sem
   gravar nada extra. Um guarda em memória evita repetir no mesmo dia se o
   usuário mudar a meta depois de batê-la.
+
+Aviso antes do fim (pre_end_warning_seconds): som curto, uma vez por bloco de
+foco em execução, quando o restante chega ao limite. Não toca em pausas, com
+som desligado, com o timer pausado nem se o foco não for maior que o aviso.
+Pular, Reiniciar e a troca de bloco rearmam o aviso.
 """
 
 from __future__ import annotations
@@ -144,6 +154,8 @@ class PomodoroController:
         # Contagem None = consulta falhou (desconhecida): a tela mostra 0 e não há comemoração.
         self._today_cache: Optional[tuple[date, Optional[int]]] = None
         self._goal_celebrated_on: Optional[date] = None
+        # Aviso antes do fim do foco já tratado no bloco atual.
+        self._pre_end_warned = False
 
     # ---- estado para a UI -----------------------------------------------
 
@@ -240,6 +252,7 @@ class PomodoroController:
 
     def reset(self) -> None:
         self._end_block()
+        self._pre_end_warned = False
         self._timer.reset()
         self._apply_pending_timer_config()
         self._sync_noise()
@@ -248,6 +261,7 @@ class PomodoroController:
         if self._timer.phase is Phase.IDLE:
             return
         self._end_block()
+        self._pre_end_warned = False
         self._timer.skip()
         if self._timer.is_running:
             self._block_started_at = self._now()
@@ -256,11 +270,18 @@ class PomodoroController:
     def tick(self) -> Optional[TransitionEvent]:
         event = self._timer.tick()
         if event is None:
+            self._check_pre_end_warning()
             return None
 
+        self._pre_end_warned = False
         finished_started = self._block_started_at
-        # O próximo bloco começa contando imediatamente neste instante.
-        self._block_started_at = self._now()
+        if self._auto_start(event.next):
+            # O próximo bloco começa contando imediatamente neste instante.
+            self._block_started_at = self._now()
+        else:
+            # Fica pausado com a duração cheia; o início é marcado no próximo Iniciar.
+            self._timer.pause()
+            self._block_started_at = None
         check_goal = event.finished is Phase.FOCUS and finished_started is not None
         goal_before = self._today_count_or_none() if check_goal else None
         if finished_started is not None:
@@ -309,6 +330,14 @@ class PomodoroController:
         """Encerra o app: registra o bloco em andamento como interrompido."""
         self._end_block()
         self._stop_noise()
+
+    # ---- internos: ritmo ------------------------------------------------
+
+    def _auto_start(self, phase: Phase) -> bool:
+        """Se o bloco que vem após uma conclusão natural começa contando sozinho."""
+        if phase is Phase.FOCUS:
+            return self._config.auto_start_focus
+        return self._config.auto_start_breaks
 
     # ---- internos: sessões ----------------------------------------------
 
@@ -374,6 +403,22 @@ class PomodoroController:
         if self._config.toast_enabled:
             message = GOAL_REACHED_MESSAGE.format(goal=goal)
             self._call("toast (meta diária)", lambda: self._notifier.toast(TOAST_TITLE, message))
+
+    def _check_pre_end_warning(self) -> None:
+        """Toca o aviso uma vez quando faltar pre_end_warning_seconds no foco."""
+        warning = self._config.pre_end_warning_seconds
+        if (
+            self._pre_end_warned
+            or warning <= 0
+            or self._timer.phase is not Phase.FOCUS
+            or not self._timer.is_running
+            or self._planned_seconds(Phase.FOCUS) <= warning
+            or self._timer.remaining_seconds > warning
+        ):
+            return
+        self._pre_end_warned = True
+        if self._config.sound_enabled:
+            self._call("aviso antes do fim", lambda: self._notifier.warning_sound())
 
     # ---- internos: ruído ------------------------------------------------
 

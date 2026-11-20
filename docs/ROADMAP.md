@@ -32,15 +32,15 @@ Regras para todos os itens:
 
 ## 0.0.13: ritmo dos blocos
 
-- [ ] **F05 · Iniciar blocos automaticamente** (pequeno)
-  - Opções `auto_start_breaks` e `auto_start_focus` (padrão: desligadas). Ao terminar um bloco, o próximo já começa contando.
+- [~] **F05 · Iniciar blocos automaticamente** (pequeno) ([#6](https://github.com/lucasbehrooz/pomodoro-gatodoro/pull/6))
+  - Opções `auto_start_breaks` e `auto_start_focus` (padrão: ligadas, que é o comportamento atual: ao terminar um bloco, o próximo já começa contando). Desligada, após o fim natural do bloco o próximo fica pausado com a duração cheia esperando **Iniciar**; o início da sessão é marcado nesse clique. Pular e Reiniciar não mudam.
   - Onde: `config.py`, formulário, `ui/controller.py` (após transição).
   - Testes: transição com e sem auto-início; sessão gravada corretamente.
-- [ ] **F06 · Aviso antes do fim** (pequeno)
+- [~] **F06 · Aviso antes do fim** (pequeno) (#7)
   - Opção `pre_end_warning_seconds` (0 = desligado, padrão 60). Som discreto quando faltar esse tempo no foco.
   - Onde: `config.py`, `notifier.py` (som curto), `ui/controller.py` (disparar uma vez por bloco).
   - Testes: dispara uma vez, não dispara em pausa, não dispara se o bloco for menor que o aviso.
-- [ ] **F07 · Dica na pausa** (pequeno)
+- [~] **F07 · Dica na pausa** ([#8](https://github.com/lucasbehrooz/pomodoro-gatodoro/pull/8)) (pequeno)
   - A notificação de início de pausa traz uma dica aleatória ("Beba água", "Alongue o pescoço"...). Lista em `ui/tips.py` ou `tips.py`.
   - Testes: a mensagem da pausa contém uma dica da lista; foco não recebe dica.
 

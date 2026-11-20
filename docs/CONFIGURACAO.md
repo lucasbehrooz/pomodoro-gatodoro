@@ -22,7 +22,7 @@ Se o `config.json` não existir ou estiver corrompido, o app usa os valores padr
 | `daily_goal` | `8` | Meta diária de focos concluídos, de `0` a `24` (`0` desliga). Ver [Meta diária](#meta-diária) |
 | `current_task` | `""` | Rótulo da tarefa atual, gravado no histórico de cada foco |
 | `sound_enabled` | `true` | Toca o som de alerta ao fim de cada bloco |
-| `toast_enabled` | `true` | Mostra a notificação do Windows |
+| `toast_enabled` | `true` | Mostra a notificação do Windows (a de início de pausa inclui uma dica aleatória) |
 | `brown_noise_enabled` | `false` | Liga o ruído marrom |
 | `brown_noise_focus_only` | `true` | Ruído só no foco (`false` toca também nas pausas) |
 | `brown_noise_volume` | `0.3` | Volume do ruído, de `0.0` a `1.0` |
@@ -31,8 +31,12 @@ Se o `config.json` não existir ou estiver corrompido, o app usa os valores padr
 | `start_with_windows` | `false` | Abre o app junto com o Windows |
 | `check_updates` | `true` | Ao abrir, verifica se há versão nova no GitHub |
 | `skipped_version` | `""` | Versão marcada em **Ignorar versão** (não é avisada de novo) |
+| `auto_start_breaks` | `true` | Ao terminar um foco, a pausa já começa contando (`false`: espera **Iniciar**) |
+| `auto_start_focus` | `true` | Ao terminar uma pausa, o foco já começa contando (`false`: espera **Iniciar**) |
 
 Alterações de duração feitas com um timer em andamento valem a partir do próximo **Reiniciar**.
+
+Com **Iniciar pausas automaticamente** ou **Iniciar focos automaticamente** desligado, o bloco seguinte aparece com a duração cheia e fica parado até você clicar em **Iniciar** (o som e o toast tocam normalmente). O tempo parado não entra no histórico. As opções valem só para o fim natural do bloco; **Pular** e **Reiniciar** continuam iguais.
 
 ## Meta diária
 

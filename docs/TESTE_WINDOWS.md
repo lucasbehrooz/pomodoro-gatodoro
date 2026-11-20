@@ -58,7 +58,9 @@ Preparação:
 
 **Esperado:**
 - Toca um som de alerta.
-- Aparece um toast do Windows com o título do app e a mensagem da próxima etapa ("Hora da pausa").
+- Aparece um toast do Windows com o título do app e a mensagem da próxima etapa seguida de uma dica, por exemplo "Hora da pausa. Dica: Beba água." Acentos legíveis e texto não cortado.
+- Ao fim da pausa, o toast "Hora de focar" aparece sem dica.
+- Em pausas seguidas, a dica muda de uma pausa para a outra.
 - A fase muda para pausa e o contador de focos sobe para `1/4`.
 
 Repita com os toggles desligados (um por vez, com o mesmo minuto de espera) e confirme que não há som nem toast correspondente.
@@ -68,6 +70,19 @@ Repita com os toggles desligados (um por vez, com o mesmo minuto de espera) e co
 - Com som e toast desligados: (X) OK  ( ) Falhou  Observação: ______________________
 
 Obs.: se o toast não aparecer, verifique se as notificações do Windows estão ativas (Configurações → Sistema → Notificações) e se o modo "Não perturbe" está desligado.
+
+### 3.1. Iniciar blocos automaticamente
+
+**Passos:** com foco e pausa curta em `1` min, ligue o **Ruído marrom**. Em **Configurações**, desmarque **Iniciar pausas automaticamente** e deixe **Iniciar focos automaticamente** marcado. Salve, clique em **Reiniciar** e **Iniciar**. Aguarde o fim natural do foco. Espere uns 20 s e clique em **Iniciar**. Aguarde o fim da pausa. Depois marque as duas opções de novo e repita.
+
+**Esperado:**
+- Desmarcada: ao fim do foco tocam som e toast, a fase muda para "Pausa curta" mostrando `01:00` parado, o botão volta para **Iniciar**, o gato para e o ruído some. Ao clicar em **Iniciar**, a pausa conta normalmente.
+- Ao fim da pausa (focos automáticos ligados), o foco já começa contando sozinho.
+- Nas **Estatísticas**, a pausa aparece com início no horário do clique em **Iniciar**, não no fim do foco.
+- Com as duas marcadas (padrão), tudo funciona como antes: o próximo bloco sempre começa contando.
+
+- Pausa esperando Iniciar: ( ) OK  ( ) Falhou  Observação: ______________________
+- Padrão (tudo automático): ( ) OK  ( ) Falhou  Observação: ______________________
 
 ---
 

@@ -25,6 +25,8 @@ BOOL_FIELDS: tuple[str, ...] = (
     "close_to_tray",
     "start_with_windows",
     "check_updates",
+    "auto_start_breaks",
+    "auto_start_focus",
 )
 
 LABELS: dict[str, str] = {
@@ -42,6 +44,8 @@ LABELS: dict[str, str] = {
     "start_with_windows": "Iniciar com o Windows",
     "check_updates": "Avisar quando houver nova versão",
     "theme": "Tema",
+    "auto_start_breaks": "Iniciar pausas automaticamente",
+    "auto_start_focus": "Iniciar focos automaticamente",
 }
 
 
