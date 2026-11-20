@@ -125,7 +125,39 @@ def test_update_status_text():
     assert update_status_text(m) == "deu ruim"
 
 
+def test_auto_start_checkboxes_are_built_and_parsed():
+    from pomodoro.ui.settings import BOOL_FIELDS, LABELS
+
+    assert "auto_start_breaks" in BOOL_FIELDS
+    assert "auto_start_focus" in BOOL_FIELDS
+    assert LABELS["auto_start_breaks"] == "Iniciar pausas automaticamente"
+    assert LABELS["auto_start_focus"] == "Iniciar focos automaticamente"
+    values = form_values(Config(auto_start_breaks=False))
+    assert values["auto_start_breaks"] is False
+    assert values["auto_start_focus"] is True
+    new = build_config(valid_raw(auto_start_breaks=False, auto_start_focus=False), Config())
+    assert new.auto_start_breaks is False
+    assert new.auto_start_focus is False
+
+
 def test_daily_goal_is_in_form_and_accepts_zero():
     assert form_values(Config(daily_goal=6))["daily_goal"] == 6
     assert build_config({"daily_goal": "0"}, Config()).daily_goal == 0
     assert build_config({"daily_goal": " 12 "}, Config()).daily_goal == 12
+
+
+def test_pre_end_warning_is_in_form():
+    from pomodoro.ui.settings import INT_FIELDS, LABELS
+
+    assert INT_FIELDS["pre_end_warning_seconds"] == (0, 300)
+    assert LABELS["pre_end_warning_seconds"] == "Aviso antes do fim do foco (s, 0 = desligado)"
+    assert form_values(Config(pre_end_warning_seconds=45))["pre_end_warning_seconds"] == 45
+    assert build_config({"pre_end_warning_seconds": "0"}, Config()).pre_end_warning_seconds == 0
+    assert build_config({"pre_end_warning_seconds": "300"}, Config()).pre_end_warning_seconds == 300
+
+
+@pytest.mark.parametrize("value", ["-1", "301", "um minuto"])
+def test_pre_end_warning_rejects_invalid(value):
+    with pytest.raises(SettingsError) as exc:
+        build_config({"pre_end_warning_seconds": value}, Config())
+    assert str(exc.value).startswith("Aviso antes do fim do foco (s, 0 = desligado):")

@@ -2,7 +2,6 @@ import sqlite3
 from dataclasses import replace
 from datetime import date, datetime, timedelta
 from pathlib import Path
-import random
 
 import pytest
 
@@ -10,7 +9,6 @@ from pomodoro.config import Config
 from pomodoro.notifier import NullNotifier
 from pomodoro.storage import Storage
 from pomodoro.timer import Phase
-from pomodoro.tips import TIPS
 from pomodoro.ui.controller import (
     ALERT_PAUSE_SECONDS,
     NOISE_FADE_SECONDS,
@@ -108,7 +106,7 @@ def notifier() -> FakeNotifier:
     return FakeNotifier()
 
 
-def make(cfg, storage, clock, notifier=None, noise=None, notifier_factory=None, tip_rng=None):
+def make(cfg, storage, clock, notifier=None, noise=None, notifier_factory=None):
     return PomodoroController(
         cfg,
         storage,
@@ -117,17 +115,7 @@ def make(cfg, storage, clock, notifier=None, noise=None, notifier_factory=None, 
         notifier_factory=notifier_factory,
         clock=clock,
         now=lambda: BASE + timedelta(seconds=clock.t - 1000.0),
-        tip_rng=tip_rng,
     )
-
-
-def split_tip(message: str) -> tuple[str, str | None]:
-    """Separa 'Hora da pausa. Dica: Beba água.' em ('Hora da pausa', 'Beba água')."""
-    if ". Dica: " not in message:
-        return message, None
-    base, tip = message.split(". Dica: ", 1)
-    assert tip.endswith(".")
-    return base, tip[:-1]
 
 
 def rows(storage: Storage) -> list[tuple[str, int, int, str]]:
@@ -272,12 +260,7 @@ def test_tick_transition_records_completed_and_notifies(cfg, storage, clock, not
     assert rows(storage) == [("focus", 60, 1, BASE.isoformat())]
     assert storage.count_completed_focus(DAY) == 1
     assert notifier.alerts == 1
-    assert len(notifier.toasts) == 1
-    title, message = notifier.toasts[0]
-    assert title == "Pomodoro Gatodoro"
-    base, tip = split_tip(message)
-    assert base == "Hora da pausa"
-    assert tip in TIPS
+    assert notifier.toasts == [("Pomodoro Gatodoro", "Hora da pausa")]
 
 
 def test_tick_break_completion_records_break_and_announces_focus(cfg, storage, clock, notifier):
@@ -397,8 +380,7 @@ def test_non_timer_fields_apply_immediately_while_running(cfg, storage, clock):
     c.tick()
     assert old.alerts == 0 and old.toasts == []
     assert new.alerts == 0  # som desligado no config novo
-    assert len(new.toasts) == 1
-    assert split_tip(new.toasts[0][1])[0] == "Hora da pausa"
+    assert new.toasts == [("Pomodoro Gatodoro", "Hora da pausa")]
 
 
 # ---- ruído ------------------------------------------------------------
@@ -517,6 +499,134 @@ def test_shutdown_stops_noise(storage, clock, cfg):
     c.start()
     c.shutdown()
     assert noise.calls[-1] == ("stop", NOISE_FADE_SECONDS)
+
+
+# ---- auto-início dos blocos (F05) --------------------------------------
+
+
+@pytest.mark.parametrize("auto", [True, False])
+def test_focus_end_to_short_break_respects_auto_start_breaks(cfg, storage, clock, auto):
+    c = make(replace(cfg, auto_start_breaks=auto), storage, clock)
+    c.start()
+    clock.advance(60)
+    event = c.tick()
+    assert event is not None and event.next is Phase.SHORT_BREAK
+    assert c.phase is Phase.SHORT_BREAK
+    assert c.is_running is auto
+    assert c.remaining_seconds == 60
+    # Foco concluído é gravado igual nos dois casos.
+    assert rows(storage) == [("focus", 60, 1, BASE.isoformat())]
+    clock.advance(25)
+    assert c.remaining_seconds == (35 if auto else 60)
+
+
+@pytest.mark.parametrize("auto", [True, False])
+def test_focus_end_to_long_break_respects_auto_start_breaks(cfg, storage, clock, auto):
+    c = make(replace(cfg, auto_start_breaks=auto, auto_start_focus=True), storage, clock)
+    c.start()
+    clock.advance(60)
+    c.tick()  # foco -> pausa curta
+    if not auto:
+        c.start()
+    clock.advance(60)
+    c.tick()  # pausa curta -> foco (auto_start_focus ligado)
+    assert c.is_running
+    clock.advance(60)
+    event = c.tick()
+    assert event is not None and event.next is Phase.LONG_BREAK
+    assert c.is_running is auto
+    assert c.remaining_seconds == 120
+
+
+@pytest.mark.parametrize("auto", [True, False])
+def test_break_end_to_focus_respects_auto_start_focus(cfg, storage, clock, auto):
+    c = make(replace(cfg, auto_start_focus=auto), storage, clock)
+    c.start()
+    clock.advance(60)
+    c.tick()
+    clock.advance(60)
+    event = c.tick()
+    assert event is not None and event.next is Phase.FOCUS
+    assert c.phase is Phase.FOCUS
+    assert c.is_running is auto
+    assert c.remaining_seconds == 60
+    assert rows(storage)[-1] == (
+        "short_break",
+        60,
+        1,
+        (BASE + timedelta(seconds=60)).isoformat(),
+    )
+
+
+def test_auto_start_off_records_next_block_from_resume_time(cfg, storage, clock):
+    c = make(replace(cfg, auto_start_breaks=False), storage, clock)
+    c.start()
+    clock.advance(60)
+    c.tick()  # pausa curta fica esperando Iniciar
+    clock.advance(300)  # tempo parado não conta nem vira sessão
+    assert c.tick() is None
+    c.start()  # início marcado aqui: BASE + 360 s
+    clock.advance(60)
+    event = c.tick()
+    assert event is not None and event.finished is Phase.SHORT_BREAK
+    assert rows(storage) == [
+        ("focus", 60, 1, BASE.isoformat()),
+        ("short_break", 60, 1, (BASE + timedelta(seconds=360)).isoformat()),
+    ]
+
+
+def test_auto_start_off_reset_while_waiting_records_nothing_extra(cfg, storage, clock):
+    c = make(replace(cfg, auto_start_breaks=False), storage, clock)
+    c.start()
+    clock.advance(60)
+    c.tick()
+    clock.advance(30)
+    c.reset()
+    assert c.phase is Phase.IDLE
+    assert rows(storage) == [("focus", 60, 1, BASE.isoformat())]
+
+
+def test_auto_start_off_stops_noise_and_resumes_on_start(cfg, storage, clock):
+    noise = FakeNoise()
+    c = make(
+        replace(
+            cfg,
+            brown_noise_enabled=True,
+            brown_noise_focus_only=False,
+            auto_start_breaks=False,
+        ),
+        storage,
+        clock,
+        noise=noise,
+    )
+    c.start()
+    assert c.noise_playing
+    clock.advance(60)
+    c.tick()
+    assert not c.is_running
+    assert not c.noise_playing
+    assert ("stop", NOISE_FADE_SECONDS) in noise.calls
+    c.start()
+    assert c.noise_playing
+    assert noise.names().count("start") == 2
+
+
+def test_auto_start_off_does_not_change_skip(cfg, storage, clock):
+    c = make(replace(cfg, auto_start_breaks=False, auto_start_focus=False), storage, clock)
+    c.start()
+    clock.advance(10)
+    c.skip()
+    assert c.phase is Phase.SHORT_BREAK
+    assert c.is_running  # Pular preserva o estado de execução
+
+
+def test_auto_start_off_still_notifies_transition(cfg, storage, clock, notifier):
+    c = make(replace(cfg, auto_start_breaks=False), storage, clock, notifier=notifier)
+    c.start()
+    clock.advance(60)
+    c.tick()
+    assert notifier.alerts == 1
+    assert notifier.toasts == [("Pomodoro Gatodoro", "Hora da pausa")]
 
 
 # ---- meta diária ------------------------------------------------------
@@ -722,72 +832,62 @@ def test_unknown_count_after_record_does_not_celebrate(cfg, tmp_path, clock, not
         storage.close()
 
 
-# ---- dica na pausa ------------------------------------------------------
+# ---- auto-início combinado com meta e Pular (F05) ----------------------
 
 
-def run_blocks(c, clock, n: int) -> None:
-    """Conclui n blocos seguidos (cfg: foco 60 s, pausa curta 60 s, longa 120 s)."""
-    for _ in range(n):
-        clock.advance(c.remaining_seconds)
-        assert c.tick() is not None
-
-
-def test_break_toasts_have_tip_and_focus_toasts_do_not(cfg, storage, clock, notifier):
-    c = make(cfg, storage, clock, notifier=notifier, tip_rng=random.Random(3))
+def test_auto_start_off_focus_reaching_goal_still_celebrates(cfg, storage, clock, notifier):
+    seed_focus(storage, DAY, 1)
+    c = make(
+        replace(cfg, daily_goal=2, auto_start_breaks=False), storage, clock, notifier=notifier
+    )
     c.start()
-    # foco -> curta -> foco -> longa -> foco
-    run_blocks(c, clock, 4)
-    bases_and_tips = [split_tip(m) for _, m in notifier.toasts]
-    assert [b for b, _ in bases_and_tips] == [
-        "Hora da pausa",
-        "Hora de focar",
-        "Hora da pausa longa",
-        "Hora de focar",
+    clock.advance(60)
+    event = c.tick()
+    assert event is not None and event.finished is Phase.FOCUS
+    assert not c.is_running  # pausa esperando Iniciar
+    assert goal_toasts(notifier) == [(TOAST_TITLE, GOAL_REACHED_MESSAGE.format(goal=2))]
+
+
+def test_auto_start_off_skip_while_waiting_then_start(cfg, storage, clock):
+    c = make(replace(cfg, auto_start_breaks=False), storage, clock)
+    c.start()
+    clock.advance(60)
+    c.tick()  # pausa curta esperando Iniciar
+    clock.advance(40)
+    c.skip()  # pausa que não contou nada: não grava
+    assert c.phase is Phase.FOCUS
+    assert not c.is_running  # Pular preserva o estado parado
+    assert c.remaining_seconds == 60
+    clock.advance(20)
+    c.start()  # início do foco: BASE + 120 s
+    clock.advance(60)
+    event = c.tick()
+    assert event is not None and event.finished is Phase.FOCUS
+    assert rows(storage) == [
+        ("focus", 60, 1, BASE.isoformat()),
+        ("focus", 60, 1, (BASE + timedelta(seconds=120)).isoformat()),
     ]
-    assert bases_and_tips[0][1] in TIPS
-    assert bases_and_tips[2][1] in TIPS
-    assert bases_and_tips[1] == ("Hora de focar", None)
-    assert bases_and_tips[3] == ("Hora de focar", None)
 
 
-def test_break_tip_never_repeats_consecutively(cfg, storage, clock, notifier):
-    c = make(cfg, storage, clock, notifier=notifier, tip_rng=random.Random(0))
+def test_long_break_end_waits_with_auto_start_focus_off(cfg, storage, clock):
+    c = make(replace(cfg, auto_start_focus=False), storage, clock)
     c.start()
-    run_blocks(c, clock, 60)
-    tips = [split_tip(m)[1] for _, m in notifier.toasts]
-    tips = [t for t in tips if t is not None]
-    assert len(tips) == 30
-    assert all(a != b for a, b in zip(tips, tips[1:]))
-
-
-def test_break_tips_are_deterministic_with_injected_rng(cfg, storage, clock, tmp_path):
-    def collect(seed: int, sub: str) -> list[str]:
-        n = FakeNotifier()
-        s = Storage(tmp_path / sub / "pomodoro.db")
-        try:
-            c = make(cfg, s, clock, notifier=n, tip_rng=random.Random(seed))
-            c.start()
-            run_blocks(c, clock, 6)
-        finally:
-            s.close()
-        return [m for _, m in n.toasts]
-
-    assert collect(5, "a") == collect(5, "b")
-
-
-def test_skip_into_break_has_no_toast(cfg, storage, clock, notifier):
-    c = make(cfg, storage, clock, notifier=notifier, tip_rng=random.Random(1))
+    clock.advance(60)
+    c.tick()  # foco -> pausa curta (contando)
+    clock.advance(60)
+    c.tick()  # pausa curta -> foco (esperando)
+    assert not c.is_running
     c.start()
-    c.skip()
-    assert c.phase is Phase.SHORT_BREAK
-    assert notifier.toasts == []
-
-
-def test_no_tip_drawn_when_toast_disabled(cfg, storage, clock, notifier):
-    rng = random.Random(9)
-    expected_next = random.Random(9).random()
-    c = make(replace(cfg, toast_enabled=False), storage, clock, notifier=notifier, tip_rng=rng)
-    c.start()
-    run_blocks(c, clock, 2)
-    assert notifier.toasts == []
-    assert rng.random() == expected_next
+    clock.advance(60)
+    event = c.tick()
+    assert event is not None and event.next is Phase.LONG_BREAK
+    assert c.is_running  # pausas automáticas seguem ligadas
+    clock.advance(120)
+    event = c.tick()
+    assert event is not None and event.finished is Phase.LONG_BREAK
+    assert c.phase is Phase.FOCUS
+    assert not c.is_running
+    assert c.remaining_seconds == 60
+    assert c.completed_focus_count == 0
+    clock.advance(30)
+    assert c.remaining_seconds == 60

@@ -6,7 +6,7 @@ Um timer Pomodoro para Windows com um gatinho que faz pãozinho enquanto você e
 
 - **Ciclo 25/5:** 25 minutos de foco, 5 de pausa, e 15 de pausa longa a cada 4 focos.
 - **Ruído marrom de fundo:** para ajudar a manter a concentração.
-- **Avisos:** som e notificação do Windows quando um bloco termina. A notificação de início de pausa traz uma dica rápida ("Beba água", "Alongue o pescoço e os ombros"...).
+- **Avisos:** som e notificação do Windows quando um bloco termina, e um som curto opcional pouco antes do fim do foco.
 - **Histórico:** veja quantos pomodoros você fez hoje, na semana ou no mês.
 - **Meta diária:** acompanhe "Hoje: 3/8" na tela inicial e ganhe uma comemoração ao bater a meta.
 - **Bandeja:** o app pode ficar minimizado no canto da tela.
@@ -29,7 +29,7 @@ Um timer Pomodoro para Windows com um gatinho que faz pãozinho enquanto você e
 - **Reiniciar:** volta o bloco atual ao começo.
 - **Pular:** passa para o próximo bloco.
 - **Atalhos de teclado:** com a janela em foco, **Espaço** inicia/pausa, **R** reinicia e **S** pula.
-- **Configurações:** ajuste os tempos, os sons, o ruído, o tema e a inicialização com o Windows.
+- **Configurações:** ajuste os tempos, os sons, o ruído, o tema, a inicialização com o Windows e se o próximo bloco começa sozinho ou espera **Iniciar**.
 - **Estatísticas:** veja os pomodoros concluídos e o tempo de foco por dia, na semana ou no mês, e a sequência de dias seguidos com foco (com o recorde).
 
 Quando sai uma versão nova, o app avisa ao abrir. Clique em **Atualizar** (ou vá em **Configurações → Atualizações**) e depois em **Atualizar para X.Y.Z**: o app baixa o instalador, confere o arquivo e abre a instalação. Suas configurações e seu histórico são mantidos. Para não ser avisado, desligue **Avisar quando houver nova versão** nas configurações.

@@ -73,6 +73,42 @@ def test_invalid_update_fields_fall_back_to_defaults(tmp_path):
     assert cfg.skipped_version == ""
 
 
+# ---- auto-início dos blocos (F05) --------------------------------------
+
+
+def test_auto_start_defaults_preserve_current_behavior():
+    cfg = Config()
+    assert cfg.auto_start_breaks is True
+    assert cfg.auto_start_focus is True
+
+
+def test_auto_start_roundtrip(tmp_path):
+    p = tmp_path / "config.json"
+    save_config(Config(auto_start_breaks=False, auto_start_focus=False), p)
+    cfg = load_config(p)
+    assert cfg.auto_start_breaks is False
+    assert cfg.auto_start_focus is False
+
+
+def test_auto_start_missing_uses_default(tmp_path):
+    p = tmp_path / "config.json"
+    p.write_text('{"focus_minutes": 30}', encoding="utf-8")
+    cfg = load_config(p)
+    assert cfg.auto_start_breaks is True
+    assert cfg.auto_start_focus is True
+
+
+@pytest.mark.parametrize("value", ['"sim"', "1", "null", "[]"])
+def test_auto_start_invalid_uses_default(tmp_path, value):
+    p = tmp_path / "config.json"
+    p.write_text(
+        '{"auto_start_breaks": %s, "auto_start_focus": %s}' % (value, value), encoding="utf-8"
+    )
+    cfg = load_config(p)
+    assert cfg.auto_start_breaks is True
+    assert cfg.auto_start_focus is True
+
+
 def test_daily_goal_default_and_roundtrip(tmp_path):
     assert Config().daily_goal == 8
     p = tmp_path / "config.json"
@@ -95,3 +131,22 @@ def test_daily_goal_invalid_uses_default(tmp_path, value):
     cfg = load_config(p)
     assert cfg.daily_goal == 8
     assert cfg.focus_minutes == 30
+
+
+def test_pre_end_warning_default():
+    assert Config().pre_end_warning_seconds == 60
+
+
+def test_pre_end_warning_roundtrip(tmp_path):
+    p = tmp_path / "config.json"
+    save_config(Config(pre_end_warning_seconds=0), p)
+    assert load_config(p).pre_end_warning_seconds == 0
+    save_config(Config(pre_end_warning_seconds=120), p)
+    assert load_config(p).pre_end_warning_seconds == 120
+
+
+@pytest.mark.parametrize("value", ['"60"', "-1", "301", "true", "null", "1.5"])
+def test_pre_end_warning_invalid_uses_default(tmp_path, value):
+    p = tmp_path / "config.json"
+    p.write_text('{"pre_end_warning_seconds": %s}' % value, encoding="utf-8")
+    assert load_config(p).pre_end_warning_seconds == 60

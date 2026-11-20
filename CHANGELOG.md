@@ -6,7 +6,7 @@ Cada versão publicada por tag usa a seção correspondente como texto da releas
 ## [Não lançado]
 
 ### Adicionado
-- Dica na pausa: a notificação de início de pausa (curta ou longa) traz uma dica aleatória, como "Beba água" ou "Olhe para longe da tela por 20 segundos", sem repetir a mesma duas vezes seguidas. A notificação de foco continua sem dica.
+- Opções **Iniciar pausas automaticamente** e **Iniciar focos automaticamente** (ligadas por padrão, como antes). Desligadas, ao fim de um bloco o próximo fica parado com a duração cheia até você clicar em **Iniciar**.
 
 ## [0.0.12]
 
