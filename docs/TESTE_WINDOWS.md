@@ -288,6 +288,27 @@ Precisa de internet. Use uma versão instalada mais antiga que a última release
 
 ---
 
+## 14. Rótulo da tarefa
+
+**Passos:**
+1. Na tela inicial, encontre o campo "Em que você está focando?" logo acima dos botões.
+2. Digite uma tarefa (ex.: "Estudar Python").
+3. Inicie um foco. Ao fim, a tarefa deve aparecer no histórico (próximo passo).
+4. Reinicie o app e confira que a tarefa permanece no campo (é persistida em `config.json`).
+5. Abra **Estatísticas**, selecione um período (ex.: "7 dias") e procure a seção "Tempo por tarefa" acima do gráfico. Deve mostrar "Estudar Python: XXm" ordenado por tempo decrescente.
+6. Deixe o campo vazio e complete um foco: na seção "Tempo por tarefa" deve aparecer "Sem rótulo: XXm".
+
+**Esperado:**
+- Campo aceita entrada de texto livre.
+- Tarefa é gravada no histórico de cada foco (completado ou interrompido).
+- Tarefa persiste após reiniciar o app.
+- Estatísticas mostram tempo agregado por tarefa, em ordem decrescente.
+- Focos sem tarefa aparecem como "Sem rótulo".
+
+- Resultado: ( ) OK  ( ) Falhou  Observação: ______________________
+
+---
+
 ## Resumo
 
 | Seção | Resultado geral |
@@ -305,5 +326,6 @@ Precisa de internet. Use uma versão instalada mais antiga que a última release
 | 11. Instalador | ( ) OK  ( ) Falhou |
 | 12. SmartScreen e antivírus | ( ) OK  ( ) Falhou |
 | 13. Aviso de nova versão e atualização | ( ) OK  ( ) Falhou |
+| 14. Rótulo da tarefa | ( ) OK  ( ) Falhou |
 
 Versão testada: ________  Windows (versão/build): ________  Data: ________

@@ -162,6 +162,11 @@ class MainWindow(ctk.CTk):
         self._cat = CatAnimation(self)
         self._cat.pack(pady=(0, 0))
 
+        # Campo para rótulo da tarefa
+        self._task_entry = ctk.CTkEntry(self, placeholder_text="Em que você está focando?")
+        self._task_entry.pack(pady=(8, 0), padx=16, fill="x")
+        self._task_entry.bind("<KeyRelease>", lambda _: self._on_task_changed())
+
         buttons = ctk.CTkFrame(self, fg_color="transparent")
         buttons.pack(pady=16)
         self._toggle_btn = ctk.CTkButton(buttons, text="Iniciar", width=100, command=self._on_toggle)
@@ -306,6 +311,12 @@ class MainWindow(ctk.CTk):
         self._refresh()
         self._refresh_stats_if_open()  # a linha da meta acompanha a meta nova na hora
 
+    def _on_task_changed(self) -> None:
+        """Atualiza config.current_task quando o usuário digita no campo."""
+        new_config = replace(self._controller.config, current_task=self._task_entry.get())
+        self._save(new_config)
+        self._controller.apply_config(new_config)
+
     # ---- aviso de nova versão -------------------------------------------
 
     def _sync_update_banner(self) -> None:
@@ -448,6 +459,8 @@ class MainWindow(ctk.CTk):
         self._toggle_btn.configure(text="Pausar" if c.is_running else "Iniciar")
         self._cat.set_running(c.is_running)
         self._pending_label.configure(text=MSG_PENDING_NOTICE if c.timer_config_pending else "")
+        self._task_entry.delete(0, "end")
+        self._task_entry.insert(0, c.config.current_task)
 
 
 def _event_time(event: tkinter.Event) -> int:

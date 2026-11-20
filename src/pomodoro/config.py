@@ -47,6 +47,9 @@ class Config:
     # Versão que o usuário pediu para não ser avisado de novo (ex.: "0.0.8")
     skipped_version: str = ""
 
+    # Tarefa atual (opcional, para rótulo no histórico)
+    current_task: str = ""
+
 
 def config_dir() -> Path:
     """Diretório de dados do app. Em Windows usa %APPDATA%; fora dele, ~/.config."""
@@ -86,6 +89,8 @@ def load_config(path: Path | None = None) -> Config:
         config = replace(config, daily_goal=DEFAULT_DAILY_GOAL)
     if not isinstance(config.skipped_version, str):
         config = replace(config, skipped_version="")
+    if not isinstance(config.current_task, str):
+        config = replace(config, current_task="")
     return config
 
 

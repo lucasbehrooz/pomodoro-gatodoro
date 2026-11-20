@@ -285,6 +285,19 @@ def goal_legend_text(metric: str, goal: int) -> str:
     return f"- - -  Meta diária: {goal}"
 
 
+def tasks_summary(storage: Storage, today: date, period: str) -> str:
+    """Resumo de tempo por tarefa no período. Ordenado por tempo decrescente."""
+    start, end = period_range(period, today)
+    tasks = storage.focus_seconds_by_task(start, end)
+    if not tasks:
+        return ""
+    lines = ["Tempo por tarefa:"]
+    for task_label, seconds in tasks.items():
+        minutes = seconds // 60
+        lines.append(f"  {task_label}: {minutes}m")
+    return "\n".join(lines)
+
+
 # ---- janela -----------------------------------------------------------------
 
 _LIGHT = {"bg": "#dbdbdb", "bar": "#3b8ed0", "text": "#000000", "goal": CHART_GOAL_LIGHT}
@@ -356,6 +369,8 @@ class StatsWindow(ctk.CTkToplevel):
         self._period_label.pack(anchor="w", pady=2)
         self._streak_label = ctk.CTkLabel(frame, text="", anchor="w")
         self._streak_label.pack(anchor="w", pady=2)
+        self._tasks_label = ctk.CTkLabel(frame, text="", anchor="w", justify="left")
+        self._tasks_label.pack(anchor="w", pady=2)
 
         selectors = ctk.CTkFrame(frame, fg_color="transparent")
         selectors.pack(anchor="w", pady=(8, 0))
@@ -406,6 +421,7 @@ class StatsWindow(ctk.CTkToplevel):
             self._week_label,
             self._period_label,
             self._streak_label,
+            self._tasks_label,
         ):
             apply_text(label, palette)
         apply_text(self._caption, palette, muted=True)
@@ -435,6 +451,7 @@ class StatsWindow(ctk.CTkToplevel):
 
         days = self._storage.completed_focus_days()
         self._streak_label.configure(text=streak_line(streak(days, today), record_streak(days)))
+        self._tasks_label.configure(text=tasks_summary(self._storage, today, self._period_key))
 
         series = build_period_series(self._storage, today, period, self._metric_key)
         self._draw_chart(series)

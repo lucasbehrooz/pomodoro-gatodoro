@@ -24,7 +24,8 @@ CREATE TABLE IF NOT EXISTS sessions (
     phase TEXT NOT NULL,
     started_at TEXT NOT NULL,
     duration_seconds INTEGER NOT NULL,
-    completed INTEGER NOT NULL CHECK (completed IN (0, 1))
+    completed INTEGER NOT NULL CHECK (completed IN (0, 1)),
+    task TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_sessions_started_at ON sessions (started_at);
 """
@@ -44,6 +45,11 @@ class Storage:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self._conn: sqlite3.Connection | None = sqlite3.connect(self.path)
         self._conn.executescript(_SCHEMA)
+        # Migração idempotente: adiciona coluna se não existe
+        try:
+            self._db.execute("ALTER TABLE sessions ADD COLUMN task TEXT")
+        except sqlite3.OperationalError:
+            pass  # coluna já existe
         self._conn.commit()
 
     # --- ciclo de vida -------------------------------------------------
@@ -78,14 +84,15 @@ class Storage:
         started_at: datetime,
         duration_seconds: int,
         completed: bool,
+        task: str | None = None,
     ) -> None:
         if phase is Phase.IDLE:
             raise ValueError("Phase.IDLE não é uma sessão gravável")
         with self._db:
             self._db.execute(
-                "INSERT INTO sessions (phase, started_at, duration_seconds, completed) "
-                "VALUES (?, ?, ?, ?)",
-                (phase.value, _local_iso(started_at), int(duration_seconds), int(completed)),
+                "INSERT INTO sessions (phase, started_at, duration_seconds, completed, task) "
+                "VALUES (?, ?, ?, ?, ?)",
+                (phase.value, _local_iso(started_at), int(duration_seconds), int(completed), task or None),
             )
 
     # --- leitura -------------------------------------------------------
@@ -165,3 +172,17 @@ class Storage:
         today = date.today()
         monday = today - timedelta(days=today.weekday())
         return self.count_completed_focus_between(monday, monday + timedelta(days=6))
+
+    def focus_seconds_by_task(self, start: date, end: date) -> dict[str, int]:
+        """Segundos de foco por tarefa em [start, end]. Tarefas None agrupadas como 'Sem rótulo'."""
+        if start > end:
+            raise ValueError("start deve ser <= end")
+        rows = self._db.execute(
+            f"SELECT COALESCE(task, 'Sem rótulo') AS task_label, SUM(duration_seconds) "
+            f"FROM sessions "
+            f"WHERE phase = ? AND {_DAY_SQL} BETWEEN ? AND ? "
+            f"GROUP BY COALESCE(task, 'Sem rótulo') "
+            f"ORDER BY SUM(duration_seconds) DESC",
+            (Phase.FOCUS.value, start.isoformat(), end.isoformat()),
+        ).fetchall()
+        return {task_label: int(n or 0) for task_label, n in rows}
