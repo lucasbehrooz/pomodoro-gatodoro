@@ -16,14 +16,14 @@ Preparação:
 **Passos:** dê dois cliques em `Pomodoro.exe`.
 **Esperado:** a janela abre (340x500), mostra "Foco", o tempo `25:00`, "Focos no ciclo: 0/4", o gato, os botões Iniciar, Reiniciar, Pular, Configurações e Estatísticas. Não aparece console.
 
-- Resultado: ( ) OK  ( ) Falhou  Observação: ______________________
+- Resultado: (X) OK  ( ) Falhou  Observação: ______________________
 
 **Temas:** em **Configurações → Tema**, escolha **Padrão**, **Feminino** e **Escuro**, clicando em **Salvar** em cada um.
 **Esperado:** a janela principal troca de cores logo após salvar; a troca vale sem reiniciar. Textos continuam legíveis em todos.
 
-- Tema Padrão: ( ) OK  ( ) Falhou  Observação: __________________
-- Tema Feminino: ( ) OK  ( ) Falhou  Observação: __________________
-- Tema Escuro: ( ) OK  ( ) Falhou  Observação: __________________
+- Tema Padrão: (X) OK  ( ) Falhou  Observação: __________________
+- Tema Feminino: (X) OK  ( ) Falhou  Observação: Renomeia para Rosa em vez de feminino
+- Tema Escuro: (X) OK  ( ) Falhou  Observação: __________________
 
 ---
 
@@ -38,7 +38,7 @@ Preparação:
 
 **Esperado:** o tempo desce de um em um segundo sem travar a janela. Pular passa para a pausa curta ("Pausa curta"). Reiniciar volta ao início da fase atual.
 
-- Resultado: ( ) OK  ( ) Falhou  Observação: ______________________
+- Resultado: (X) OK  ( ) Falhou  Observação: ______________________
 
 ---
 
@@ -53,9 +53,9 @@ Preparação:
 
 Repita com os toggles desligados (um por vez, com o mesmo minuto de espera) e confirme que não há som nem toast correspondente.
 
-- Som ligado: ( ) OK  ( ) Falhou  Observação: ______________________
-- Toast ligado: ( ) OK  ( ) Falhou  Observação: ______________________
-- Com som e toast desligados: ( ) OK  ( ) Falhou  Observação: ______________________
+- Som ligado: (X) OK  ( ) Falhou  Observação: ______________________
+- Toast ligado: (X) OK  ( ) Falhou  Observação: ______________________
+- Com som e toast desligados: (X) OK  ( ) Falhou  Observação: ______________________
 
 Obs.: se o toast não aparecer, verifique se as notificações do Windows estão ativas (Configurações → Sistema → Notificações) e se o modo "Não perturbe" está desligado.
 
@@ -77,7 +77,7 @@ Obs.: se o toast não aparecer, verifique se as notificações do Windows estão
 
 **Esperado:** o gato anima ("pãozinho") só enquanto o timer está em execução. Parado ou pausado, fica estático.
 
-- Resultado: ( ) OK  ( ) Falhou  Observação: ______________________
+- Resultado: (X) OK  ( ) Falhou  Observação: ______________________
 
 ---
 
@@ -93,11 +93,11 @@ Obs.: se o toast não aparecer, verifique se as notificações do Windows estão
 
 **Esperado:** o ruído toca só quando o timer está rodando e respeita o volume e o toggle. Sem cliques audíveis no início e no fim.
 
-- Liga no foco: ( ) OK  ( ) Falhou  Observação: ______________________
-- Volume respeitado: ( ) OK  ( ) Falhou  Observação: ______________________
-- Toggle desliga: ( ) OK  ( ) Falhou  Observação: ______________________
-- Opção "só no foco" (pausa silenciosa): ( ) OK  ( ) Falhou  Observação: ______________________
-- Opção "também nas pausas": ( ) OK  ( ) Falhou  Observação: ______________________
+- Liga no foco: (X) OK  ( ) Falhou  Observação: ______________________
+- Volume respeitado: (X) OK  ( ) Falhou  Observação: ______________________
+- Toggle desliga: (X) OK  ( ) Falhou  Observação: ______________________
+- Opção "só no foco" (pausa silenciosa): (X) OK  ( ) Falhou  Observação: ______________________
+- Opção "também nas pausas": (X) OK  ( ) Falhou  Observação: ______________________
 
 ---
 
@@ -109,7 +109,7 @@ Obs.: se o toast não aparecer, verifique se as notificações do Windows estão
 
 Obs.: a pausa do ruído só acontece com o som de alerta ligado (comportamento atual do código). Pular não dispara a pausa do ruído.
 
-- Resultado: ( ) OK  ( ) Falhou  Observação: ______________________
+- Resultado: (X) OK  ( ) Falhou  Observação: ______________________
 
 ---
 
@@ -125,13 +125,13 @@ Obs.: a pausa do ruído só acontece com o som de alerta ligado (comportamento a
 7. Com a janela fechada para a bandeja, escolha **Sair** no menu. O app fecha e o ícone some da bandeja.
 8. Desligue **Fechar a janela manda para a bandeja** nas configurações, salve e clique no **X**. O app deve encerrar (não ir para a bandeja).
 
-- Ícone visível: ( ) OK  ( ) Falhou  Observação: ______________________
-- Tooltip: ( ) OK  ( ) Falhou  Observação: ______________________
-- Menu completo: ( ) OK  ( ) Falhou  Observação: ______________________
-- Iniciar/Pausar pela bandeja: ( ) OK  ( ) Falhou  Observação: ______________________
-- X manda para a bandeja e reabre: ( ) OK  ( ) Falhou  Observação: ______________________
-- Sair pela bandeja: ( ) OK  ( ) Falhou  Observação: ______________________
-- Com toggle desligado, X encerra: ( ) OK  ( ) Falhou  Observação: ______________________
+- Ícone visível: (X) OK  ( ) Falhou  Observação: ______________________
+- Tooltip: (X) OK  ( ) Falhou  Observação: ______________________
+- Menu completo: (X) OK  ( ) Falhou  Observação: ______________________
+- Iniciar/Pausar pela bandeja: (X) OK  ( ) Falhou  Observação: ______________________
+- X manda para a bandeja e reabre: (X) OK  ( ) Falhou  Observação: ______________________
+- Sair pela bandeja: (X) OK  ( ) Falhou  Observação: ______________________
+- Com toggle desligado, X encerra: (X) OK  ( ) Falhou  Observação: ______________________
 
 ---
 
