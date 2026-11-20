@@ -6,6 +6,14 @@ Cada versão publicada por tag usa a seção correspondente como texto da releas
 ## [Não lançado]
 
 ### Adicionado
+
+### Alterado
+
+### Corrigido
+
+## [0.0.10]
+
+### Adicionado
 - Seção **Atualizações** nas Configurações: mostra a versão instalada, verifica na hora e tem o botão **Atualizar para X.Y.Z**, que baixa o instalador, confere o SHA-256 e abre a instalação.
 
 ### Alterado
