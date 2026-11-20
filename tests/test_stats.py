@@ -16,6 +16,9 @@ from pomodoro.storage import Storage
 from pomodoro.timer import Phase
 from pomodoro.ui.stats import (
     bar_geometry,
+    bar_label,
+    build_period_series,
+    format_duration_short,
     build_week_series,
     format_duration,
     period_seconds,
@@ -180,6 +183,34 @@ def test_period_seconds(storage: Storage):
     assert period_seconds(storage, TODAY, "month") == 8 * 1500 + 600
 
 
+@pytest.mark.parametrize(
+    ("seconds", "expected"),
+    [(0, "0"), (59, "0"), (25 * 60, "25m"), (3600, "1h"), (3600 + 5 * 60, "1h05"), (-1, "0")],
+)
+def test_format_duration_short(seconds, expected):
+    assert format_duration_short(seconds) == expected
+
+
+def test_bar_label_by_metric():
+    assert bar_label(3, "count") == "3"
+    assert bar_label(1500, "time") == "25m"
+
+
+def test_period_series_by_metric(storage: Storage):
+    seed(storage)
+    counts = dict(build_period_series(storage, TODAY, "7", "count"))
+    seconds = dict(build_period_series(storage, TODAY, "7", "time"))
+    assert counts[TODAY] == 2
+    assert seconds[TODAY] == 1500 + 1500 + 600  # inclui o interrompido
+    assert seconds[date(2026, 11, 6)] == 0
+    assert list(counts) == list(seconds)  # mesmos dias, mesma ordem
+
+
+def test_period_series_rejects_unknown_metric(storage: Storage):
+    with pytest.raises(ValueError):
+        build_period_series(storage, TODAY, "7", "calorias")
+
+
 # ---- bar_geometry ------------------------------------------------------------
 
 
@@ -251,6 +282,11 @@ def test_stats_window_smoke(storage: Storage):
         root.update()
         assert window.winfo_exists()
         window.refresh()  # reabrir/atualizar não quebra
+        window._on_metric_selected("Tempo")
+        assert "Tempo de foco" in window._caption.cget("text")
+        window._on_period_selected("Mês atual")
+        window._on_metric_selected("Pomodoros")
+        assert "Focos concluídos" in window._caption.cget("text")
         window.destroy()
     finally:
         root.destroy()

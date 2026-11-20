@@ -28,7 +28,9 @@ Um timer Pomodoro para Windows com um gatinho que faz pãozinho enquanto você e
 - **Reiniciar:** volta o bloco atual ao começo.
 - **Pular:** passa para o próximo bloco.
 - **Configurações:** ajuste os tempos, os sons, o ruído, o tema e a inicialização com o Windows.
-- **Estatísticas:** veja os pomodoros concluídos por dia, na semana ou no mês.
+- **Estatísticas:** veja os pomodoros concluídos e o tempo de foco por dia, na semana ou no mês.
+
+Quando sai uma versão nova, o app avisa ao abrir. Clique em **Baixar** para ir à página da versão e instale por cima da atual. Para não ser avisado, desligue **Avisar quando houver nova versão** nas configurações.
 
 Fechar a janela pode enviar o app para a bandeja, perto do relógio. Clique com o botão direito no ícone para pausar, abrir ou sair.
 

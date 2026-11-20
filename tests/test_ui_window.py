@@ -112,3 +112,30 @@ def test_update_banner_download_and_skip(tmp_path: Path):
     finally:
         window.quit_app()
         storage.close()
+
+
+def test_open_stats_refresh_after_skip(tmp_path: Path):
+    try:
+        from pomodoro.ui.main_window import MainWindow
+    except ImportError as exc:  # pragma: no cover
+        pytest.skip(f"customtkinter indisponível: {exc}")
+
+    storage = Storage(tmp_path / "pomodoro.db")
+    controller = PomodoroController(Config(), storage)
+    try:
+        window = MainWindow(controller, save=lambda c: None, storage=storage)
+    except Exception as exc:  # sem display
+        storage.close()
+        pytest.skip(f"sem display para a janela: {exc}")
+
+    try:
+        window._open_stats()
+        refreshed: list[bool] = []
+        original = window._stats_window.refresh
+        window._stats_window.refresh = lambda: (refreshed.append(True), original())
+        window._on_skip()
+        window._on_reset()
+        assert refreshed == [True, True]
+    finally:
+        window.quit_app()
+        storage.close()

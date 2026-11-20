@@ -91,9 +91,10 @@ pomodoro/
 O build e a release são feitos pelo GitHub Actions (`.github/workflows/release-windows.yml`). Ao enviar uma tag `vX.Y.Z`, o workflow:
 
 1. roda os testes em Windows;
-2. gera `PomodoroGatodoro.exe` com PyInstaller;
-3. gera `pomodoro-gatodoro-x64-setup.exe` com Inno Setup;
-4. publica os dois arquivos na release, com o texto da seção `[X.Y.Z]` do `CHANGELOG.md`.
+2. confere se a tag bate com a versão em `pyproject.toml` e `src/pomodoro/__init__.py` (se não bater, o build falha);
+3. gera `PomodoroGatodoro.exe` com PyInstaller;
+4. gera `pomodoro-gatodoro-x64-setup.exe` com Inno Setup;
+5. publica os dois arquivos na release, com o texto da seção `[X.Y.Z]` do `CHANGELOG.md`.
 
 Passos:
 
@@ -108,6 +109,8 @@ Passos:
    ```
 
 Não reutilize uma tag já publicada: para corrigir, publique uma nova versão.
+
+O app compara `__version__` com a última release do GitHub para mostrar o aviso de nova versão (`src/pomodoro/updater.py`). Por isso as duas versões precisam acompanhar a tag. Rascunhos e pré-releases não disparam o aviso.
 
 O `.exe` não é assinado digitalmente, por isso o SmartScreen pode avisar na primeira execução.
 

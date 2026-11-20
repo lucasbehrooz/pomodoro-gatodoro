@@ -198,10 +198,12 @@ class MainWindow(ctk.CTk):
     def _on_reset(self) -> None:
         self._controller.reset()
         self._refresh()
+        self._refresh_stats_if_open()
 
     def _on_skip(self) -> None:
         self._controller.skip()
         self._refresh()
+        self._refresh_stats_if_open()
 
     def _open_settings(self) -> None:
         dialog = self._settings_dialog
@@ -330,9 +332,18 @@ class MainWindow(ctk.CTk):
         self._drain_queue()
         if self._quitting:
             return
-        self._controller.tick()
+        if self._controller.tick() is not None:  # bloco terminou e foi gravado
+            self._refresh_stats_if_open()
         self._refresh()
         self._schedule_tick()
+
+    def _refresh_stats_if_open(self) -> None:
+        window = self._stats_window
+        if window is not None and window.winfo_exists():
+            try:
+                window.refresh()
+            except Exception:
+                logger.exception("Falha ao atualizar as estatísticas")
 
     def _drain_queue(self) -> None:
         while True:

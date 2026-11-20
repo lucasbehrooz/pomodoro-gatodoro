@@ -121,15 +121,25 @@ class Storage:
 
     def daily_focus_counts(self, start: date, end: date) -> dict[date, int]:
         """Focos concluídos por dia em [start, end]; dias sem registro valem 0."""
+        return self._daily_focus("COUNT(*)", "AND completed = 1", start, end)
+
+    def daily_focus_seconds(self, start: date, end: date) -> dict[date, int]:
+        """Segundos de foco por dia em [start, end], inclusive interrompidos; 0 sem registro."""
+        return self._daily_focus("SUM(duration_seconds)", "", start, end)
+
+    def _daily_focus(
+        self, aggregate: str, extra_where: str, start: date, end: date
+    ) -> dict[date, int]:
+        # aggregate/extra_where são constantes internas, nunca entrada do usuário.
         if start > end:
             raise ValueError("start deve ser <= end")
         rows = self._db.execute(
-            f"SELECT {_DAY_SQL} AS day, COUNT(*) FROM sessions "
-            f"WHERE phase = ? AND completed = 1 AND {_DAY_SQL} BETWEEN ? AND ? "
+            f"SELECT {_DAY_SQL} AS day, {aggregate} FROM sessions "
+            f"WHERE phase = ? {extra_where} AND {_DAY_SQL} BETWEEN ? AND ? "
             f"GROUP BY day",
             (Phase.FOCUS.value, start.isoformat(), end.isoformat()),
         ).fetchall()
-        found = {date.fromisoformat(day): int(n) for day, n in rows}
+        found = {date.fromisoformat(day): int(n or 0) for day, n in rows}
 
         result: dict[date, int] = {}
         current = start

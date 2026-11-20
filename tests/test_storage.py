@@ -137,3 +137,16 @@ def test_focus_seconds_empty_and_invalid_range(storage: Storage):
     assert storage.focus_seconds_between(day, day) == 0
     with pytest.raises(ValueError):
         storage.focus_seconds_between(day, day - timedelta(days=1))
+
+
+def test_daily_focus_seconds_fill_zeros_and_include_interrupted(storage: Storage):
+    start = date(2026, 11, 9)
+    storage.record_session(Phase.FOCUS, datetime(2026, 11, 10, 9, 0), 1500, True)
+    storage.record_session(Phase.FOCUS, datetime(2026, 11, 10, 11, 0), 600, False)
+    storage.record_session(Phase.LONG_BREAK, datetime(2026, 11, 10, 12, 0), 900, True)
+    result = storage.daily_focus_seconds(start, date(2026, 11, 11))
+    assert result == {
+        date(2026, 11, 9): 0,
+        date(2026, 11, 10): 2100,
+        date(2026, 11, 11): 0,
+    }

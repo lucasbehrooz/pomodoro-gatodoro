@@ -24,6 +24,7 @@ from pomodoro.ui.theme import (
     Palette,
     apply_accent_button,
     apply_card,
+    apply_option_menu,
     apply_text,
     apply_window,
     get_palette,
@@ -39,6 +40,13 @@ PERIOD_LABELS: dict[str, str] = {
     "Mês atual": "month",
 }
 DEFAULT_PERIOD = "7"
+
+# O que o gráfico mostra: rótulo -> chave interna.
+METRIC_LABELS: dict[str, str] = {
+    "Pomodoros": "count",
+    "Tempo": "time",
+}
+DEFAULT_METRIC = "count"
 MAX_X_LABELS = 7  # quantidade máxima de datas no eixo X
 
 # Geometria do gráfico (pixels). Padding também reserva espaço para rótulos.
@@ -111,12 +119,20 @@ def period_range(period: str, today: date) -> tuple[date, date]:
 
 
 def build_period_series(
-    storage: Storage, today: date, period: str
+    storage: Storage, today: date, period: str, metric: str = "count"
 ) -> list[tuple[date, int]]:
-    """Focos concluídos por dia no período, em ordem cronológica, com zeros."""
+    """Valores por dia no período, em ordem cronológica, com zeros.
+
+    metric "count": focos concluídos. metric "time": segundos de foco.
+    """
     start, end = period_range(period, today)
-    counts = storage.daily_focus_counts(start, end)
-    return [(day, counts[day]) for day in sorted(counts)]
+    if metric == "count":
+        values = storage.daily_focus_counts(start, end)
+    elif metric == "time":
+        values = storage.daily_focus_seconds(start, end)
+    else:
+        raise ValueError(f"métrica desconhecida: {metric!r}")
+    return [(day, values[day]) for day in sorted(values)]
 
 
 def period_total(storage: Storage, today: date, period: str) -> int:
@@ -129,6 +145,22 @@ def period_seconds(storage: Storage, today: date, period: str) -> int:
     """Tempo total de foco no período, em segundos."""
     start, end = period_range(period, today)
     return storage.focus_seconds_between(start, end)
+
+
+def format_duration_short(seconds: int) -> str:
+    """Versão curta para cima das barras: '0', '25m', '1h', '1h05'."""
+    minutes = max(0, int(seconds)) // 60
+    hours, minutes = divmod(minutes, 60)
+    if hours == 0:
+        return f"{minutes}m" if minutes else "0"
+    if minutes == 0:
+        return f"{hours}h"
+    return f"{hours}h{minutes:02d}"
+
+
+def bar_label(value: int, metric: str) -> str:
+    """Texto em cima de cada barra do gráfico."""
+    return format_duration_short(value) if metric == "time" else str(value)
 
 
 def stat_line(title: str, count: int, seconds: int) -> str:
@@ -195,6 +227,10 @@ def chart_colors(palette: Palette, dark: bool) -> dict[str, str]:
     return {"bg": palette.card, "bar": palette.accent, "text": palette.text}
 
 
+def _key_label(labels: dict[str, str], key: str) -> str:
+    return next(label for label, k in labels.items() if k == key)
+
+
 class StatsWindow(ctk.CTkToplevel):
     """Mostra totais e um gráfico de barras dos últimos 7 dias.
 
@@ -230,15 +266,26 @@ class StatsWindow(ctk.CTkToplevel):
         self._period_label = ctk.CTkLabel(frame, text="", anchor="w")
         self._period_label.pack(anchor="w", pady=2)
 
+        selectors = ctk.CTkFrame(frame, fg_color="transparent")
+        selectors.pack(anchor="w", pady=(8, 0))
         self._period_key = DEFAULT_PERIOD
         self._period_menu = ctk.CTkOptionMenu(
-            frame,
+            selectors,
             values=list(PERIOD_LABELS),
             command=self._on_period_selected,
-            width=160,
+            width=140,
         )
         self._period_menu.set(self._label_for(self._period_key))
-        self._period_menu.pack(anchor="w", pady=(8, 0))
+        self._period_menu.pack(side="left")
+        self._metric_key = DEFAULT_METRIC
+        self._metric_menu = ctk.CTkOptionMenu(
+            selectors,
+            values=list(METRIC_LABELS),
+            command=self._on_metric_selected,
+            width=130,
+        )
+        self._metric_menu.set(_key_label(METRIC_LABELS, self._metric_key))
+        self._metric_menu.pack(side="left", padx=(8, 0))
 
         self._caption = ctk.CTkLabel(frame, text="")
         self._caption.pack(anchor="w", pady=(8, 4))
@@ -264,6 +311,8 @@ class StatsWindow(ctk.CTkToplevel):
         for label in (self._today_label, self._week_label, self._period_label):
             apply_text(label, palette)
         apply_text(self._caption, palette, muted=True)
+        apply_option_menu(self._period_menu, palette)
+        apply_option_menu(self._metric_menu, palette)
         apply_accent_button(self._close_btn, palette)
         refresh_transparent_bg(self)
         self.refresh()
@@ -282,15 +331,16 @@ class StatsWindow(ctk.CTkToplevel):
         total = period_total(self._storage, today, period)
         seconds = period_seconds(self._storage, today, period)
         self._period_label.configure(text=stat_line(self._period_title(), total, seconds))
-        self._caption.configure(text=f"Focos concluídos por dia ({self._period_title().lower()})")
+        what = "Tempo de foco" if self._metric_key == "time" else "Focos concluídos"
+        self._caption.configure(text=f"{what} por dia ({self._period_title().lower()})")
 
-        series = build_period_series(self._storage, today, period)
+        series = build_period_series(self._storage, today, period, self._metric_key)
         self._draw_chart(series)
 
     # ---- internos ---------------------------------------------------------
 
     def _label_for(self, key: str) -> str:
-        return next(label for label, k in PERIOD_LABELS.items() if k == key)
+        return _key_label(PERIOD_LABELS, key)
 
     def _period_title(self) -> str:
         if self._period_key == "month":
@@ -299,6 +349,10 @@ class StatsWindow(ctk.CTkToplevel):
 
     def _on_period_selected(self, label: str) -> None:
         self._period_key = PERIOD_LABELS[label]
+        self.refresh()
+
+    def _on_metric_selected(self, label: str) -> None:
+        self._metric_key = METRIC_LABELS[label]
         self.refresh()
 
     def _draw_chart(self, series: list[tuple[date, int]]) -> None:
@@ -326,7 +380,10 @@ class StatsWindow(ctk.CTkToplevel):
                 canvas.create_rectangle(x0, y0, x1, y1, fill=colors["bar"], outline="")
             # Valor em cima da barra só quando há espaço (poucos dias).
             if len(series) <= 14:
-                canvas.create_text(cx, y0 - 4, text=str(count), anchor="s", fill=colors["text"])
+                canvas.create_text(
+                    cx, y0 - 4, text=bar_label(count, self._metric_key), anchor="s",
+                    fill=colors["text"],
+                )
             if index % step == 0:
                 canvas.create_text(
                     cx, base + 12, text=f"{day:%d/%m}", anchor="center", fill=colors["text"]

@@ -1,11 +1,11 @@
 # Checklist de teste no Windows
 
-Roteiro para testar o `Pomodoro.exe` e o instalador `Pomodoro-Setup-<versão>.exe` em um Windows real. Esta lógica não foi validada em Windows durante o desenvolvimento (feito em Linux): áudio, toast, bandeja, registro e instalador precisam ser conferidos aqui.
+Roteiro para testar o `PomodoroGatodoro.exe` e o instalador `pomodoro-gatodoro-x64-setup.exe` em um Windows real. Esta lógica não foi validada em Windows durante o desenvolvimento (feito em Linux): áudio, toast, bandeja, registro e instalador precisam ser conferidos aqui.
 
 Para cada item, marque **OK**, **Falhou** ou preencha **Observação**. Se falhar, anote a mensagem exibida, o horário e o que foi feito antes.
 
 Preparação:
-- Use o `Pomodoro.exe` gerado pelo workflow (artefato `Pomodoro-windows` ou release).
+- Use o `PomodoroGatodoro.exe` gerado pelo workflow (artefato `PomodoroGatodoro-windows` ou release).
 - Antes de começar, feche o app se estiver aberto e apague `%APPDATA%\Pomodoro\` para testar do zero (opcional, mas recomendado na primeira rodada).
 - Deixe o volume do sistema em um nível audível.
 
@@ -13,16 +13,16 @@ Preparação:
 
 ## 1. Abertura e aparência
 
-**Passos:** dê dois cliques em `Pomodoro.exe`.
+**Passos:** dê dois cliques em `PomodoroGatodoro.exe`.
 **Esperado:** a janela abre (340x500), mostra "Foco", o tempo `25:00`, "Focos no ciclo: 0/4", o gato, os botões Iniciar, Reiniciar, Pular, Configurações e Estatísticas. Não aparece console.
 
 - Resultado: (X) OK  ( ) Falhou  Observação: ______________________
 
-**Temas:** em **Configurações → Tema**, escolha **Padrão**, **Feminino** e **Escuro**, clicando em **Salvar** em cada um.
+**Temas:** em **Configurações → Tema**, escolha **Padrão**, **Rosa** e **Escuro**, clicando em **Salvar** em cada um.
 **Esperado:** a janela principal troca de cores logo após salvar; a troca vale sem reiniciar. Textos continuam legíveis em todos.
 
 - Tema Padrão: (X) OK  ( ) Falhou  Observação: __________________
-- Tema Feminino: (X) OK  ( ) Falhou  Observação: Renomeia para Rosa em vez de feminino
+- Tema Rosa: (X) OK  ( ) Falhou  Observação: Renomeia para Rosa em vez de feminino
 - Tema Escuro: (X) OK  ( ) Falhou  Observação: __________________
 
 ---
@@ -65,9 +65,17 @@ Obs.: se o toast não aparecer, verifique se as notificações do Windows estão
 
 **Passos:** com alguns blocos concluídos do passo 3, clique em **Estatísticas**.
 
-**Esperado:** abre uma janela "Estatísticas" com o total de pomodoros de hoje e da semana, e um gráfico de barras dos últimos dias. Com o app aberto, clicar de novo em **Estatísticas** traz a janela existente para frente (não abre duas). Os números batem com os blocos concluídos.
+**Esperado:** abre uma janela "Estatísticas" com o total de pomodoros de hoje, da semana e do período, cada um com o tempo de foco (ex.: "Pomodoros hoje: 2 · 50 min de foco"), e um gráfico de barras dos últimos dias. Com o app aberto, clicar de novo em **Estatísticas** traz a janela existente para frente (não abre duas). Os números batem com os blocos concluídos.
+
+**Tempo e gráfico:**
+1. Comece um foco, espere 1 minuto e clique em **Pular**. A quantidade de pomodoros não muda, mas o tempo de foco de hoje sobe cerca de 1 min (foco interrompido conta no tempo).
+2. No segundo seletor, troque **Pomodoros** por **Tempo**. O gráfico passa a mostrar o tempo por dia (ex.: "25m", "1h05") e a legenda vira "Tempo de foco por dia".
+3. Deixe a janela de estatísticas aberta e termine um foco (ou clique em **Reiniciar** com um foco em andamento). Os números se atualizam sozinhos, sem fechar e abrir a janela.
 
 - Resultado: ( ) OK  ( ) Falhou  Observação: ______________________
+- Tempo de foco (inclui interrompido): ( ) OK  ( ) Falhou  Observação: ______________________
+- Gráfico Pomodoros/Tempo: ( ) OK  ( ) Falhou  Observação: ______________________
+- Atualiza sozinha: ( ) OK  ( ) Falhou  Observação: ______________________
 
 ---
 
@@ -142,7 +150,7 @@ Religue **Fechar a janela manda para a bandeja** antes deste bloco, se quiser.
 **Passos:**
 1. Em **Configurações**, marque **Iniciar com o Windows** e clique em **Salvar**.
 2. Confira a mensagem na janela principal: deve dizer "Configurações salvas e aplicadas." sem aviso de falha.
-3. Abra o Editor do Registro (`regedit`) e vá em `HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run`. Deve existir o valor **Pomodoro** (tipo REG_SZ) com o caminho entre aspas do `Pomodoro.exe`.
+3. Abra o Editor do Registro (`regedit`) e vá em `HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run`. Deve existir o valor **Pomodoro** (tipo REG_SZ) com o caminho entre aspas do `PomodoroGatodoro.exe`.
 4. Faça logoff e login (ou reinicie o Windows).
 5. Confira que o Pomodoro abriu sozinho.
 6. Em **Configurações**, desmarque **Iniciar com o Windows**, salve, e confira no `regedit` que o valor **Pomodoro** sumiu.
@@ -155,7 +163,7 @@ Religue **Fechar a janela manda para a bandeja** antes deste bloco, se quiser.
 - Desligar remove o valor: ( ) OK  ( ) Falhou  Observação: ______________________
 - Não abre após desligar: ( ) OK  ( ) Falhou  Observação: ______________________
 
-Obs.: ao rodar pelo `.exe` instalado, o valor aponta para o `Pomodoro.exe` no caminho atual. Se o app for movido ou reinstalado em outro lugar, ligue a opção de novo para atualizar o caminho.
+Obs.: ao rodar pelo `.exe` instalado, o valor aponta para o `PomodoroGatodoro.exe` no caminho atual. Se o app for movido ou reinstalado em outro lugar, ligue a opção de novo para atualizar o caminho.
 
 ---
 
@@ -177,14 +185,14 @@ Obs.: ao rodar pelo `.exe` instalado, o valor aponta para o `Pomodoro.exe` no ca
 ## 11. Instalador (Inno Setup)
 
 **Passos:**
-1. Execute `Pomodoro-Setup-<versão>.exe` (duplo clique). Se o SmartScreen aparecer, veja o item 12.
+1. Execute `pomodoro-gatodoro-x64-setup.exe` (duplo clique). Se o SmartScreen aparecer, veja o item 12.
 2. Confira o idioma do assistente (português se o compilador tinha o idioma; senão, inglês).
-3. Confira que a instalação aceita o modo "somente para mim" (sem UAC) e instala em `%LOCALAPPDATA%\Programs\Pomodoro`.
+3. Confira que a instalação aceita o modo "somente para mim" (sem UAC) e instala em `%LOCALAPPDATA%\Programs\Pomodoro Gatodoro`.
 4. Na tela de tarefas, confira a opção **Criar atalho na área de trabalho** marcada por padrão.
-5. Conclua a instalação. Marque (ou não) "Abrir o Pomodoro" ao final.
-6. Confira o atalho no **Menu Iniciar** (pasta Pomodoro) e na área de trabalho.
+5. Conclua a instalação. Marque (ou não) "Abrir o Pomodoro Gatodoro" ao final.
+6. Confira o atalho no **Menu Iniciar** (pasta Pomodoro Gatodoro) e na área de trabalho.
 7. Abra o app pelo atalho.
-8. Desinstale: **Configurações → Aplicativos** (ou Painel de Controle) → Pomodoro → Desinstalar. Ou use "Desinstalar Pomodoro" no menu Iniciar.
+8. Desinstale: **Configurações → Aplicativos** (ou Painel de Controle) → Pomodoro Gatodoro → Desinstalar. Ou use "Desinstalar Pomodoro Gatodoro" no menu Iniciar.
 9. Confira que a pasta do programa, os atalhos e o valor **Pomodoro** em `HKCU\...\Run` foram removidos.
 10. Confira que `%APPDATA%\Pomodoro` (config e histórico) foi mantido (comportamento esperado: a desinstalação não apaga os dados do usuário).
 
@@ -211,6 +219,26 @@ Obs.: a instalação só para o usuário não pede administrador. Se escolher "p
 
 ---
 
+## 13. Aviso de nova versão
+
+Precisa de internet. Só aparece em uma versão mais antiga que a última release do GitHub.
+
+**Passos:**
+1. Instale uma versão anterior à última publicada (ex.: a penúltima release) e abra o app.
+2. Em alguns segundos deve aparecer, acima dos botões de baixo, "Nova versão disponível: X.Y.Z" com **Baixar** e **Ignorar versão**. A janela fica um pouco mais alta.
+3. Clique em **Baixar**: abre a página da release no navegador e o aviso some.
+4. Feche e abra o app de novo: o aviso volta. Clique em **Ignorar versão**, feche e abra: o aviso não aparece mais para essa versão (`"skipped_version"` no `config.json`).
+5. Em **Configurações**, desmarque **Avisar quando houver nova versão**, salve, apague `"skipped_version"` do `config.json` com o app fechado e abra de novo: nenhum aviso.
+6. Na versão mais recente (ou sem internet), abra o app: nenhum aviso e nenhuma mensagem de erro.
+
+- Aviso aparece: ( ) OK  ( ) Falhou  Observação: ______________________
+- Baixar abre a release: ( ) OK  ( ) Falhou  Observação: ______________________
+- Ignorar versão vale após reabrir: ( ) OK  ( ) Falhou  Observação: ______________________
+- Opção desligada não avisa: ( ) OK  ( ) Falhou  Observação: ______________________
+- Sem internet / versão atual: nada aparece: ( ) OK  ( ) Falhou  Observação: ______________________
+
+---
+
 ## Resumo
 
 | Seção | Resultado geral |
@@ -227,5 +255,6 @@ Obs.: a instalação só para o usuário não pede administrador. Se escolher "p
 | 10. Configuração e banco | ( ) OK  ( ) Falhou |
 | 11. Instalador | ( ) OK  ( ) Falhou |
 | 12. SmartScreen e antivírus | ( ) OK  ( ) Falhou |
+| 13. Aviso de nova versão | ( ) OK  ( ) Falhou |
 
 Versão testada: ________  Windows (versão/build): ________  Data: ________
