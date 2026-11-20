@@ -88,6 +88,7 @@ pomodoro/
 │   ├── config.py        # dataclass Config + load/save JSON
 │   ├── storage.py       # SQLite: sessões e consultas de contagem
 │   ├── notifier.py      # som (winsound) e toast (winotify), com NullNotifier
+│   ├── tips.py          # dicas da notificação de pausa (pick_tip com rng injetável)
 │   ├── noise.py         # BrownNoiseGenerator + BrownNoisePlayer (sounddevice)
 │   ├── tray.py          # TrayIcon (pystray em thread própria, fila de eventos)
 │   ├── autostart.py     # "Iniciar com o Windows" via registro HKCU\...\Run

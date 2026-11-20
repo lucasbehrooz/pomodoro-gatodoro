@@ -21,7 +21,7 @@ Se o `config.json` não existir ou estiver corrompido, o app usa os valores padr
 | `cycles_before_long_break` | `4` | Quantidade de focos até a pausa longa |
 | `daily_goal` | `8` | Meta diária de focos concluídos, de `0` a `24` (`0` desliga). Ver [Meta diária](#meta-diária) |
 | `sound_enabled` | `true` | Toca o som de alerta ao fim de cada bloco |
-| `toast_enabled` | `true` | Mostra a notificação do Windows |
+| `toast_enabled` | `true` | Mostra a notificação do Windows (a de início de pausa inclui uma dica aleatória) |
 | `brown_noise_enabled` | `false` | Liga o ruído marrom |
 | `brown_noise_focus_only` | `true` | Ruído só no foco (`false` toca também nas pausas) |
 | `brown_noise_volume` | `0.3` | Volume do ruído, de `0.0` a `1.0` |

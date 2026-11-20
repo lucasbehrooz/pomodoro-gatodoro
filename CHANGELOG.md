@@ -5,6 +5,9 @@ Cada versão publicada por tag usa a seção correspondente como texto da releas
 
 ## [Não lançado]
 
+### Adicionado
+- Dica na pausa: a notificação de início de pausa (curta ou longa) traz uma dica aleatória, como "Beba água" ou "Olhe para longe da tela por 20 segundos", sem repetir a mesma duas vezes seguidas. A notificação de foco continua sem dica.
+
 ## [0.0.12]
 
 ### Adicionado

@@ -17,12 +17,17 @@ Meta diária (``Config.daily_goal``, 0 = desligada):
   do dia, isso acontece uma vez por dia e sobrevive a reinícios do app sem
   gravar nada extra. Um guarda em memória evita repetir no mesmo dia se o
   usuário mudar a meta depois de batê-la.
+
+Dica na pausa: o toast de início de pausa (curta ou longa, só por transição
+natural do timer) traz uma dica de ``pomodoro.tips``, nunca a mesma duas vezes
+seguidas. O foco não recebe dica.
 """
 
 from __future__ import annotations
 
 import logging
 import math
+import random
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -34,6 +39,7 @@ from pomodoro.config import Config
 from pomodoro.notifier import Notifier, NullNotifier
 from pomodoro.storage import Storage
 from pomodoro.timer import Phase, PomodoroTimer, TransitionEvent
+from pomodoro.tips import pick_tip, with_tip
 
 logger = logging.getLogger(__name__)
 
@@ -126,6 +132,7 @@ class PomodoroController:
         notifier_factory: Optional[Callable[[Config], Notifier]] = None,
         clock: Callable[[], float] = time.monotonic,
         now: Callable[[], datetime] = datetime.now,
+        tip_rng: Optional[random.Random] = None,
     ) -> None:
         self._config = config
         self._timer_config = config
@@ -144,6 +151,8 @@ class PomodoroController:
         # Contagem None = consulta falhou (desconhecida): a tela mostra 0 e não há comemoração.
         self._today_cache: Optional[tuple[date, Optional[int]]] = None
         self._goal_celebrated_on: Optional[date] = None
+        self._tip_rng = tip_rng or random.Random()
+        self._last_tip: Optional[str] = None
 
     # ---- estado para a UI -----------------------------------------------
 
@@ -353,8 +362,17 @@ class PomodoroController:
                     lambda: noise.pause_for_alert(ALERT_PAUSE_SECONDS),
                 )
         if self._config.toast_enabled:
-            message = NEXT_STEP_MESSAGES[event.next]
+            message = self._transition_message(event.next)
             self._call("toast", lambda: self._notifier.toast(TOAST_TITLE, message))
+
+    def _transition_message(self, next_phase: Phase) -> str:
+        """Mensagem do toast de transição; pausas ganham uma dica."""
+        message = NEXT_STEP_MESSAGES[next_phase]
+        if next_phase not in (Phase.SHORT_BREAK, Phase.LONG_BREAK):
+            return message
+        tip = pick_tip(self._tip_rng, self._last_tip)
+        self._last_tip = tip
+        return with_tip(message, tip)
 
     def _maybe_celebrate_goal(self, before: Optional[int]) -> None:
         """Comemora a meta diária quando o foco recém-gravado a alcança (uma vez por dia).

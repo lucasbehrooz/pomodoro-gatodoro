@@ -58,7 +58,9 @@ Preparação:
 
 **Esperado:**
 - Toca um som de alerta.
-- Aparece um toast do Windows com o título do app e a mensagem da próxima etapa ("Hora da pausa").
+- Aparece um toast do Windows com o título do app e a mensagem da próxima etapa seguida de uma dica, por exemplo "Hora da pausa. Dica: Beba água." Acentos legíveis e texto não cortado.
+- Ao fim da pausa, o toast "Hora de focar" aparece sem dica.
+- Em pausas seguidas, a dica muda de uma pausa para a outra.
 - A fase muda para pausa e o contador de focos sobe para `1/4`.
 
 Repita com os toggles desligados (um por vez, com o mesmo minuto de espera) e confirme que não há som nem toast correspondente.
