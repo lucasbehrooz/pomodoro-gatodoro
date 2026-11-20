@@ -495,3 +495,155 @@ def test_shutdown_stops_noise(storage, clock, cfg):
     c.start()
     c.shutdown()
     assert noise.calls[-1] == ("stop", NOISE_FADE_SECONDS)
+
+
+# ---- aviso antes do fim do foco (F06) ---------------------------------
+
+
+class WarningNotifier(FakeNotifier):
+    def __init__(self) -> None:
+        super().__init__()
+        self.warnings = 0
+
+    def warning_sound(self) -> None:
+        self.warnings += 1
+
+
+def warn_cfg(cfg: Config, **overrides) -> Config:
+    # foco de 2 min (120 s) com aviso a 30 s do fim
+    values = {"focus_minutes": 2, "pre_end_warning_seconds": 30}
+    values.update(overrides)
+    return replace(cfg, **values)
+
+
+def test_pre_end_warning_fires_once_per_focus(cfg, storage, clock):
+    n = WarningNotifier()
+    c = make(warn_cfg(cfg), storage, clock, notifier=n)
+    c.start()
+    clock.advance(89)
+    c.tick()
+    assert n.warnings == 0
+    clock.advance(1)  # faltam 30 s
+    c.tick()
+    assert n.warnings == 1
+    for _ in range(10):
+        clock.advance(1)
+        c.tick()
+    assert n.warnings == 1
+    assert n.alerts == 0
+
+
+def test_pre_end_warning_not_in_breaks(cfg, storage, clock):
+    n = WarningNotifier()
+    c = make(warn_cfg(cfg, short_break_minutes=2, long_break_minutes=2), storage, clock, notifier=n)
+    c.start()
+    clock.advance(120)
+    c.tick()  # foco -> pausa curta
+    assert c.phase is Phase.SHORT_BREAK
+    n.warnings = 0
+    clock.advance(100)
+    c.tick()
+    assert n.warnings == 0
+
+
+def test_pre_end_warning_rearms_on_next_focus(cfg, storage, clock):
+    n = WarningNotifier()
+    c = make(warn_cfg(cfg), storage, clock, notifier=n)
+    c.start()
+    clock.advance(100)
+    c.tick()
+    assert n.warnings == 1
+    clock.advance(20)
+    c.tick()  # foco -> pausa
+    clock.advance(60)
+    c.tick()  # pausa -> foco
+    assert c.phase is Phase.FOCUS
+    clock.advance(95)
+    c.tick()
+    assert n.warnings == 2
+
+
+@pytest.mark.parametrize("warning", [120, 300])
+def test_pre_end_warning_skipped_when_focus_not_longer(cfg, storage, clock, warning):
+    n = WarningNotifier()
+    c = make(warn_cfg(cfg, pre_end_warning_seconds=warning), storage, clock, notifier=n)
+    c.start()
+    for _ in range(12):
+        clock.advance(10)
+        c.tick()
+    assert n.warnings == 0
+
+
+def test_pre_end_warning_disabled_with_zero(cfg, storage, clock):
+    n = WarningNotifier()
+    c = make(warn_cfg(cfg, pre_end_warning_seconds=0), storage, clock, notifier=n)
+    c.start()
+    clock.advance(119)
+    c.tick()
+    assert n.warnings == 0
+
+
+def test_pre_end_warning_respects_sound_disabled(cfg, storage, clock):
+    n = WarningNotifier()
+    c = make(warn_cfg(cfg, sound_enabled=False), storage, clock, notifier=n)
+    c.start()
+    clock.advance(100)
+    c.tick()
+    assert n.warnings == 0
+
+
+def test_pre_end_warning_not_while_paused(cfg, storage, clock):
+    n = WarningNotifier()
+    c = make(warn_cfg(cfg), storage, clock, notifier=n)
+    c.start()
+    clock.advance(80)
+    c.pause()
+    clock.advance(500)
+    c.tick()
+    assert n.warnings == 0
+    c.start()
+    clock.advance(10)  # faltam 30 s
+    c.tick()
+    assert n.warnings == 1
+
+
+def test_pre_end_warning_rearms_after_reset(cfg, storage, clock):
+    n = WarningNotifier()
+    c = make(warn_cfg(cfg), storage, clock, notifier=n)
+    c.start()
+    clock.advance(100)
+    c.tick()
+    assert n.warnings == 1
+    c.reset()
+    c.start()
+    clock.advance(100)
+    c.tick()
+    assert n.warnings == 2
+
+
+def test_pre_end_warning_rearms_after_skip(cfg, storage, clock):
+    n = WarningNotifier()
+    c = make(warn_cfg(cfg), storage, clock, notifier=n)
+    c.start()
+    clock.advance(100)
+    c.tick()
+    assert n.warnings == 1
+    c.skip()  # foco -> pausa
+    c.skip()  # pausa -> foco
+    assert c.phase is Phase.FOCUS
+    clock.advance(100)
+    c.tick()
+    assert n.warnings == 2
+
+
+def test_pre_end_warning_failure_does_not_break_timer(cfg, storage, clock):
+    class Broken(FakeNotifier):
+        def warning_sound(self) -> None:
+            raise RuntimeError("sem áudio")
+
+    c = make(warn_cfg(cfg), storage, clock, notifier=Broken())
+    c.start()
+    clock.advance(100)
+    c.tick()
+    clock.advance(20)
+    assert c.tick() is not None

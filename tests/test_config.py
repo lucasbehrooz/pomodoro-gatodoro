@@ -71,3 +71,22 @@ def test_invalid_update_fields_fall_back_to_defaults(tmp_path):
     cfg = load_config(p)
     assert cfg.check_updates is True
     assert cfg.skipped_version == ""
+
+
+def test_pre_end_warning_default():
+    assert Config().pre_end_warning_seconds == 60
+
+
+def test_pre_end_warning_roundtrip(tmp_path):
+    p = tmp_path / "config.json"
+    save_config(Config(pre_end_warning_seconds=0), p)
+    assert load_config(p).pre_end_warning_seconds == 0
+    save_config(Config(pre_end_warning_seconds=120), p)
+    assert load_config(p).pre_end_warning_seconds == 120
+
+
+@pytest.mark.parametrize("value", ['"60"', "-1", "301", "true", "null", "1.5"])
+def test_pre_end_warning_invalid_uses_default(tmp_path, value):
+    p = tmp_path / "config.json"
+    p.write_text('{"pre_end_warning_seconds": %s}' % value, encoding="utf-8")
+    assert load_config(p).pre_end_warning_seconds == 60

@@ -9,6 +9,11 @@ Regras de registro de sessões:
 - Bloco interrompido por skip/reset/shutdown: completed=False, duração
   decorrida. Blocos sem nenhum segundo decorrido não são gravados.
 - Pausar não encerra o bloco.
+
+Aviso antes do fim (pre_end_warning_seconds): som curto, uma vez por bloco de
+foco em execução, quando o restante chega ao limite. Não toca em pausas, com
+som desligado, com o timer pausado nem se o foco não for maior que o aviso.
+Pular, Reiniciar e a troca de bloco rearmam o aviso.
 """
 
 from __future__ import annotations
@@ -115,6 +120,8 @@ class PomodoroController:
         # Instante de início do bloco atual, só após o bloco começar a contar.
         self._block_started_at: Optional[datetime] = None
         self._noise_on = False
+        # Aviso antes do fim do foco já tratado no bloco atual.
+        self._pre_end_warned = False
 
     # ---- estado para a UI -----------------------------------------------
 
@@ -178,6 +185,7 @@ class PomodoroController:
 
     def reset(self) -> None:
         self._end_block()
+        self._pre_end_warned = False
         self._timer.reset()
         self._apply_pending_timer_config()
         self._sync_noise()
@@ -186,6 +194,7 @@ class PomodoroController:
         if self._timer.phase is Phase.IDLE:
             return
         self._end_block()
+        self._pre_end_warned = False
         self._timer.skip()
         if self._timer.is_running:
             self._block_started_at = self._now()
@@ -194,8 +203,10 @@ class PomodoroController:
     def tick(self) -> Optional[TransitionEvent]:
         event = self._timer.tick()
         if event is None:
+            self._check_pre_end_warning()
             return None
 
+        self._pre_end_warned = False
         finished_started = self._block_started_at
         # O próximo bloco começa contando imediatamente neste instante.
         self._block_started_at = self._now()
@@ -288,6 +299,22 @@ class PomodoroController:
         if self._config.toast_enabled:
             message = NEXT_STEP_MESSAGES[event.next]
             self._call("toast", lambda: self._notifier.toast(TOAST_TITLE, message))
+
+    def _check_pre_end_warning(self) -> None:
+        """Toca o aviso uma vez quando faltar pre_end_warning_seconds no foco."""
+        warning = self._config.pre_end_warning_seconds
+        if (
+            self._pre_end_warned
+            or warning <= 0
+            or self._timer.phase is not Phase.FOCUS
+            or not self._timer.is_running
+            or self._planned_seconds(Phase.FOCUS) <= warning
+            or self._timer.remaining_seconds > warning
+        ):
+            return
+        self._pre_end_warned = True
+        if self._config.sound_enabled:
+            self._call("aviso antes do fim", self._notifier.warning_sound)
 
     # ---- internos: ruído ------------------------------------------------
 

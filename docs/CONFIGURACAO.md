@@ -29,6 +29,7 @@ Se o `config.json` não existir ou estiver corrompido, o app usa os valores padr
 | `start_with_windows` | `false` | Abre o app junto com o Windows |
 | `check_updates` | `true` | Ao abrir, verifica se há versão nova no GitHub |
 | `skipped_version` | `""` | Versão marcada em **Ignorar versão** (não é avisada de novo) |
+| `pre_end_warning_seconds` | `60` | Toca um som curto quando faltar esse tempo (em segundos, de `0` a `300`) para o fim do foco. `0` desliga. Não toca nas pausas, com o timer pausado, com `sound_enabled` desligado nem se o foco for mais curto ou igual ao aviso |
 
 Alterações de duração feitas com um timer em andamento valem a partir do próximo **Reiniciar**.
 

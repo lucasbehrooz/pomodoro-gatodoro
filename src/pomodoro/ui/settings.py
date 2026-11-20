@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import replace
 
-from pomodoro.config import Config
+from pomodoro.config import PRE_END_WARNING_RANGE, Config
 from pomodoro.ui.theme import THEMES
 
 # Faixas válidas para os campos inteiros do formulário (inclusive).
@@ -14,6 +14,8 @@ INT_FIELDS: dict[str, tuple[int, int]] = {
     "short_break_minutes": (1, 60),
     "long_break_minutes": (1, 120),
     "cycles_before_long_break": (1, 12),
+    # Aviso antes do fim do foco (F06)
+    "pre_end_warning_seconds": PRE_END_WARNING_RANGE,
 }
 
 BOOL_FIELDS: tuple[str, ...] = (
@@ -40,6 +42,8 @@ LABELS: dict[str, str] = {
     "start_with_windows": "Iniciar com o Windows",
     "check_updates": "Avisar quando houver nova versão",
     "theme": "Tema",
+    # Aviso antes do fim do foco (F06)
+    "pre_end_warning_seconds": "Aviso antes do fim do foco (s, 0 = desligado)",
 }
 
 

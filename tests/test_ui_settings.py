@@ -120,3 +120,20 @@ def test_update_status_text():
     assert update_status_text(m).startswith("Baixando… 50%")
     m.state, m.error = UpdateState.ERROR, "deu ruim"
     assert update_status_text(m) == "deu ruim"
+
+
+def test_pre_end_warning_is_in_form():
+    from pomodoro.ui.settings import INT_FIELDS, LABELS
+
+    assert INT_FIELDS["pre_end_warning_seconds"] == (0, 300)
+    assert LABELS["pre_end_warning_seconds"] == "Aviso antes do fim do foco (s, 0 = desligado)"
+    assert form_values(Config(pre_end_warning_seconds=45))["pre_end_warning_seconds"] == 45
+    assert build_config({"pre_end_warning_seconds": "0"}, Config()).pre_end_warning_seconds == 0
+    assert build_config({"pre_end_warning_seconds": "300"}, Config()).pre_end_warning_seconds == 300
+
+
+@pytest.mark.parametrize("value", ["-1", "301", "um minuto"])
+def test_pre_end_warning_rejects_invalid(value):
+    with pytest.raises(SettingsError) as exc:
+        build_config({"pre_end_warning_seconds": value}, Config())
+    assert str(exc.value).startswith("Aviso antes do fim do foco (s, 0 = desligado):")

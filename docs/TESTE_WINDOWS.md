@@ -69,6 +69,19 @@ Repita com os toggles desligados (um por vez, com o mesmo minuto de espera) e co
 
 Obs.: se o toast não aparecer, verifique se as notificações do Windows estão ativas (Configurações → Sistema → Notificações) e se o modo "Não perturbe" está desligado.
 
+### 3.1. Aviso antes do fim do foco
+
+**Passos:** em **Configurações**, deixe a duração do foco em `2` min, **Aviso antes do fim do foco** em `30` e **Som de alerta** ligado. Salve, clique em **Reiniciar** e depois **Iniciar**.
+
+**Esperado:**
+- Quando o contador chega a `00:30`, toca um som curto, diferente do alerta de fim de bloco (som de "Exclamação" do Windows). Toca uma vez só.
+- No fim do foco toca o alerta normal. Na pausa seguinte não há aviso.
+- Pausando o timer antes de `00:30`, o aviso não toca enquanto estiver pausado; toca ao retomar e chegar a `00:30`.
+- Com o aviso em `0`, com **Som de alerta** desligado ou com o foco em `1` min e aviso em `60`, não há aviso.
+
+- Aviso toca uma vez, som diferente do alerta: ( ) OK  ( ) Falhou  Observação: ______________________
+- Sem aviso na pausa, pausado, com 0 ou som desligado: ( ) OK  ( ) Falhou  Observação: ______________________
+
 ---
 
 ## 4. Histórico e estatísticas

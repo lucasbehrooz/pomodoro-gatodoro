@@ -5,6 +5,7 @@ Contrato:
     class Notifier(Protocol):
         def alert_sound(self) -> None           # toca o som de alerta
         def toast(self, title: str, message: str) -> None   # notificação do Windows
+        def warning_sound(self) -> None         # som curto: o foco está acabando
 
 Implementações previstas:
     - WindowsNotifier: winsound + winotify (Fase 5)
@@ -23,12 +24,17 @@ logger = logging.getLogger(__name__)
 # do Windows). PlaySound com SND_ALIAS | SND_ASYNC retorna imediatamente e
 # respeita o esquema de sons escolhido pelo usuário.
 SYSTEM_ALERT_SOUND = "SystemAsterisk"
+# Som do aviso antes do fim do foco: outro alias do esquema de sons, para não
+# ser confundido com o alerta de fim de bloco.
+SYSTEM_WARNING_SOUND = "SystemExclamation"
 
 
 class Notifier(Protocol):
     def alert_sound(self) -> None: ...
 
     def toast(self, title: str, message: str) -> None: ...
+
+    def warning_sound(self) -> None: ...
 
 
 class NullNotifier:
@@ -38,6 +44,9 @@ class NullNotifier:
         return None
 
     def toast(self, title: str, message: str) -> None:
+        return None
+
+    def warning_sound(self) -> None:
         return None
 
 
@@ -70,6 +79,19 @@ class WindowsNotifier:
             )
         except Exception:
             logger.warning("Falha ao tocar som de alerta", exc_info=True)
+
+    def warning_sound(self) -> None:
+        if not self.sound_enabled:
+            return
+        try:
+            import winsound
+
+            winsound.PlaySound(
+                SYSTEM_WARNING_SOUND,
+                winsound.SND_ALIAS | winsound.SND_ASYNC,
+            )
+        except Exception:
+            logger.warning("Falha ao tocar som de aviso", exc_info=True)
 
     def toast(self, title: str, message: str) -> None:
         if not self.toast_enabled:
