@@ -34,7 +34,7 @@ Regras para todos os itens:
 
 ## 0.0.13: motivação
 
-- [ ] **F03 · Meta diária** (pequeno)
+- [~] **F03 · Meta diária** (pequeno)
   - Opção `daily_goal` (0 = desligada, padrão 8, faixa 0 a 24). Tela inicial mostra "Hoje: 3/8"; ao bater a meta, uma notificação comemorativa (uma vez por dia).
   - Onde: `config.py`, `ui/settings.py`, `ui/settings_dialog.py`, `ui/controller.py` (contagem do dia e "meta batida"), `ui/main_window.py`, `ui/stats.py` (linha da meta no gráfico de quantidade).
   - Testes: contagem do dia, notificação só uma vez, linha da meta na geometria.

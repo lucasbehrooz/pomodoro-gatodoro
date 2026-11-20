@@ -19,6 +19,7 @@ Se o `config.json` não existir ou estiver corrompido, o app usa os valores padr
 | `short_break_minutes` | `5` | Duração da pausa curta, em minutos |
 | `long_break_minutes` | `15` | Duração da pausa longa, em minutos |
 | `cycles_before_long_break` | `4` | Quantidade de focos até a pausa longa |
+| `daily_goal` | `8` | Meta diária de focos concluídos, de `0` a `24` (`0` desliga). Ver [Meta diária](#meta-diária) |
 | `sound_enabled` | `true` | Toca o som de alerta ao fim de cada bloco |
 | `toast_enabled` | `true` | Mostra a notificação do Windows |
 | `brown_noise_enabled` | `false` | Liga o ruído marrom |
@@ -31,6 +32,12 @@ Se o `config.json` não existir ou estiver corrompido, o app usa os valores padr
 | `skipped_version` | `""` | Versão marcada em **Ignorar versão** (não é avisada de novo) |
 
 Alterações de duração feitas com um timer em andamento valem a partir do próximo **Reiniciar**.
+
+## Meta diária
+
+Com `daily_goal` maior que zero, a tela inicial mostra quantos focos você concluiu hoje e a meta, por exemplo "Hoje: 3/8" (com "· meta batida" depois de alcançá-la). Só contam focos concluídos, pelo dia local em que começaram. Com `0`, nada aparece.
+
+No foco que alcança a meta, o app mostra uma notificação comemorativa (se a notificação do Windows estiver ligada). Ela aparece uma vez por dia: o app compara a contagem do dia antes e depois de cada foco concluído, então fechar e abrir o app não repete o aviso. Nas **Estatísticas**, o gráfico de **Pomodoros** ganha uma linha tracejada "Meta N" na altura da meta.
 
 ## Histórico
 

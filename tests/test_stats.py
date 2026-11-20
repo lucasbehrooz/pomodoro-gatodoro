@@ -17,6 +17,9 @@ from pomodoro.timer import Phase
 from pomodoro.ui.stats import (
     bar_geometry,
     bar_label,
+    chart_scale,
+    goal_line_y,
+    show_goal_line,
     build_period_series,
     format_duration_short,
     build_week_series,
@@ -256,6 +259,53 @@ def test_negative_values_are_treated_as_zero():
     assert heights(rects) == [0, 80]
 
 
+# ---- linha da meta diária ----------------------------------------------------
+
+
+def test_chart_scale_includes_goal():
+    assert chart_scale([2, 5, 3]) == 5
+    assert chart_scale([2, 5, 3], goal=8) == 8
+    assert chart_scale([2, 9, 3], goal=8) == 9
+    assert chart_scale([], goal=0) == 0
+
+
+def test_goal_line_shares_scale_with_bars():
+    # base em 100, área interna 90 px; escala 10 -> meta 5 na metade (y = 100 - 45)
+    values = [0, 5, 10]
+    scale = chart_scale(values, goal=5)
+    rects = bar_geometry(values, width=100, height=110, padding=10, scale=scale)
+    y = goal_line_y(5, scale, height=110, padding=10)
+
+    assert y == 55
+    assert rects[1][1] == y  # a barra que bateu a meta encosta na linha
+
+
+def test_goal_above_all_bars_sets_top_of_chart():
+    values = [2, 4]
+    scale = chart_scale(values, goal=8)
+    rects = bar_geometry(values, width=100, height=110, padding=10, scale=scale)
+
+    assert goal_line_y(8, scale, height=110, padding=10) == 10  # topo da área
+    assert heights(rects) == [22, 45]  # barras ficam proporcionais à meta
+
+
+def test_goal_line_absent_without_goal():
+    assert goal_line_y(0, 10, height=110, padding=10) is None
+    assert goal_line_y(5, 0, height=110, padding=10) is None
+
+
+def test_bar_geometry_without_scale_is_unchanged():
+    assert bar_geometry([1, 2], 100, 110, 10) == bar_geometry([1, 2], 100, 110, 10, scale=0)
+
+
+@pytest.mark.parametrize(
+    "metric, goal, expected",
+    [("count", 8, True), ("count", 0, False), ("time", 8, False)],
+)
+def test_goal_line_only_in_count_chart_with_goal(metric, goal, expected):
+    assert show_goal_line(metric, goal) is expected
+
+
 # ---- janela (smoke opt-in) ---------------------------------------------------
 
 
@@ -278,7 +328,7 @@ def test_stats_window_smoke(storage: Storage):
         pytest.skip(f"sem display para a janela: {exc}")
 
     try:
-        window = StatsWindow(root, storage, today=lambda: TODAY)
+        window = StatsWindow(root, storage, today=lambda: TODAY, goal=lambda: 3)
         root.update()
         assert window.winfo_exists()
         window.refresh()  # reabrir/atualizar não quebra

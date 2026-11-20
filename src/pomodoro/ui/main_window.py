@@ -37,7 +37,7 @@ logger = logging.getLogger(__name__)
 
 TICK_MS = 200
 WINDOW_WIDTH = 340
-WINDOW_HEIGHT = 500
+WINDOW_HEIGHT = 524
 UPDATE_BANNER_HEIGHT = 76  # altura extra da janela enquanto o aviso de versão aparece
 
 MSG_SETTINGS_APPLIED = "Configurações salvas e aplicadas."
@@ -145,7 +145,11 @@ class MainWindow(ctk.CTk):
         self._time_label.pack(pady=4)
 
         self._cycle_label = ctk.CTkLabel(self, text="")
-        self._cycle_label.pack(pady=4)
+        self._cycle_label.pack(pady=(4, 0))
+
+        # "Hoje: 3/8"; fica vazio com a meta diária desligada.
+        self._goal_label = ctk.CTkLabel(self, text="")
+        self._goal_label.pack(pady=(0, 4))
 
         self._cat = CatAnimation(self)
         self._cat.pack(pady=(0, 0))
@@ -171,6 +175,7 @@ class MainWindow(ctk.CTk):
         apply_text(self._phase_label, p)
         apply_text(self._time_label, p)
         apply_text(self._cycle_label, p, muted=True)
+        apply_text(self._goal_label, p, muted=True)
         apply_text(self._status_label, p, muted=True)
         self._pending_label.configure(text_color=p.warning)
         apply_text(self._update_label, p)
@@ -233,7 +238,12 @@ class MainWindow(ctk.CTk):
             window.lift()
             window.focus()
             return
-        self._stats_window = StatsWindow(self, self._storage, palette=self._palette)
+        self._stats_window = StatsWindow(
+            self,
+            self._storage,
+            palette=self._palette,
+            goal=lambda: self._controller.config.daily_goal,
+        )
 
     def _save_settings(self, new: Config) -> None:
         self._save(new)  # OSError é tratado pelo diálogo
@@ -373,6 +383,7 @@ class MainWindow(ctk.CTk):
         self._cycle_label.configure(
             text=f"Focos no ciclo: {c.completed_focus_count}/{c.cycles_before_long_break}"
         )
+        self._goal_label.configure(text=c.daily_goal_text)
         self._toggle_btn.configure(text="Pausar" if c.is_running else "Iniciar")
         self._cat.set_running(c.is_running)
         self._pending_label.configure(text=MSG_PENDING_NOTICE if c.timer_config_pending else "")

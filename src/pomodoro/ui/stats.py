@@ -1,6 +1,6 @@
 """Tela de histórico e gráfico de pomodoros concluídos.
 
-Parte pura (sem Tk, testável): build_week_series, summarize, bar_geometry.
+Parte pura (sem Tk, testável): build_week_series, summarize, bar_geometry, goal_line_y.
 Parte de janela: StatsWindow (CTkToplevel), aberta sob demanda pela MainWindow.
 
 Contagem: só focos concluídos (completed=True), por dia local.
@@ -20,6 +20,8 @@ from pomodoro.ui.icon import apply_window_icon
 
 from pomodoro.storage import Storage
 from pomodoro.ui.theme import (
+    CHART_GOAL_DARK,
+    CHART_GOAL_LIGHT,
     DEFAULT_THEME,
     Palette,
     apply_accent_button,
@@ -175,13 +177,19 @@ def label_step(count: int, max_labels: int = MAX_X_LABELS) -> int:
     return math.ceil(count / max_labels)
 
 
+def chart_scale(values: list[int], goal: int = 0) -> int:
+    """Valor que ocupa a altura toda do gráfico: o maior entre os valores e a meta."""
+    return max([0, goal, *values])
+
+
 def bar_geometry(
-    values: list[int], width: int, height: int, padding: int
+    values: list[int], width: int, height: int, padding: int, scale: int | None = None
 ) -> list[tuple[int, int, int, int]]:
     """Retângulos (x0, y0, x1, y1) das barras de um gráfico vertical.
 
     - As barras ficam sobre uma linha de base em `height - padding`.
-    - A altura é proporcional ao maior valor (escala pelo máximo).
+    - A altura é proporcional ao maior valor (escala pelo máximo), ou a
+      `scale` quando informado (ex.: para caber a linha da meta).
     - Valor zero, ou máximo zero, gera barra de altura 0 (y0 == y1 == base):
       nenhuma área é desenhada, mas a coluna continua reservada e o rótulo "0"
       continua visível na tela.
@@ -196,7 +204,7 @@ def bar_geometry(
         raise ValueError("área insuficiente para o padding informado")
 
     clamped = [max(0, v) for v in values]
-    peak = max(clamped)
+    peak = max(max(clamped), scale or 0)
     slot = inner_w / len(clamped)
     bar_w = max(1, int(slot * BAR_FILL_RATIO))
     base = height - padding
@@ -210,10 +218,29 @@ def bar_geometry(
     return rects
 
 
+def goal_line_y(goal: int, scale: int, height: int, padding: int) -> int | None:
+    """Altura (y) da linha da meta no gráfico, na mesma escala das barras.
+
+    None quando não há meta (goal <= 0) ou escala; o gráfico então não mostra a linha.
+    """
+    if goal <= 0 or scale <= 0:
+        return None
+    inner_h = height - 2 * padding
+    if inner_h <= 0:
+        raise ValueError("área insuficiente para o padding informado")
+    base = height - padding
+    return base - round(min(goal, scale) / scale * inner_h)
+
+
+def show_goal_line(metric: str, goal: int) -> bool:
+    """A linha da meta só faz sentido no gráfico de quantidade e com meta ligada."""
+    return metric == "count" and goal > 0
+
+
 # ---- janela -----------------------------------------------------------------
 
-_LIGHT = {"bg": "#dbdbdb", "bar": "#3b8ed0", "text": "#000000"}
-_DARK = {"bg": "#2b2b2b", "bar": "#3b8ed0", "text": "#ffffff"}
+_LIGHT = {"bg": "#dbdbdb", "bar": "#3b8ed0", "text": "#000000", "goal": CHART_GOAL_LIGHT}
+_DARK = {"bg": "#2b2b2b", "bar": "#3b8ed0", "text": "#ffffff", "goal": CHART_GOAL_DARK}
 
 
 def chart_colors(palette: Palette, dark: bool) -> dict[str, str]:
@@ -222,9 +249,19 @@ def chart_colors(palette: Palette, dark: bool) -> dict[str, str]:
     Tema padrão (sem cores próprias): mantém as cores originais do gráfico.
     Demais temas: fundo do card, barras no accent e texto da paleta.
     """
-    if palette.card is None or palette.accent is None or palette.text is None:
+    if (
+        palette.card is None
+        or palette.accent is None
+        or palette.text is None
+        or palette.goal_line is None
+    ):
         return _DARK if dark else _LIGHT
-    return {"bg": palette.card, "bar": palette.accent, "text": palette.text}
+    return {
+        "bg": palette.card,
+        "bar": palette.accent,
+        "text": palette.text,
+        "goal": palette.goal_line,
+    }
 
 
 def _key_label(labels: dict[str, str], key: str) -> str:
@@ -235,6 +272,8 @@ class StatsWindow(ctk.CTkToplevel):
     """Mostra totais e um gráfico de barras dos últimos 7 dias.
 
     `today` é injetável para testes; por padrão usa a data atual.
+    `goal` devolve a meta diária atual (0 = sem linha da meta); é lida a cada
+    refresh, então mudar a meta nas Configurações vale na próxima atualização.
     Chama refresh() no construtor. Para atualizar uma janela já aberta, chame refresh().
     """
 
@@ -244,6 +283,7 @@ class StatsWindow(ctk.CTkToplevel):
         storage: Storage,
         today: Callable[[], date] = date.today,
         palette: Palette | None = None,
+        goal: Callable[[], int] = lambda: 0,
     ) -> None:
         super().__init__(master)
         self.title("Estatísticas")
@@ -253,6 +293,7 @@ class StatsWindow(ctk.CTkToplevel):
 
         self._storage = storage
         self._today = today
+        self._goal = goal
         self._palette: Palette = palette or get_palette(DEFAULT_THEME)
 
         self._frame = ctk.CTkFrame(self)
@@ -363,7 +404,11 @@ class StatsWindow(ctk.CTkToplevel):
         canvas.configure(bg=colors["bg"])
 
         values = [count for _, count in series]
-        rects = bar_geometry(values, CANVAS_WIDTH, CANVAS_HEIGHT, CANVAS_PADDING)
+        goal = self._goal()
+        if not show_goal_line(self._metric_key, goal):
+            goal = 0
+        scale = chart_scale(values, goal)
+        rects = bar_geometry(values, CANVAS_WIDTH, CANVAS_HEIGHT, CANVAS_PADDING, scale)
         base = CANVAS_HEIGHT - CANVAS_PADDING
         canvas.create_line(
             CANVAS_PADDING // 2,
@@ -388,3 +433,23 @@ class StatsWindow(ctk.CTkToplevel):
                 canvas.create_text(
                     cx, base + 12, text=f"{day:%d/%m}", anchor="center", fill=colors["text"]
                 )
+
+        goal_y = goal_line_y(goal, scale, CANVAS_HEIGHT, CANVAS_PADDING)
+        if goal_y is not None:
+            # Tracejada e com rótulo: não depende só da cor para ser entendida.
+            canvas.create_line(
+                CANVAS_PADDING // 2,
+                goal_y,
+                CANVAS_WIDTH - CANVAS_PADDING // 2,
+                goal_y,
+                fill=colors["goal"],
+                dash=(4, 3),
+                width=2,
+            )
+            canvas.create_text(
+                CANVAS_WIDTH - CANVAS_PADDING // 2,
+                goal_y - 2,
+                text=f"Meta {goal}",
+                anchor="se",
+                fill=colors["goal"],
+            )

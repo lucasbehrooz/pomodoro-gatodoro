@@ -150,3 +150,38 @@ def test_open_stats_refresh_after_skip(tmp_path: Path):
     finally:
         window.quit_app()
         storage.close()
+
+
+def test_daily_goal_label_and_stats_goal_line(tmp_path: Path):
+    try:
+        from pomodoro.ui.main_window import MainWindow
+    except ImportError as exc:  # pragma: no cover
+        pytest.skip(f"customtkinter indisponível: {exc}")
+
+    from dataclasses import replace
+
+    storage = Storage(tmp_path / "pomodoro.db")
+    controller = PomodoroController(Config(daily_goal=8), storage)
+    try:
+        window = MainWindow(controller, save=lambda c: None, storage=storage)
+    except Exception as exc:  # sem display
+        storage.close()
+        pytest.skip(f"sem display para a janela: {exc}")
+
+    try:
+        window.update()
+        assert window._goal_label.cget("text") == "Hoje: 0/8"
+        window._open_stats()
+        window.update()
+        canvas = window._stats_window._canvas
+        assert any(canvas.itemcget(i, "text") == "Meta 8" for i in canvas.find_all()
+                   if canvas.type(i) == "text")
+
+        window._save_settings(replace(controller.config, daily_goal=0))
+        window.update()
+        assert window._goal_label.cget("text") == ""
+        assert not any(canvas.itemcget(i, "text").startswith("Meta") for i in canvas.find_all()
+                       if canvas.type(i) == "text")
+        window.quit_app()
+    finally:
+        storage.close()

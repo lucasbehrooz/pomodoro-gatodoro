@@ -6,6 +6,7 @@ Cada versão publicada por tag usa a seção correspondente como texto da releas
 ## [Não lançado]
 
 ### Adicionado
+- Meta diária de focos (padrão 8, 0 desliga): a tela inicial mostra "Hoje: 3/8", uma notificação comemora a meta uma vez por dia e o gráfico de Pomodoros ganha a linha da meta.
 - Uma instância só: abrir o Pomodoro com outro já aberto traz a janela existente para frente (mesmo se estava na bandeja) em vez de criar um segundo app e um segundo ícone na bandeja.
 - Cada release publica um `latest.json` com versão, tamanho e SHA-256 do instalador. O app verifica atualizações por ele, sem gastar o limite da API do GitHub.
 

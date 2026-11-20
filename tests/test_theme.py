@@ -225,9 +225,26 @@ def test_chart_colors_padrao_keeps_original_colors():
 @pytest.mark.parametrize("palette", [FEMININO, ESCURO], ids=["feminino", "escuro"])
 def test_chart_colors_follow_palette(palette: Palette):
     colors = chart_colors(palette, dark=False)
-    assert colors == {"bg": palette.card, "bar": palette.accent, "text": palette.text}
+    assert colors == {
+        "bg": palette.card,
+        "bar": palette.accent,
+        "text": palette.text,
+        "goal": palette.goal_line,
+    }
     # O modo do sistema não altera temas com cores próprias.
     assert chart_colors(palette, dark=True) == colors
+
+
+@pytest.mark.parametrize(
+    "palette, dark",
+    [(PADRAO, False), (PADRAO, True), (FEMININO, False), (ESCURO, False)],
+    ids=["padrao-claro", "padrao-escuro", "feminino", "escuro"],
+)
+def test_goal_line_is_readable_and_distinct_from_bars(palette: Palette, dark: bool):
+    # O rótulo "Meta N" usa a cor da linha: precisa de contraste de texto.
+    colors = chart_colors(palette, dark=dark)
+    assert _contrast(colors["goal"], colors["bg"]) >= 4.5
+    assert colors["goal"].lower() != colors["bar"].lower()
 
 
 # ---- smoke de UI (opt-in) ----------------------------------------------------
