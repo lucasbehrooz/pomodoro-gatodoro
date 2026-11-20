@@ -59,6 +59,8 @@ class FakeKernel32:
         self.calls: list[tuple] = []
         self._next = 100
         self.fail_mutex = False
+        self.fail_mutex_error = 6  # ERROR_INVALID_HANDLE: falha genérica
+        self.fail_events: set[str] = set()
 
     def _open(self, name):
         if name in self.names:
@@ -73,12 +75,15 @@ class FakeKernel32:
     def CreateMutexW(self, attrs, initial_owner, name):
         self.calls.append(("CreateMutexW", name))
         if self.fail_mutex:
-            self.last_error = 5
+            self.last_error = self.fail_mutex_error
             return 0
         return self._open(name)
 
     def CreateEventW(self, attrs, manual_reset, initial_state, name):
         self.calls.append(("CreateEventW", name, bool(manual_reset)))
+        if name in self.fail_events:
+            self.last_error = 5
+            return 0
         is_new = name not in self.names
         handle = self._open(name)
         if is_new:
@@ -101,7 +106,14 @@ class FakeKernel32:
     def WaitForSingleObject(self, handle, timeout):
         name = self.handles[handle]
         script = self.wait_script.get(name, [])
-        return script.pop(0) if script else WAIT_FAILED
+        if script:
+            return script.pop(0)
+        # Sem roteiro: respeita o estado do evento (sem bloquear de verdade).
+        if self.signaled.get(name):
+            if not self.manual_reset.get(name, False):
+                self.signaled[name] = False  # reset automático
+            return 0
+        return WAIT_FAILED
 
     def CloseHandle(self, handle):
         self.closed.append(handle)
@@ -166,6 +178,55 @@ def test_mutex_failure_runs_as_single_app():
     assert signals.already_running is False
     signals.listen(lambda: None, lambda: None)  # não quebra sem evento Show
     signals.close()
+
+
+def test_access_denied_mutex_counts_as_running():
+    """Instância elevada: CreateMutexW volta NULL com ERROR_ACCESS_DENIED."""
+    k32 = FakeKernel32()
+    k32.fail_mutex = True
+    k32.fail_mutex_error = instance_mod.ERROR_ACCESS_DENIED
+    k32.fail_events.add(SHOW_EVENT_NAME)  # sem acesso ao evento também
+    signals = make(k32)
+    assert signals.already_running is True
+    assert signals.notify_existing() is False  # só sai, com log
+    signals.listen(lambda: None, lambda: None)
+    assert signals._threads == []
+
+
+def test_access_denied_mutex_still_signals_show_when_possible():
+    k32 = FakeKernel32()
+    make(k32)  # instância original criou o evento Show
+    k32.fail_mutex = True
+    k32.fail_mutex_error = instance_mod.ERROR_ACCESS_DENIED
+    second = make(k32)
+    assert second.already_running is True
+    assert second.notify_existing() is True
+    assert k32.signaled[SHOW_EVENT_NAME] is True
+
+
+def test_show_event_failure_is_logged(caplog):
+    k32 = FakeKernel32()
+    k32.fail_events.add(SHOW_EVENT_NAME)
+    with caplog.at_level("WARNING", logger="pomodoro.instance"):
+        signals = make(k32)
+    assert signals.already_running is False
+    assert "Evento de mostrar indisponível" in caplog.text
+    signals.listen(lambda: None, lambda: None)
+    assert [t.name for t in signals._threads] == ["quit-signal"]
+
+
+def test_second_open_before_listen_is_served_when_listening_starts():
+    """A segunda abertura chega enquanto a primeira ainda monta a janela."""
+    k32 = FakeKernel32()
+    first = make(k32)
+    second = make(k32)
+    assert second.notify_existing() is True
+    assert k32.signaled[SHOW_EVENT_NAME] is True  # ninguém escutando ainda
+    shows = []
+    first.listen(lambda: None, lambda: shows.append(1))
+    join(first)
+    assert shows == [1]
+    assert k32.signaled[SHOW_EVENT_NAME] is False  # reset automático
 
 
 def test_show_event_wakes_listener_many_times():

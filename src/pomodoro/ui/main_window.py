@@ -303,7 +303,20 @@ class MainWindow(ctk.CTk):
     def show_window(self) -> None:
         self.deiconify()
         self.lift()
+        # Topmost por um instante: no Windows, garante que a janela fique na frente
+        # mesmo quando o SO nega o foco (ex.: pedido vindo de outra abertura do app).
+        try:
+            self.attributes("-topmost", True)
+            self.after_idle(self._drop_topmost)
+        except Exception:
+            logger.debug("Não foi possível trazer a janela para frente", exc_info=True)
         self.focus_force()
+
+    def _drop_topmost(self) -> None:
+        try:
+            self.attributes("-topmost", False)
+        except Exception:  # janela já destruída
+            logger.debug("Não foi possível tirar o topmost", exc_info=True)
 
     def hide_to_tray(self) -> None:
         if self._on_hide_to_tray is not None:
