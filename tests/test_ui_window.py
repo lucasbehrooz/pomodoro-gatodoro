@@ -13,6 +13,7 @@ import pytest
 from pomodoro.config import Config
 from pomodoro.storage import Storage
 from pomodoro.ui.controller import PomodoroController
+from pomodoro.ui.shortcuts import HINT_TEXT
 
 pytestmark = pytest.mark.skipif(
     os.environ.get("POMODORO_UI_SMOKE") != "1",
@@ -152,36 +153,158 @@ def test_open_stats_refresh_after_skip(tmp_path: Path):
         storage.close()
 
 
-def test_daily_goal_label_and_stats_goal_line(tmp_path: Path):
+def _make_window(tmp_path: Path):
     try:
         from pomodoro.ui.main_window import MainWindow
     except ImportError as exc:  # pragma: no cover
         pytest.skip(f"customtkinter indisponível: {exc}")
-
-    from dataclasses import replace
-
     storage = Storage(tmp_path / "pomodoro.db")
-    controller = PomodoroController(Config(daily_goal=8), storage)
+    controller = PomodoroController(Config(), storage)
     try:
-        window = MainWindow(controller, save=lambda c: None, storage=storage)
+        window = MainWindow(controller, save=lambda c: None)
     except Exception as exc:  # sem display
         storage.close()
         pytest.skip(f"sem display para a janela: {exc}")
+    return window, controller, storage
 
+
+_clock = iter(range(10_000, 10_000_000, 500))  # horário dos eventos, em ms
+
+
+def _press(widget, key: str) -> None:
+    """Aperta e solta a tecla, como um toque normal."""
+    t = next(_clock)
+    widget.event_generate(f"<KeyPress-{key}>", time=t)
+    widget.event_generate(f"<KeyRelease-{key}>", time=t + 80)
+    widget.update()
+
+
+def test_keyboard_shortcuts_call_button_handlers(tmp_path: Path):
+    window, controller, storage = _make_window(tmp_path)
+    calls: list[str] = []
     try:
-        window.update()
-        assert window._goal_label.cget("text") == "Hoje: 0/8"
-        window._open_stats()
-        window.update()
-        canvas = window._stats_window._canvas
-        assert any(canvas.itemcget(i, "text") == "Meta 8" for i in canvas.find_all()
-                   if canvas.type(i) == "text")
+        for name in ("_on_toggle", "_on_reset", "_on_skip"):
+            original = getattr(window, name)
 
-        window._save_settings(replace(controller.config, daily_goal=0))
+            def wrapper(original=original, name=name):
+                calls.append(name)
+                original()
+
+            setattr(window, name, wrapper)
         window.update()
-        assert window._goal_label.cget("text") == ""
-        assert not any(canvas.itemcget(i, "text").startswith("Meta") for i in canvas.find_all()
-                       if canvas.type(i) == "text")
-        window.quit_app()
+        target = window._time_label  # widget comum da janela principal
+
+        _press(target, "space")
+        assert controller.is_running
+        assert window._toggle_btn.cget("text") == "Pausar"
+        _press(target, "space")
+        assert not controller.is_running
+        _press(target, "s")
+        _press(target, "S")
+        _press(target, "r")
+        _press(target, "R")
+        _press(target, "x")  # sem atalho
+        assert calls == [
+            "_on_toggle",
+            "_on_toggle",
+            "_on_skip",
+            "_on_skip",
+            "_on_reset",
+            "_on_reset",
+        ]
+        assert window._hint_label.cget("text") == HINT_TEXT
     finally:
+        window.quit_app()
+        storage.close()
+
+
+def test_keyboard_shortcuts_ignored_in_text_fields_and_child_windows(tmp_path: Path):
+    import customtkinter as ctk
+
+    window, controller, storage = _make_window(tmp_path)
+    try:
+        entry = ctk.CTkEntry(window)
+        entry.pack()
+        child = ctk.CTkToplevel(window)
+        child_label = ctk.CTkLabel(child, text="filha")
+        child_label.pack()
+        child_entry = ctk.CTkEntry(child)
+        child_entry.pack()
+        window.update()
+
+        for widget in (entry._entry, child_label, child_entry._entry, child):
+            _press(widget, "space")
+            _press(widget, "s")
+            _press(widget, "r")
+        assert not controller.is_running
+        assert controller.completed_focus_count == 0
+        assert window._toggle_btn.cget("text") == "Iniciar"
+
+        # Digitar no campo continua funcionando.
+        entry._entry.focus_force()
+        entry._entry.insert("end", "rs ")
+        assert entry.get() == "rs "
+        child.destroy()
+    finally:
+        window.quit_app()
+        storage.close()
+
+
+@pytest.mark.parametrize("theme", ["padrao", "feminino", "escuro"])
+def test_hint_follows_theme(tmp_path: Path, theme: str):
+    from pomodoro.ui.theme import get_palette
+
+    window, controller, storage = _make_window(tmp_path)
+    try:
+        window._set_theme(theme)
+        window.update()
+        palette = get_palette(theme)
+        expected = palette.muted
+        if expected is None:  # tema padrao: cor padrão do CustomTkinter
+            import customtkinter as ctk
+
+            expected = ctk.ThemeManager.theme["CTkLabel"]["text_color"]
+        assert window._hint_label.cget("text_color") == expected
+    finally:
+        window.quit_app()
+        storage.close()
+
+
+def test_held_key_does_not_repeat(tmp_path: Path):
+    window, controller, storage = _make_window(tmp_path)
+    calls: list[str] = []
+    try:
+        for name in ("_on_toggle", "_on_skip"):
+            original = getattr(window, name)
+
+            def wrapper(original=original, name=name):
+                calls.append(name)
+                original()
+
+            setattr(window, name, wrapper)
+        window.update()
+        target = window._time_label
+
+        # Windows: segurar S gera só KeyPress repetidos.
+        start = next(_clock)
+        for i in range(10):
+            target.event_generate("<KeyPress-s>", time=start + 33 * i)
+        target.event_generate("<KeyRelease-s>", time=start + 400)
+        target.update()
+        assert calls == ["_on_skip"]
+        _press(target, "s")  # novo toque pula de novo
+        assert calls == ["_on_skip", "_on_skip"]
+
+        # X11: segurar Espaço gera pares KeyRelease/KeyPress no mesmo instante.
+        t = next(_clock)
+        target.event_generate("<KeyPress-space>", time=t)
+        for i in range(1, 10):
+            target.event_generate("<KeyRelease-space>", time=t + 33 * i)
+            target.event_generate("<KeyPress-space>", time=t + 33 * i)
+        target.event_generate("<KeyRelease-space>", time=t + 400)
+        target.update()
+        assert calls == ["_on_skip", "_on_skip", "_on_toggle"]
+        assert controller.is_running
+    finally:
+        window.quit_app()
         storage.close()

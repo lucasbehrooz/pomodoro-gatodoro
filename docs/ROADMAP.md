@@ -26,7 +26,7 @@ Regras para todos os itens:
   - Aceite: segunda abertura não cria janela nem ícone na bandeja; a primeira aparece e ganha foco, mesmo se estava na bandeja.
   - Testes: lógica de "já existe" com kernel32 falso; nomes batendo com o `.iss` continuam passando.
   - Windows: abrir duas vezes pelo atalho; abrir com o app na bandeja.
-- [ ] **F02 · Atalhos de teclado** (pequeno)
+- [~] **F02 · Atalhos de teclado** (pequeno) (#2)
   - Espaço = Iniciar/Pausar, R = Reiniciar, S = Pular, na janela principal. Não disparar quando o foco estiver em campo de texto (diálogos).
   - Onde: `ui/main_window.py` (bind na janela, chamando os mesmos handlers dos botões).
   - Aceite: atalhos funcionam com a janela em foco; botões mostram a dica (ex.: tooltip ou texto "Espaço").
