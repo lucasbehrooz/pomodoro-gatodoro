@@ -87,11 +87,18 @@ Obs.: se o toast não aparecer, verifique se as notificações do Windows estão
 - Gráfico Pomodoros/Tempo: ( ) OK  ( ) Falhou  Observação: ______________________
 - Atualiza sozinha: ( ) OK  ( ) Falhou  Observação: ______________________
 
+**Sequência de dias:**
+1. Abra as **Estatísticas** e confira a linha "Sequência: N dias · Recorde: M dias". Se ainda não houver foco concluído hoje, a sequência vai até ontem (não zera só porque o dia começou).
+2. Conclua um foco hoje (primeiro do dia) com a janela aberta: a sequência sobe 1 sozinha. Um foco interrompido (**Pular**) não muda a sequência.
+3. Com 1 dia, o texto fica no singular ("1 dia").
+
+- Sequência e recorde: ( ) OK  ( ) Falhou  Observação: ______________________
+
 **Meta diária:**
-4. Em **Configurações**, ponha **Meta diária de focos** em 2 (use foco de 1 min para agilizar) e salve. A tela inicial mostra "Hoje: N/2" logo abaixo de "Focos no ciclo".
-5. Conclua focos até bater a meta: o contador sobe a cada foco concluído e, no foco que alcança a meta, aparece a notificação "Meta do dia batida: 2 pomodoros!" e o texto vira "Hoje: 2/2 · meta batida". Conclua mais um foco e feche e abra o app: a notificação da meta não aparece de novo hoje.
-6. Em **Estatísticas**, no gráfico **Pomodoros**, aparece uma linha tracejada na altura da meta e, abaixo do gráfico, a legenda "Meta diária: 2", legível nos três temas. No dia em que a meta é batida, o número em cima da barra de hoje continua visível (nada o cobre). Em **Tempo** a linha e a legenda somem. Com as Estatísticas abertas, mude a meta e salve: a linha muda na hora.
-7. Ponha a meta em 0 e salve: "Hoje: …" some da tela inicial e a linha some do gráfico.
+1. Em **Configurações**, ponha **Meta diária de focos** em 2 (use foco de 1 min para agilizar) e salve. A tela inicial mostra "Hoje: N/2" logo abaixo de "Focos no ciclo".
+2. Conclua focos até bater a meta: o contador sobe a cada foco concluído e, no foco que alcança a meta, aparece a notificação "Meta do dia batida: 2 pomodoros!" e o texto vira "Hoje: 2/2 · meta batida". Conclua mais um foco e feche e abra o app: a notificação da meta não aparece de novo hoje.
+3. Em **Estatísticas**, no gráfico **Pomodoros**, aparece uma linha tracejada na altura da meta e, abaixo do gráfico, a legenda "Meta diária: 2", legível nos três temas. No dia em que a meta é batida, o número em cima da barra de hoje continua visível (nada o cobre). Em **Tempo** a linha e a legenda somem. Com as Estatísticas abertas, mude a meta e salve: a linha muda na hora.
+4. Ponha a meta em 0 e salve: "Hoje: …" some da tela inicial e a linha some do gráfico.
 
 - Meta diária (contador, notificação única, linha no gráfico, desligar): ( ) OK  ( ) Falhou  Observação: ______________________
 
@@ -166,13 +173,13 @@ Obs.: a pausa do ruído só acontece com o som de alerta ligado (comportamento a
 2. Minimize a janela e abra o app de novo. A janela volta e ganha o foco.
 3. Feche a janela para a bandeja (**X**), clique em outro programa e abra o app de novo. A janela reaparece na frente e com foco, e o timer continua de onde estava.
 4. Repita o passo 3 mais duas vezes: deve funcionar todas as vezes.
-5. Confira no Gerenciador de Tarefas que só há um processo `PomodoroGatodoro.exe` depois das aberturas.
+5. Confira que continua só **um** ícone do gato na bandeja e no Gerenciador de Tarefas só um grupo do Pomodoro. O `.exe` de arquivo único aparece como **dois** processos `PomodoroGatodoro.exe` (o inicializador e o app); isso é normal. Não deve haver quatro.
 
 - Segunda abertura não cria janela nem ícone: ( ) OK  ( ) Falhou  Observação: ______________________
 - Janela minimizada volta: ( ) OK  ( ) Falhou  Observação: ______________________
 - Janela na bandeja volta com foco: ( ) OK  ( ) Falhou  Observação: ______________________
 - Funciona várias vezes seguidas: ( ) OK  ( ) Falhou  Observação: ______________________
-- Um processo só: ( ) OK  ( ) Falhou  Observação: ______________________
+- Um app só (um ícone; no máximo dois processos `PomodoroGatodoro.exe`): ( ) OK  ( ) Falhou  Observação: ______________________
 
 ---
 

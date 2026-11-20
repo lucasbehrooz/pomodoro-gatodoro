@@ -338,6 +338,8 @@ def test_stats_window_smoke(storage: Storage):
         window = StatsWindow(root, storage, today=lambda: TODAY)
         root.update()
         assert window.winfo_exists()
+        # seed: focos concluídos em 08, 09 e 10/11 (e antes, com buraco).
+        assert window._streak_label.cget("text") == "Sequência: 3 dias · Recorde: 3 dias"
         window.refresh()  # reabrir/atualizar não quebra
         window._on_metric_selected("Tempo")
         assert "Tempo de foco" in window._caption.cget("text")

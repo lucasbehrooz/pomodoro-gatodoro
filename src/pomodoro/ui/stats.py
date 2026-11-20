@@ -9,7 +9,7 @@ Tempo: soma de todo o foco, inclusive focos interrompidos.
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from datetime import date, timedelta
 import math
 import tkinter as tk
@@ -171,6 +171,42 @@ def stat_line(title: str, count: int, seconds: int) -> str:
     return f"{title}: {count} · {format_duration(seconds)} de foco"
 
 
+def streak(days: Iterable[date], today: date) -> int:
+    """Dias seguidos com foco concluído até hoje.
+
+    Conta `today` se ele estiver em `days`; senão a sequência termina ontem.
+    Sem foco hoje nem ontem, a sequência é 0. Dias futuros são ignorados.
+    """
+    found = set(days)
+    current = today if today in found else today - timedelta(days=1)
+    count = 0
+    while current in found:
+        count += 1
+        current -= timedelta(days=1)
+    return count
+
+
+def record_streak(days: Iterable[date]) -> int:
+    """Maior sequência de dias seguidos com foco concluído em `days`."""
+    best = run = 0
+    previous: date | None = None
+    for day in sorted(set(days)):
+        run = run + 1 if previous is not None and day - previous == timedelta(days=1) else 1
+        best = max(best, run)
+        previous = day
+    return best
+
+
+def format_days(count: int) -> str:
+    """'1 dia', '0 dias', '5 dias'."""
+    return f"{count} dia" if count == 1 else f"{count} dias"
+
+
+def streak_line(current: int, best: int) -> str:
+    """Linha das Estatísticas: 'Sequência: 5 dias · Recorde: 12 dias'."""
+    return f"Sequência: {format_days(current)} · Recorde: {format_days(best)}"
+
+
 def label_step(count: int, max_labels: int = MAX_X_LABELS) -> int:
     """Passo entre datas exibidas no eixo X, para não sobrepor os rótulos."""
     if count <= max_labels:
@@ -318,6 +354,8 @@ class StatsWindow(ctk.CTkToplevel):
         self._week_label.pack(anchor="w", pady=2)
         self._period_label = ctk.CTkLabel(frame, text="", anchor="w")
         self._period_label.pack(anchor="w", pady=2)
+        self._streak_label = ctk.CTkLabel(frame, text="", anchor="w")
+        self._streak_label.pack(anchor="w", pady=2)
 
         selectors = ctk.CTkFrame(frame, fg_color="transparent")
         selectors.pack(anchor="w", pady=(8, 0))
@@ -363,7 +401,12 @@ class StatsWindow(ctk.CTkToplevel):
         self._palette = palette
         apply_window(self, palette, "CTkToplevel")
         apply_card(self._frame, palette)
-        for label in (self._today_label, self._week_label, self._period_label):
+        for label in (
+            self._today_label,
+            self._week_label,
+            self._period_label,
+            self._streak_label,
+        ):
             apply_text(label, palette)
         apply_text(self._caption, palette, muted=True)
         self._goal_legend.configure(text_color=goal_line_color(palette))
@@ -389,6 +432,9 @@ class StatsWindow(ctk.CTkToplevel):
         self._period_label.configure(text=stat_line(self._period_title(), total, seconds))
         what = "Tempo de foco" if self._metric_key == "time" else "Focos concluídos"
         self._caption.configure(text=f"{what} por dia ({self._period_title().lower()})")
+
+        days = self._storage.completed_focus_days()
+        self._streak_label.configure(text=streak_line(streak(days, today), record_streak(days)))
 
         series = build_period_series(self._storage, today, period, self._metric_key)
         self._draw_chart(series)
