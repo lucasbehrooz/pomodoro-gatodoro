@@ -148,13 +148,13 @@ Obs.: a pausa do ruído só acontece com o som de alerta ligado (comportamento a
 2. Minimize a janela e abra o app de novo. A janela volta e ganha o foco.
 3. Feche a janela para a bandeja (**X**), clique em outro programa e abra o app de novo. A janela reaparece na frente e com foco, e o timer continua de onde estava.
 4. Repita o passo 3 mais duas vezes: deve funcionar todas as vezes.
-5. Confira no Gerenciador de Tarefas que só há um processo `PomodoroGatodoro.exe` depois das aberturas.
+5. Confira que continua só **um** ícone do gato na bandeja e no Gerenciador de Tarefas só um grupo do Pomodoro. O `.exe` de arquivo único aparece como **dois** processos `PomodoroGatodoro.exe` (o inicializador e o app); isso é normal. Não deve haver quatro.
 
 - Segunda abertura não cria janela nem ícone: ( ) OK  ( ) Falhou  Observação: ______________________
 - Janela minimizada volta: ( ) OK  ( ) Falhou  Observação: ______________________
 - Janela na bandeja volta com foco: ( ) OK  ( ) Falhou  Observação: ______________________
 - Funciona várias vezes seguidas: ( ) OK  ( ) Falhou  Observação: ______________________
-- Um processo só: ( ) OK  ( ) Falhou  Observação: ______________________
+- Um app só (um ícone; no máximo dois processos `PomodoroGatodoro.exe`): ( ) OK  ( ) Falhou  Observação: ______________________
 
 ---
 
