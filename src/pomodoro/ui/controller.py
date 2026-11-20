@@ -10,6 +10,11 @@ Regras de registro de sessões:
   decorrida. Blocos sem nenhum segundo decorrido não são gravados.
 - Pausar não encerra o bloco.
 
+Auto-início (auto_start_breaks / auto_start_focus): ao concluir um bloco
+naturalmente, o próximo só continua contando se a opção da fase seguinte
+estiver ligada; senão fica pausado com a duração cheia, e o início da sessão é
+marcado no próximo Iniciar. Pular e Reiniciar não dependem dessas opções.
+
 Meta diária (``Config.daily_goal``, 0 = desligada):
 - A contagem do dia vem do Storage (focos concluídos com dia local de hoje).
 - A comemoração dispara quando um foco concluído faz a contagem do dia
@@ -259,8 +264,13 @@ class PomodoroController:
             return None
 
         finished_started = self._block_started_at
-        # O próximo bloco começa contando imediatamente neste instante.
-        self._block_started_at = self._now()
+        if self._auto_start(event.next):
+            # O próximo bloco começa contando imediatamente neste instante.
+            self._block_started_at = self._now()
+        else:
+            # Fica pausado com a duração cheia; o início é marcado no próximo Iniciar.
+            self._timer.pause()
+            self._block_started_at = None
         check_goal = event.finished is Phase.FOCUS and finished_started is not None
         goal_before = self._today_count_or_none() if check_goal else None
         if finished_started is not None:
@@ -309,6 +319,14 @@ class PomodoroController:
         """Encerra o app: registra o bloco em andamento como interrompido."""
         self._end_block()
         self._stop_noise()
+
+    # ---- internos: ritmo ------------------------------------------------
+
+    def _auto_start(self, phase: Phase) -> bool:
+        """Se o bloco que vem após uma conclusão natural começa contando sozinho."""
+        if phase is Phase.FOCUS:
+            return self._config.auto_start_focus
+        return self._config.auto_start_breaks
 
     # ---- internos: sessões ----------------------------------------------
 
