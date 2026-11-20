@@ -365,9 +365,10 @@ class PomodoroController:
 
     def _record(self, phase: Phase, started_at: datetime, seconds: int, completed: bool) -> None:
         self._today_cache = None
+        task = self._config.current_task or None
         self._call(
             "registro da sessão",
-            lambda: self._storage.record_session(phase, started_at, seconds, completed),
+            lambda: self._storage.record_session(phase, started_at, seconds, completed, task),
         )
 
     # ---- internos: notificações -----------------------------------------

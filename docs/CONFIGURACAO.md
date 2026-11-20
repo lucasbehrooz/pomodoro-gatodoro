@@ -20,6 +20,7 @@ Se o `config.json` não existir ou estiver corrompido, o app usa os valores padr
 | `long_break_minutes` | `15` | Duração da pausa longa, em minutos |
 | `cycles_before_long_break` | `4` | Quantidade de focos até a pausa longa |
 | `daily_goal` | `8` | Meta diária de focos concluídos, de `0` a `24` (`0` desliga). Ver [Meta diária](#meta-diária) |
+| `current_task` | `""` | Rótulo da tarefa atual, gravado no histórico de cada foco |
 | `sound_enabled` | `true` | Toca o som de alerta ao fim de cada bloco |
 | `toast_enabled` | `true` | Mostra a notificação do Windows (a de início de pausa inclui uma dica aleatória) |
 | `brown_noise_enabled` | `false` | Liga o ruído marrom |
@@ -45,7 +46,11 @@ No foco que alcança a meta, o app mostra uma notificação comemorativa (se a n
 
 ## Histórico
 
-O banco `pomodoro.db` tem a tabela `sessions`, com um registro por bloco. Cada registro guarda a fase (`focus`, `short_break` ou `long_break`), o início em ISO 8601 no horário local, a duração em segundos e se o bloco foi concluído. A quantidade de pomodoros conta apenas focos concluídos. O tempo de foco soma todos os focos, inclusive os interrompidos (pausas não entram).
+O banco `pomodoro.db` tem a tabela `sessions`, com um registro por bloco. Cada registro guarda a fase (`focus`, `short_break` ou `long_break`), o início em ISO 8601 no horário local, a duração em segundos, se o bloco foi concluído e o rótulo da tarefa (opcional). A quantidade de pomodoros conta apenas focos concluídos. O tempo de foco soma todos os focos, inclusive os interrompidos (pausas não entram).
+
+### Rótulo da tarefa
+
+Na tela inicial, há um campo "Em que você está focando?" onde você pode descrever a tarefa que está realizando (ex.: "Estudar Python", "Email"). O rótulo é gravado no histórico de cada foco concluído ou interrompido. Nas **Estatísticas**, a seção "Tempo por tarefa" mostra o tempo total de foco por tarefa no período selecionado, ordenado do maior para o menor. Tarefas sem rótulo aparecem como "Sem rótulo".
 
 O histórico é mantido indefinidamente. Para apagá-lo, feche o app e remova o arquivo `pomodoro.db`.
 
