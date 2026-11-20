@@ -5,8 +5,13 @@ Cada versão publicada por tag usa a seção correspondente como texto da releas
 
 ## [Não lançado]
 
+## [0.0.13]
+
 ### Adicionado
-- Opções **Iniciar pausas automaticamente** e **Iniciar focos automaticamente** (ligadas por padrão, como antes). Desligadas, ao fim de um bloco o próximo fica parado com a duração cheia até você clicar em **Iniciar**.
+- **Iniciar blocos automaticamente**: opções **Iniciar pausas automaticamente** e **Iniciar focos automaticamente** (ligadas por padrão, como antes). Desligadas, ao fim de um bloco o próximo fica parado com a duração cheia até você clicar em **Iniciar**.
+- **Aviso antes do fim do foco**: opção **Aviso antes do fim do foco** (padrão 60s, 0 desliga). Um som curto toca quando faltar este tempo no foco.
+- **Dica na pausa**: cada notificação de início de pausa traz uma dica aleatória ("Beba água", "Alongue o pescoço"…) para manter a saúde em dia.
+- **Rótulo da tarefa**: campo "Em que você está focando?" na tela inicial (opcional). O rótulo é gravado no histórico de cada foco. Nas **Estatísticas**, a seção "Tempo por tarefa" mostra o tempo total por tarefa no período, ordenado por tempo decrescente.
 
 ## [0.0.12]
 
