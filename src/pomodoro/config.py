@@ -9,6 +9,9 @@ from pathlib import Path
 
 from pomodoro.ui.theme import DEFAULT_THEME, is_valid_theme
 
+DEFAULT_DAILY_GOAL = 8
+DAILY_GOAL_RANGE = (0, 24)  # inclusivo; 0 desliga a meta
+
 
 @dataclass
 class Config:
@@ -18,6 +21,8 @@ class Config:
     long_break_minutes: int = 15
     # Quantos focos até a pausa longa
     cycles_before_long_break: int = 4
+    # Meta diária de focos concluídos (0 = desligada)
+    daily_goal: int = DEFAULT_DAILY_GOAL
 
     # Notificações
     sound_enabled: bool = True
@@ -80,6 +85,10 @@ def load_config(path: Path | None = None) -> Config:
         config = replace(config, start_with_windows=False)
     if not isinstance(config.check_updates, bool):
         config = replace(config, check_updates=True)
+    goal = config.daily_goal
+    lo, hi = DAILY_GOAL_RANGE
+    if isinstance(goal, bool) or not isinstance(goal, int) or not lo <= goal <= hi:
+        config = replace(config, daily_goal=DEFAULT_DAILY_GOAL)
     if not isinstance(config.skipped_version, str):
         config = replace(config, skipped_version="")
     for name in ("auto_start_breaks", "auto_start_focus"):

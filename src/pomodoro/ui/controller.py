@@ -14,6 +14,14 @@ Auto-início (auto_start_breaks / auto_start_focus): ao concluir um bloco
 naturalmente, o próximo só continua contando se a opção da fase seguinte
 estiver ligada; senão fica pausado com a duração cheia, e o início da sessão é
 marcado no próximo Iniciar. Pular e Reiniciar não dependem dessas opções.
+
+Meta diária (``Config.daily_goal``, 0 = desligada):
+- A contagem do dia vem do Storage (focos concluídos com dia local de hoje).
+- A comemoração dispara quando um foco concluído faz a contagem do dia
+  cruzar a meta (antes < meta <= depois). Como a contagem só cresce ao longo
+  do dia, isso acontece uma vez por dia e sobrevive a reinícios do app sem
+  gravar nada extra. Um guarda em memória evita repetir no mesmo dia se o
+  usuário mudar a meta depois de batê-la.
 """
 
 from __future__ import annotations
@@ -23,7 +31,7 @@ import math
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import date, datetime
 from enum import Enum
 from typing import Optional, Protocol
 
@@ -43,6 +51,8 @@ NEXT_STEP_MESSAGES: dict[Phase, str] = {
     Phase.SHORT_BREAK: "Hora da pausa",
     Phase.LONG_BREAK: "Hora da pausa longa",
 }
+
+GOAL_REACHED_MESSAGE = "Meta do dia batida: {goal} pomodoros! Bom trabalho."
 
 PHASE_LABELS: dict[Phase, str] = {
     Phase.IDLE: "Ocioso",
@@ -91,6 +101,21 @@ def format_mmss(seconds: float) -> str:
     return f"{minutes:02d}:{secs:02d}"
 
 
+def goal_progress_text(count: int, goal: int) -> str:
+    """Texto da tela inicial: 'Hoje: 3/8'. Meta 0 (desligada) não mostra nada."""
+    if goal <= 0:
+        return ""
+    text = f"Hoje: {count}/{goal}"
+    if count >= goal:
+        text += " · meta batida"
+    return text
+
+
+def goal_just_reached(before: int, after: int, goal: int) -> bool:
+    """True quando a contagem do dia passou de abaixo da meta para a meta ou além."""
+    return goal > 0 and before < goal <= after
+
+
 def _timer_fields(config: Config) -> tuple[int, ...]:
     return tuple(getattr(config, name) for name in TIMER_FIELDS)
 
@@ -120,6 +145,10 @@ class PomodoroController:
         # Instante de início do bloco atual, só após o bloco começar a contar.
         self._block_started_at: Optional[datetime] = None
         self._noise_on = False
+        # Focos concluídos hoje: (dia local, contagem). None força nova consulta.
+        # Contagem None = consulta falhou (desconhecida): a tela mostra 0 e não há comemoração.
+        self._today_cache: Optional[tuple[date, Optional[int]]] = None
+        self._goal_celebrated_on: Optional[date] = None
 
     # ---- estado para a UI -----------------------------------------------
 
@@ -158,6 +187,39 @@ class PomodoroController:
     @property
     def noise_playing(self) -> bool:
         return self._noise_on
+
+    @property
+    def today_focus_count(self) -> int:
+        """Focos concluídos hoje (dia local); 0 se a consulta falhou."""
+        count = self._today_count_or_none()
+        return 0 if count is None else count
+
+    def _today_count_or_none(self) -> Optional[int]:
+        """Contagem do dia com cache até o próximo registro ou virada do dia.
+
+        None quando a consulta falhou. A falha também fica em cache, para não
+        repetir a consulta (e o log) a cada tick.
+        """
+        today = self._now().date()
+        cached = self._today_cache
+        if cached is not None and cached[0] == today:
+            return cached[1]
+        count: Optional[int]
+        try:
+            count = self._storage.count_completed_focus(today)
+        except Exception:
+            logger.exception("Falha ao contar os focos de hoje")
+            count = None
+        self._today_cache = (today, count)
+        return count
+
+    @property
+    def daily_goal_text(self) -> str:
+        """'Hoje: 3/8' para a tela inicial; vazio com a meta desligada."""
+        goal = self._config.daily_goal
+        if goal <= 0:
+            return ""
+        return goal_progress_text(self.today_focus_count, goal)
 
     # ---- comandos -------------------------------------------------------
 
@@ -209,6 +271,8 @@ class PomodoroController:
             # Fica pausado com a duração cheia; o início é marcado no próximo Iniciar.
             self._timer.pause()
             self._block_started_at = None
+        check_goal = event.finished is Phase.FOCUS and finished_started is not None
+        goal_before = self._today_count_or_none() if check_goal else None
         if finished_started is not None:
             self._record(
                 event.finished,
@@ -221,6 +285,8 @@ class PomodoroController:
 
         self._sync_noise()
         self._notify_transition(event)
+        if check_goal:
+            self._maybe_celebrate_goal(goal_before)
         return event
 
     def apply_config(self, new: Config) -> ApplyStatus:
@@ -287,6 +353,7 @@ class PomodoroController:
         self._record(phase, started, seconds, completed=False)
 
     def _record(self, phase: Phase, started_at: datetime, seconds: int, completed: bool) -> None:
+        self._today_cache = None
         self._call(
             "registro da sessão",
             lambda: self._storage.record_session(phase, started_at, seconds, completed),
@@ -306,6 +373,24 @@ class PomodoroController:
         if self._config.toast_enabled:
             message = NEXT_STEP_MESSAGES[event.next]
             self._call("toast", lambda: self._notifier.toast(TOAST_TITLE, message))
+
+    def _maybe_celebrate_goal(self, before: Optional[int]) -> None:
+        """Comemora a meta diária quando o foco recém-gravado a alcança (uma vez por dia).
+
+        Contagem desconhecida (falha do banco) antes ou depois não comemora:
+        sem saber o valor anterior, a meta pode já ter sido batida.
+        """
+        goal = self._config.daily_goal
+        today = self._now().date()
+        if self._goal_celebrated_on == today or before is None:
+            return
+        after = self._today_count_or_none()
+        if after is None or not goal_just_reached(before, after, goal):
+            return
+        self._goal_celebrated_on = today
+        if self._config.toast_enabled:
+            message = GOAL_REACHED_MESSAGE.format(goal=goal)
+            self._call("toast (meta diária)", lambda: self._notifier.toast(TOAST_TITLE, message))
 
     # ---- internos: ruído ------------------------------------------------
 

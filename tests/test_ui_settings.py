@@ -66,6 +66,9 @@ def test_build_config_does_not_mutate_base():
         ("short_break_minutes", "61", "Pausa curta (min): informe um valor entre 1 e 60."),
         ("long_break_minutes", "", "Pausa longa (min): informe um número inteiro."),
         ("cycles_before_long_break", "13", "Focos até a pausa longa: informe um valor entre 1 e 12."),
+        ("daily_goal", "25", "Meta diária de focos (0 = sem meta): informe um valor entre 0 e 24."),
+        ("daily_goal", "-1", "Meta diária de focos (0 = sem meta): informe um valor entre 0 e 24."),
+        ("daily_goal", "oito", "Meta diária de focos (0 = sem meta): informe um número inteiro."),
     ],
 )
 def test_build_config_rejects_invalid_int(field, value, message):
@@ -135,3 +138,9 @@ def test_auto_start_checkboxes_are_built_and_parsed():
     new = build_config(valid_raw(auto_start_breaks=False, auto_start_focus=False), Config())
     assert new.auto_start_breaks is False
     assert new.auto_start_focus is False
+
+
+def test_daily_goal_is_in_form_and_accepts_zero():
+    assert form_values(Config(daily_goal=6))["daily_goal"] == 6
+    assert build_config({"daily_goal": "0"}, Config()).daily_goal == 0
+    assert build_config({"daily_goal": " 12 "}, Config()).daily_goal == 12

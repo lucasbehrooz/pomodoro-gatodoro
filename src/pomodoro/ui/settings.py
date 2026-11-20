@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import replace
 
-from pomodoro.config import Config
+from pomodoro.config import DAILY_GOAL_RANGE, Config
 from pomodoro.ui.theme import THEMES
 
 # Faixas válidas para os campos inteiros do formulário (inclusive).
@@ -14,6 +14,7 @@ INT_FIELDS: dict[str, tuple[int, int]] = {
     "short_break_minutes": (1, 60),
     "long_break_minutes": (1, 120),
     "cycles_before_long_break": (1, 12),
+    "daily_goal": DAILY_GOAL_RANGE,
 }
 
 BOOL_FIELDS: tuple[str, ...] = (
@@ -33,6 +34,7 @@ LABELS: dict[str, str] = {
     "short_break_minutes": "Pausa curta (min)",
     "long_break_minutes": "Pausa longa (min)",
     "cycles_before_long_break": "Focos até a pausa longa",
+    "daily_goal": "Meta diária de focos (0 = sem meta)",
     "brown_noise_volume": "Volume do ruído (%)",
     "sound_enabled": "Som de alerta",
     "toast_enabled": "Notificação do Windows",

@@ -107,3 +107,27 @@ def test_auto_start_invalid_uses_default(tmp_path, value):
     cfg = load_config(p)
     assert cfg.auto_start_breaks is True
     assert cfg.auto_start_focus is True
+
+
+def test_daily_goal_default_and_roundtrip(tmp_path):
+    assert Config().daily_goal == 8
+    p = tmp_path / "config.json"
+    save_config(Config(daily_goal=0), p)
+    assert load_config(p).daily_goal == 0
+    save_config(Config(daily_goal=24), p)
+    assert load_config(p).daily_goal == 24
+
+
+def test_daily_goal_missing_uses_default(tmp_path):
+    p = tmp_path / "config.json"
+    p.write_text('{"focus_minutes": 30}', encoding="utf-8")
+    assert load_config(p).daily_goal == 8
+
+
+@pytest.mark.parametrize("value", ["-1", "25", '"5"', "null", "true", "2.5", "[]"])
+def test_daily_goal_invalid_uses_default(tmp_path, value):
+    p = tmp_path / "config.json"
+    p.write_text('{"daily_goal": %s, "focus_minutes": 30}' % value, encoding="utf-8")
+    cfg = load_config(p)
+    assert cfg.daily_goal == 8
+    assert cfg.focus_minutes == 30

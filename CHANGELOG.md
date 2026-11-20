@@ -7,10 +7,10 @@ Cada versão publicada por tag usa a seção correspondente como texto da releas
 
 ### Adicionado
 - Sequência de dias nas Estatísticas: "Sequência: N dias" conta os dias seguidos com pelo menos um foco concluído (inclui hoje se já houver foco, senão vai até ontem), ao lado do "Recorde".
+- Meta diária de focos (padrão 8, 0 desliga): a tela inicial mostra "Hoje: 3/8", uma notificação comemora a meta uma vez por dia e o gráfico de Pomodoros ganha a linha da meta.
 - Uma instância só: abrir o Pomodoro com outro já aberto traz a janela existente para frente (mesmo se estava na bandeja) em vez de criar um segundo app e um segundo ícone na bandeja.
 - Cada release publica um `latest.json` com versão, tamanho e SHA-256 do instalador. O app verifica atualizações por ele, sem gastar o limite da API do GitHub.
 - Atalhos de teclado na janela principal: **Espaço** inicia/pausa, **R** reinicia e **S** pula. A dica aparece abaixo dos botões. Segurar a tecla não repete a ação. Não disparam em campos de texto nem nas janelas de Configurações e Estatísticas.
-
 - Opções **Iniciar pausas automaticamente** e **Iniciar focos automaticamente** (ligadas por padrão, como antes). Desligadas, ao fim de um bloco o próximo fica parado com a duração cheia até você clicar em **Iniciar**.
 
 ### Alterado
