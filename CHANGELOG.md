@@ -5,6 +5,17 @@ Cada versão publicada por tag usa a seção correspondente como texto da releas
 
 ## [Não lançado]
 
+## [1.0.1]
+
+### Adicionado
+- Mensagens motivacionais aleatórias embaixo do gato (10 opções com emoji). Muda a cada abertura do app.
+
+### Corrigido
+- PyInstaller: `--collect-all numpy` e `--hidden-import numpy` para incluir DLLs de sounddevice no executável.
+
+## [1.0.0] - 2026-11-21
+
+
 ## [1.0.0] - 2026-11-21
 
 ### Status
