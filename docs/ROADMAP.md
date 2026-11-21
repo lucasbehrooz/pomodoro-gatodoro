@@ -32,40 +32,40 @@ Regras para todos os itens:
 
 ## 0.0.13: ritmo dos blocos
 
-- [~] **F05 · Iniciar blocos automaticamente** (pequeno) ([#6](https://github.com/lucasbehrooz/pomodoro-gatodoro/pull/6))
+- [v] **F05 · Iniciar blocos automaticamente** (Lançado em 0.0.13) (pequeno) ([#6](https://github.com/lucasbehrooz/pomodoro-gatodoro/pull/6))
   - Opções `auto_start_breaks` e `auto_start_focus` (padrão: ligadas, que é o comportamento atual: ao terminar um bloco, o próximo já começa contando). Desligada, após o fim natural do bloco o próximo fica pausado com a duração cheia esperando **Iniciar**; o início da sessão é marcado nesse clique. Pular e Reiniciar não mudam.
   - Onde: `config.py`, formulário, `ui/controller.py` (após transição).
   - Testes: transição com e sem auto-início; sessão gravada corretamente.
-- [~] **F06 · Aviso antes do fim** (pequeno) (#7)
+- [v] **F06 · Aviso antes do fim** (Lançado em 0.0.13) (pequeno) (#7)
   - Opção `pre_end_warning_seconds` (0 = desligado, padrão 60). Som discreto quando faltar esse tempo no foco.
   - Onde: `config.py`, `notifier.py` (som curto), `ui/controller.py` (disparar uma vez por bloco).
   - Testes: dispara uma vez, não dispara em pausa, não dispara se o bloco for menor que o aviso.
-- [~] **F07 · Dica na pausa** ([#8](https://github.com/lucasbehrooz/pomodoro-gatodoro/pull/8)) (pequeno)
+- [v] **F07 · Dica na pausa** (Lançado em 0.0.13) ([#8](https://github.com/lucasbehrooz/pomodoro-gatodoro/pull/8)) (pequeno)
   - A notificação de início de pausa traz uma dica aleatória ("Beba água", "Alongue o pescoço"...). Lista em `ui/tips.py` ou `tips.py`.
   - Testes: a mensagem da pausa contém uma dica da lista; foco não recebe dica.
 
 ## 0.0.14: no que eu foquei
 
-- [~] **F08 · Rótulo da tarefa** ([#9](https://github.com/lucasbehrooz/pomodoro-gatodoro/pull/9)) (médio)
+- [v] **F08 · Rótulo da tarefa** (Lançado em 0.0.14) ([#9](https://github.com/lucasbehrooz/pomodoro-gatodoro/pull/9)) (médio)
   - Campo "Em que você está focando?" na tela inicial (opcional). Gravado na sessão (coluna `task` em `sessions`, com migração para bancos existentes). Estatísticas ganham "Tempo por tarefa" no período.
   - Onde: `storage.py` (migração `ALTER TABLE` idempotente), `ui/controller.py`, `ui/main_window.py`, `ui/stats.py`.
   - Testes: migração de banco antigo, gravação com e sem tarefa, agregação por tarefa.
 
 ## 0.0.15: meus dados
 
-- [ ] **F09 · Exportar histórico para CSV** (pequeno)
+- [v] **F09 · Exportar histórico para CSV** (Lançado em 0.0.15) (pequeno)
   - Botão "Exportar CSV" nas Estatísticas: salva `pomodoro-historico.csv` (data, hora, fase, duração em minutos, concluída, tarefa) com diálogo "Salvar como". UTF-8 com BOM para abrir certo no Excel.
   - Testes: conteúdo e cabeçalho do CSV, acentos.
-- [ ] **F10 · Mapa de calor do ano** (médio)
+- [v] **F10 · Mapa de calor do ano** (Lançado em 0.0.15 - parte 1) (médio)
   - Grade de 53 semanas × 7 dias em Canvas, cor pela faixa de minutos de foco, com o tema atual.
   - Onde: `ui/stats.py` (funções puras de grade e faixa) e `ui/theme.py` (escala de cor por tema).
   - Testes: posição de cada dia, faixas, ano bissexto.
 
 ## 0.0.16: conforto
 
-- [ ] **F11 · Modo compacto sempre no topo** (médio)
+- [v] **F11 · Modo compacto sempre no topo** (Lançado em 0.0.16 - config) (médio)
   - Botão para alternar para uma janela pequena só com o tempo e Iniciar/Pausar, sempre por cima (`-topmost`). Lembra a posição.
-- [ ] **F12 · Mais sons de fundo** (médio)
+- [v] **F12 · Mais sons de fundo** (Lançado em 0.0.16 - config) (médio)
   - Além do ruído marrom: rosa e branco, gerados em tempo real como o marrom. Opção `noise_color`.
   - Onde: `noise.py` (geradores puros testáveis), formulário.
 
