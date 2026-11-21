@@ -5,6 +5,13 @@ Cada versão publicada por tag usa a seção correspondente como texto da releas
 
 ## [Não lançado]
 
+## [0.0.15]
+
+### Adicionado
+- **Exportar CSV**: botão "Exportar CSV" nas Estatísticas salva `pomodoro-historico.csv` com colunas: data, hora, fase, duração (min), concluída, tarefa. UTF-8 com BOM para abrir corretamente no Excel.
+- **Mapa de calor do ano (Parte 1)**: estrutura de grade 53×7 (semanas × dias), agregação de minutos por dia, e escala de 5 cores por tema (vazio, baixo, médio, alto, muito). UI Canvas fica para patch 0.0.15.1.
+
+
 ## [0.0.14]
 
 ### Alterado

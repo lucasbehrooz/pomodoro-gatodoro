@@ -1,3 +1,3 @@
 """Pomodoro para Windows."""
 
-__version__ = "0.0.14"
+__version__ = "0.0.15"
