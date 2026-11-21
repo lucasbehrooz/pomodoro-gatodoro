@@ -6,6 +6,7 @@ from collections.abc import Mapping
 from dataclasses import replace
 
 from pomodoro.config import DAILY_GOAL_RANGE, PRE_END_WARNING_RANGE, Config
+from pomodoro.noise import NOISE_COLORS
 from pomodoro.ui.theme import THEMES
 
 # Faixas válidas para os campos inteiros do formulário (inclusive).
@@ -29,7 +30,12 @@ BOOL_FIELDS: tuple[str, ...] = (
     "auto_start_breaks",
     "auto_start_focus",
     "show_task_field",
+    "compact_mode",
 )
+
+CHOICE_FIELDS: dict[str, list[str]] = {
+    "noise_color": list(NOISE_COLORS.keys()),
+}
 
 LABELS: dict[str, str] = {
     "focus_minutes": "Duração do foco (min)",
@@ -50,6 +56,8 @@ LABELS: dict[str, str] = {
     "auto_start_focus": "Iniciar focos automaticamente",
     "pre_end_warning_seconds": "Aviso antes do fim do foco (s, 0 = desligado)",
     "show_task_field": "Mostrar campo de tarefa na tela inicial",
+    "compact_mode": "Modo compacto (janela pequena sempre no topo)",
+    "noise_color": "Cor do ruído de fundo",
 }
 
 
