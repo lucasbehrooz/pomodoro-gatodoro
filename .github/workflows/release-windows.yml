@@ -70,7 +70,7 @@ jobs:
 
       - name: Gerar executável
         run: >
-          python -m PyInstaller --noconfirm --onefile --windowed
+          python -m PyInstaller --noconfirm --onedir --windowed
           --name PomodoroGatodoro
           --icon assets/gato.ico
           --paths src
@@ -102,7 +102,6 @@ jobs:
         with:
           name: PomodoroGatodoro-windows
           path: |
-            dist/PomodoroGatodoro.exe
             dist/pomodoro-gatodoro-x64-setup.exe
 
       - name: Gerar notas da release
