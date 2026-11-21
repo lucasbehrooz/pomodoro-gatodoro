@@ -5,6 +5,35 @@ Cada versão publicada por tag usa a seção correspondente como texto da releas
 
 ## [Não lançado]
 
+## [1.0.0] - 2026-11-21
+
+### Status
+- **App concluído**: v1.0.0 estável com todas features core implementadas.
+- Roadmap F05-F12 (9 features) + UIs completas.
+- 496 testes passando, build Windows estável.
+
+### Recursos
+- Timer Pomodoro com fases (foco, pausa curta/longa)
+- Histórico em SQLite com estatísticas (dia/semana/período/mês)
+- Mapa de calor do ano (grid 53×7 com cores por tema)
+- Temas (Padrão, Rosa, Escuro)
+- Ruído de fundo (branco, rosa, marrom) com controle de volume
+- Configurações completas (durações, ciclos, avisos, auto-início, etc.)
+- Notificações toast Windows + som
+- Bandeja do sistema com menu
+- Ícone gato animado durante foco
+- Atualização automática com verificação SHA-256
+- Instalador Inno Setup
+
+### Tecnologia
+- Python 3.11+ com customtkinter, pystray, winotify
+- PyInstaller --onefile com collect-binaries sounddevice
+- SQLite para persistência
+- GitHub Actions CI/CD Windows
+
+## [0.0.18]
+
+
 ## [0.0.18]
 
 ### Adicionado
