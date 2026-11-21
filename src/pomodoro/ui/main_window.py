@@ -20,6 +20,7 @@ from pomodoro.autostart import set_autostart
 from pomodoro.config import Config, save_config
 from pomodoro.storage import Storage
 from pomodoro.ui.cat import CatAnimation
+from pomodoro.tips import pick_motivation
 from pomodoro.ui.icon import apply_window_icon
 from pomodoro.ui.controller import ApplyStatus, PomodoroController, format_mmss
 from pomodoro.ui.settings_dialog import SettingsDialog
@@ -163,7 +164,8 @@ class MainWindow(ctk.CTk):
         self._cat.pack(pady=(0, 0))
 
         # Mensagem motivacional
-        self._motivation_label = ctk.CTkLabel(self, text="Você consegue! 💪", text_color="#888888", font=ctk.CTkFont(size=11))
+        motivation = pick_motivation(self._rng)
+        self._motivation_label = ctk.CTkLabel(self, text=motivation, text_color="#888888", font=ctk.CTkFont(size=11))
         self._motivation_label.pack(pady=(4, 0))
 
 

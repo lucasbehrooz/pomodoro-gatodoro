@@ -24,6 +24,20 @@ TIPS: tuple[str, ...] = (
 )
 
 
+
+MOTIVATIONS: tuple[str, ...] = (
+    "Você consegue! 💪",
+    "Foco total! 🎯",
+    "Cada bloco te aproxima do sucesso 🚀",
+    "Você é incrível 😎",
+    "Vamos lá! 🔥",
+    "Concentração máxima ✨",
+    "Você vai conseguir 💯",
+    "Um passo de cada vez 👣",
+    "Isso é só o começo 🌟",
+    "Você é capaz! 🙌",
+)
+
 def pick_tip(
     rng: random.Random,
     previous: Optional[str] = None,
@@ -39,3 +53,15 @@ def pick_tip(
 def with_tip(message: str, tip: str) -> str:
     """Junta a mensagem da notificação e a dica: 'Hora da pausa. Dica: Beba água.'"""
     return f"{message}. Dica: {tip}."
+
+
+def pick_motivation(
+    rng: random.Random,
+    previous: Optional[str] = None,
+    motivations: Sequence[str] = MOTIVATIONS,
+) -> str:
+    """Escolhe uma mensagem motivacional aleatória, diferente de ``previous`` quando possível."""
+    if not motivations:
+        raise ValueError("lista de motivações vazia")
+    options = [m for m in motivations if m != previous] or list(motivations)
+    return rng.choice(options)
