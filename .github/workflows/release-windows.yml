@@ -70,17 +70,15 @@ jobs:
 
       - name: Gerar executável
         run: >
-          python -m PyInstaller --noconfirm --onedir --windowed
+          python -m PyInstaller --noconfirm --onefile --windowed
           --name PomodoroGatodoro
           --icon assets/gato.ico
           --paths src
           --collect-all customtkinter
           --collect-all pystray
           --collect-all PIL
-          --collect-all numpy
+          --collect-binaries sounddevice
           --hidden-import=winotify
-          --hidden-import=sounddevice
-          --hidden-import=_sounddevice_data
           --add-data "assets;assets"
           docs/packaging/run_pomodoro.py
 
