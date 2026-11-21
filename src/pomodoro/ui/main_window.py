@@ -162,6 +162,10 @@ class MainWindow(ctk.CTk):
         self._cat = CatAnimation(self)
         self._cat.pack(pady=(0, 0))
 
+        # Mensagem motivacional
+        self._motivation_label = ctk.CTkLabel(self, text="Você consegue! 💪", text_color="#888888", font=ctk.CTkFont(size=11))
+        self._motivation_label.pack(pady=(4, 0))
+
 
         buttons = ctk.CTkFrame(self, fg_color="transparent")
         buttons.pack(pady=16)
@@ -191,6 +195,7 @@ class MainWindow(ctk.CTk):
         apply_text(self._goal_label, p, muted=True)
         apply_text(self._status_label, p, muted=True)
         apply_text(self._hint_label, p, muted=True)
+        apply_text(self._motivation_label, p, muted=True)
         self._pending_label.configure(text_color=p.warning)
         apply_text(self._update_label, p)
         for btn in (
