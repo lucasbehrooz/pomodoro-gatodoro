@@ -77,8 +77,10 @@ jobs:
           --collect-all customtkinter
           --collect-all pystray
           --collect-all PIL
+          --collect-all numpy
           --hidden-import=winotify
           --hidden-import=sounddevice
+          --hidden-import=_sounddevice_data
           --add-data "assets;assets"
           docs/packaging/run_pomodoro.py
 
