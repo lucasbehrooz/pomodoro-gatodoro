@@ -105,6 +105,7 @@ class MainWindow(ctk.CTk):
         apply_window_icon(self)
         self.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}")
         self.resizable(False, False)
+        self._rng = __import__("random").Random()
         self._build()
         self._apply_palette()
         self.protocol("WM_DELETE_WINDOW", self._on_close_requested)
