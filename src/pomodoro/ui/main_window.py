@@ -162,9 +162,6 @@ class MainWindow(ctk.CTk):
         self._cat = CatAnimation(self)
         self._cat.pack(pady=(0, 0))
 
-        # Campo para rótulo da tarefa (mostrado só se show_task_field estiver ligado)
-        self._task_entry = ctk.CTkEntry(self, placeholder_text="Em que você está focando?")
-        self._task_entry.bind("<KeyRelease>", lambda _: self._on_task_changed())
 
         buttons = ctk.CTkFrame(self, fg_color="transparent")
         buttons.pack(pady=16)
@@ -459,14 +456,6 @@ class MainWindow(ctk.CTk):
         self._cat.set_running(c.is_running)
         self._pending_label.configure(text=MSG_PENDING_NOTICE if c.timer_config_pending else "")
         # Mostrar/ocultar campo de tarefa baseado em config
-        if c.config.show_task_field:
-            if not self._task_entry.winfo_manager():
-                self._task_entry.pack(pady=(8, 0), padx=16, fill="x", before=self._pending_label)
-            self._task_entry.delete(0, "end")
-            self._task_entry.insert(0, c.config.current_task)
-        else:
-            if self._task_entry.winfo_manager():
-                self._task_entry.pack_forget()
 
 
 def _event_time(event: tkinter.Event) -> int:
