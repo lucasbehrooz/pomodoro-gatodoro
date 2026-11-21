@@ -65,6 +65,12 @@ class Config:
     # Mostrar campo de entrada de tarefa na tela inicial
     show_task_field: bool = False
 
+    # Modo compacto: janela pequena com só timer e botões, sempre no topo
+    compact_mode: bool = False
+    # Posição compacta: (x, y) se lembrada, None = auto
+    compact_window_x: int | None = None
+    compact_window_y: int | None = None
+
 
 def config_dir() -> Path:
     """Diretório de dados do app. Em Windows usa %APPDATA%; fora dele, ~/.config."""
@@ -108,6 +114,12 @@ def load_config(path: Path | None = None) -> Config:
         config = replace(config, current_task="")
     if not isinstance(config.show_task_field, bool):
         config = replace(config, show_task_field=False)
+    if not isinstance(config.compact_mode, bool):
+        config = replace(config, compact_mode=False)
+    for name in ("compact_window_x", "compact_window_y"):
+        val = getattr(config, name)
+        if val is not None and not isinstance(val, int):
+            config = replace(config, **{name: None})
     if not _valid_pre_end_warning(config.pre_end_warning_seconds):
         config = replace(config, pre_end_warning_seconds=60)
     for name in ("auto_start_breaks", "auto_start_focus"):

@@ -29,6 +29,7 @@ BOOL_FIELDS: tuple[str, ...] = (
     "auto_start_breaks",
     "auto_start_focus",
     "show_task_field",
+    "compact_mode",
 )
 
 LABELS: dict[str, str] = {
@@ -50,6 +51,7 @@ LABELS: dict[str, str] = {
     "auto_start_focus": "Iniciar focos automaticamente",
     "pre_end_warning_seconds": "Aviso antes do fim do foco (s, 0 = desligado)",
     "show_task_field": "Mostrar campo de tarefa na tela inicial",
+    "compact_mode": "Modo compacto (janela pequena sempre no topo)",
 }
 
 
