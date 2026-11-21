@@ -5,6 +5,11 @@ Cada versão publicada por tag usa a seção correspondente como texto da releas
 
 ## [Não lançado]
 
+## [0.0.14]
+
+### Alterado
+- **Rótulo da tarefa**: campo "Em que você está focando?" agora vem **desabilitado por padrão** nas Configurações. Pode ser ligado em **Configurações → Mostrar campo de tarefa na tela inicial** para quem quiser usar.
+
 ## [0.0.13]
 
 ### Adicionado
