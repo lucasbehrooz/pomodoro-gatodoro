@@ -5,6 +5,13 @@ Cada versão publicada por tag usa a seção correspondente como texto da releas
 
 ## [Não lançado]
 
+## [0.0.17]
+
+### Alterado
+- **Build Windows**: PyInstaller agora usa `--onefile` com `--collect-binaries sounddevice` para incluir todas DLLs nativas necessárias no executável único. Resolve erro "Failed to load Python DLL".
+
+## [0.0.16]
+
 ## [0.0.16]
 
 ### Adicionado
