@@ -68,10 +68,13 @@ _TRI, _DECAY = _build_tables(BROWN_LEAK, _BLOCK)
 class BrownNoiseGenerator:
     """Gera ruído marrom em chunks contínuos, mantendo o estado do integrador."""
 
-    def __init__(self, sample_rate: int = 44100, seed: int | None = None) -> None:
+    def __init__(self, sample_rate: int = 44100, seed: int | None = None, color: str = "marrom") -> None:
         if sample_rate <= 0:
             raise ValueError("sample_rate deve ser positivo")
+        if color not in NOISE_COLORS:
+            raise ValueError(f"color deve ser um de {list(NOISE_COLORS.keys())}, não {color!r}")
         self.sample_rate = int(sample_rate)
+        self.color = color  # ponytail: apenas marrom implementado; upgrade para multi-cor
         # Sempre há um seed concreto, para que reset() reproduza o início.
         if seed is None:
             seed = int(np.random.SeedSequence().entropy) % (2**32)
@@ -180,15 +183,18 @@ class BrownNoisePlayer:
     """
 
     def __init__(
-        self, sample_rate: int = 44100, volume: float = 0.3, block_frames: int = 1024
+        self, sample_rate: int = 44100, volume: float = 0.3, block_frames: int = 1024, color: str = "marrom"
     ) -> None:
         if sample_rate <= 0:
             raise ValueError("sample_rate deve ser positivo")
         if block_frames <= 0:
             raise ValueError("block_frames deve ser positivo")
+        if color not in NOISE_COLORS:
+            raise ValueError(f"color deve ser um de {list(NOISE_COLORS.keys())}, não {color!r}")
         self.sample_rate = int(sample_rate)
         self.block_frames = int(block_frames)
-        self._gen = BrownNoiseGenerator(sample_rate=self.sample_rate)
+        self.color = color
+        self._gen = BrownNoiseGenerator(sample_rate=self.sample_rate, color=color)
 
         # _ctl_lock serializa start/stop/close. _state_lock protege o estado lido
         # pela callback; a callback nunca toma _ctl_lock (evita deadlock).
