@@ -174,10 +174,12 @@ class MainWindow(ctk.CTk):
         self._reset_btn.grid(row=0, column=1, padx=4)
         self._skip_btn = ctk.CTkButton(buttons, text="Pular", width=100, command=self._on_skip)
         self._skip_btn.grid(row=0, column=2, padx=4)
+        self._compact_btn = ctk.CTkButton(buttons, text="Compacto", width=100, command=self._on_toggle_compact)
+        self._compact_btn.grid(row=0, column=3, padx=4)
         self._hint_label = ctk.CTkLabel(
             buttons, text=HINT_TEXT, height=18, font=ctk.CTkFont(size=11)
         )
-        self._hint_label.grid(row=1, column=0, columnspan=3, pady=(4, 0))
+        self._hint_label.grid(row=1, column=0, columnspan=4, pady=(4, 0))
 
         self._pending_label = ctk.CTkLabel(self, text="", text_color="#f0ad4e")
         self._pending_label.pack(pady=(4, 0))
@@ -230,6 +232,18 @@ class MainWindow(ctk.CTk):
         self._controller.skip()
         self._refresh()
         self._refresh_stats_if_open()
+
+    def _on_toggle_compact(self) -> None:
+        """Alterna para modo compacto (janela pequena sempre no topo)."""
+        from pomodoro.ui.compact_window import CompactWindow
+        cfg = self._controller._config
+        cfg.compact_mode = not cfg.compact_mode
+        self._controller._config_manager.save(cfg)
+        if cfg.compact_mode:
+            CompactWindow(self._controller, self._palette)
+            self.withdraw()
+        else:
+            self.deiconify()
 
     def _on_key(self, event: tkinter.Event) -> str | None:
         """Atalhos de teclado: chamam os mesmos handlers dos botões."""
