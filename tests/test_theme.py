@@ -37,12 +37,12 @@ from pomodoro.ui.theme import (
 )
 
 HEX_RE = re.compile(r"^#[0-9A-Fa-f]{6}$")
-COLOR_FIELDS = [f.name for f in fields(Palette) if f.name != "name"]
+COLOR_FIELDS = [f.name for f in fields(Palette) if f.name not in ("name", "heatmap_colors")]
 # Campos que o tema padrão deixa como None (usa o padrão do CustomTkinter).
 DEFAULTABLE = {
     f.name
     for f in fields(Palette)
-    if f.name not in ("name", "warning", "error")
+    if f.name not in ("name", "warning", "error", "heatmap_colors")
 }
 
 
