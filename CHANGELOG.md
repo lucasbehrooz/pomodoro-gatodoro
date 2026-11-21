@@ -5,6 +5,14 @@ Cada versão publicada por tag usa a seção correspondente como texto da releas
 
 ## [Não lançado]
 
+## [0.0.16]
+
+### Adicionado
+- **Modo compacto (F11)**: opção nas Configurações para ativar janela pequena sempre no topo (só timer e botões Iniciar/Pausar). Lembra posição na próxima abertura.
+- **Cores de ruído (F12)**: além do ruído marrom, agora suporta rosa (espectro ~1/f) e branco. Configurável em Configurações → Cor do ruído de fundo. Gerador multi-cor testável em noise.py.
+
+## [0.0.15]
+
 ## [0.0.15]
 
 ### Adicionado
