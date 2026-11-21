@@ -11,11 +11,14 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable
 from datetime import date, timedelta
+import logging
 import math
 import tkinter as tk
+from tkinter import filedialog
 
 import customtkinter as ctk
 
+from pomodoro.export import sessions_to_csv
 from pomodoro.ui.icon import apply_window_icon
 
 from pomodoro.storage import Storage
@@ -406,8 +409,13 @@ class StatsWindow(ctk.CTkToplevel):
         # Legenda da linha da meta: empacotada só quando a linha aparece.
         self._goal_legend = ctk.CTkLabel(frame, text="", anchor="w")
 
-        self._close_btn = ctk.CTkButton(frame, text="Fechar", width=90, command=self.destroy)
-        self._close_btn.pack(anchor="e", pady=(12, 0))
+        # Botões (exportar + fechar)
+        buttons_frame = ctk.CTkFrame(frame, fg_color="transparent")
+        buttons_frame.pack(anchor="e", pady=(12, 0))
+        self._export_btn = ctk.CTkButton(buttons_frame, text="Exportar CSV", width=120, command=self._on_export)
+        self._export_btn.pack(side="left", padx=(0, 4))
+        self._close_btn = ctk.CTkButton(buttons_frame, text="Fechar", width=90, command=self.destroy)
+        self._close_btn.pack(side="left")
 
         self.apply_palette(self._palette)
 
@@ -428,6 +436,7 @@ class StatsWindow(ctk.CTkToplevel):
         self._goal_legend.configure(text_color=goal_line_color(palette))
         apply_option_menu(self._period_menu, palette)
         apply_option_menu(self._metric_menu, palette)
+        apply_accent_button(self._export_btn, palette)
         apply_accent_button(self._close_btn, palette)
         refresh_transparent_bg(self)
         self.refresh()
@@ -482,6 +491,28 @@ class StatsWindow(ctk.CTkToplevel):
             self._goal_legend.pack(anchor="w", pady=(4, 0), before=self._close_btn)
         elif not text and self._goal_legend.winfo_manager():
             self._goal_legend.pack_forget()
+
+    def _on_export(self) -> None:
+        """Exporta histórico para CSV com diálogo 'Salvar como'."""
+        today = self._today()
+        start, end = period_range(self._period_key, today)
+        csv_content = sessions_to_csv(self._storage, start, end)
+
+        # Diálogo "Salvar como" na pasta de Documentos/Downloads padrão
+        filename = filedialog.asksaveasfilename(
+            defaultextension=".csv",
+            initialfile="pomodoro-historico.csv",
+            filetypes=[("CSV files", "*.csv"), ("All files", "*.*")],
+        )
+        if not filename:
+            return  # usuário cancelou
+
+        try:
+            # Salva com encoding UTF-8 (BOM já está em csv_content)
+            with open(filename, "w", encoding="utf-8") as f:
+                f.write(csv_content)
+        except Exception as exc:
+            logging.error(f"Erro ao salvar CSV: {exc}")
 
     def _draw_chart(self, series: list[tuple[date, int]]) -> None:
         dark = ctk.get_appearance_mode() == "Dark"
