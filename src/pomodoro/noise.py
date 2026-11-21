@@ -1,13 +1,13 @@
-"""Gerador de ruído marrom e player de reprodução (sounddevice, importado sob demanda).
+"""Gerador de ruído colorido (marrom, rosa, branco) e player de reprodução (sounddevice, importado sob demanda).
 
-Técnica: ruído branco uniforme integrado por um integrador "vazante"
-(leaky integrator)::
+Técnica: ruído branco uniforme integrado por um integrador "vazante" (leaky integrator)::
 
-    y[n] = BROWN_LEAK * y[n-1] + w[n]
+    y[n] = a * y[n-1] + w[n]
 
-A integração do ruído branco produz espectro ~1/f² (ruído marrom). O fator
-de vazamento limita o drift DC. Com BROWN_LEAK = 0.999 e fs = 44100 Hz, a
-frequência de canto é ~ (1 - a) * fs / (2*pi) ≈ 7 Hz.
+Com coeficiente `a` ajustado por cor:
+- Branco: a=0 (sem integração)
+- Rosa: a~0.975 (espectro ~1/f)
+- Marrom: a~0.999 (espectro ~1/f²)
 
 O estado do integrador é mantido entre chamadas de ``next_chunk``, então
 chunks consecutivos formam um sinal contínuo sem cliques.
@@ -26,6 +26,13 @@ from typing import Any
 import numpy as np
 
 logger = logging.getLogger(__name__)
+
+# Cores de ruído disponíveis para F12
+NOISE_COLORS = {
+    "branco": 0.0,    # sem integração
+    "rosa": 0.975,    # espectro ~1/f
+    "marrom": 0.999,  # espectro ~1/f²
+}
 
 # Fator de vazamento do integrador (0 < a < 1). Próximo de 1 = mais grave, mais drift.
 BROWN_LEAK: float = 0.999
