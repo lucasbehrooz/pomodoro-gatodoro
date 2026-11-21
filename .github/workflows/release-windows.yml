@@ -75,6 +75,10 @@ jobs:
           --icon assets/gato.ico
           --paths src
           --collect-all customtkinter
+          --collect-all pystray
+          --collect-all PIL
+          --hidden-import=winotify
+          --hidden-import=sounddevice
           --add-data "assets;assets"
           docs/packaging/run_pomodoro.py
 
