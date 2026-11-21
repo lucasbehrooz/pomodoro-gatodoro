@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 TRAY_POLL_MS = 100
 
 
-def _make_noise_player() -> NoiseControl | None:
+def _make_noise_player(config) -> NoiseControl | None:
     """Player de ruído, se o módulo existir. Sem ele, o app roda sem ruído."""
     try:
         from pomodoro.noise import BrownNoisePlayer  # type: ignore[attr-defined]
@@ -26,7 +26,7 @@ def _make_noise_player() -> NoiseControl | None:
         logger.info("Player de ruído indisponível; ruído marrom desativado")
         return None
     try:
-        return BrownNoisePlayer()  # type: ignore[no-any-return]
+        return BrownNoisePlayer(color=config.noise_color)  # type: ignore[no-any-return]
     except Exception:
         logger.exception("Falha ao criar o player de ruído")
         return None
@@ -57,7 +57,7 @@ def _run(signals: InstanceSignals) -> None:
             config,
             storage,
             notifier=get_notifier(config.sound_enabled, config.toast_enabled),
-            noise_player=_make_noise_player(),
+            noise_player=_make_noise_player(config),
             notifier_factory=lambda c: get_notifier(c.sound_enabled, c.toast_enabled),
         )
         # Callbacks da bandeja rodam na thread do pystray: sempre via window.post().

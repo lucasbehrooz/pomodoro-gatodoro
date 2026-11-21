@@ -68,7 +68,7 @@ def harness(monkeypatch):
 
 def make_player(volume: float = 0.3) -> BrownNoisePlayer:
     # sample_rate 1000 e blocos de 100 frames: 1 bloco = 0.1 s, fades ficam em números redondos.
-    return BrownNoisePlayer(sample_rate=1000, volume=volume, block_frames=100)
+    return BrownNoisePlayer(sample_rate=1000, volume=volume, block_frames=100, color="marrom")
 
 
 def test_start_opens_stream_and_plays(harness):
