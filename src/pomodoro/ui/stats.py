@@ -488,9 +488,11 @@ class StatsWindow(ctk.CTkToplevel):
         # Legenda da linha da meta: empacotada só quando a linha aparece.
         self._goal_legend = ctk.CTkLabel(frame, text="", anchor="w")
 
-        # Botões (exportar + fechar)
+        # Botões (mapa + exportar + fechar)
         buttons_frame = ctk.CTkFrame(frame, fg_color="transparent")
         buttons_frame.pack(anchor="e", pady=(12, 0))
+        self._heatmap_btn = ctk.CTkButton(buttons_frame, text="Mapa do ano", width=110, command=self._on_show_heatmap)
+        self._heatmap_btn.pack(side="left", padx=(0, 4))
         self._export_btn = ctk.CTkButton(buttons_frame, text="Exportar CSV", width=120, command=self._on_export)
         self._export_btn.pack(side="left", padx=(0, 4))
         self._close_btn = ctk.CTkButton(buttons_frame, text="Fechar", width=90, command=self.destroy)
@@ -515,6 +517,7 @@ class StatsWindow(ctk.CTkToplevel):
         self._goal_legend.configure(text_color=goal_line_color(palette))
         apply_option_menu(self._period_menu, palette)
         apply_option_menu(self._metric_menu, palette)
+        apply_accent_button(self._heatmap_btn, palette)
         apply_accent_button(self._export_btn, palette)
         apply_accent_button(self._close_btn, palette)
         refresh_transparent_bg(self)
@@ -570,6 +573,10 @@ class StatsWindow(ctk.CTkToplevel):
             self._goal_legend.pack(anchor="w", pady=(4, 0), before=self._close_btn)
         elif not text and self._goal_legend.winfo_manager():
             self._goal_legend.pack_forget()
+
+    def _on_show_heatmap(self) -> None:
+        """Abre janela com mapa de calor do ano."""
+        HeatmapWindow(self._storage, self._palette, self._today())
 
     def _on_export(self) -> None:
         """Exporta histórico para CSV com diálogo 'Salvar como'."""
@@ -646,3 +653,55 @@ class StatsWindow(ctk.CTkToplevel):
                     cx, base + 12, text=f"{day:%d/%m}", anchor="center", fill=colors["text"]
                 )
 
+
+
+class HeatmapWindow(ctk.CTkToplevel):
+    """Janela com mapa de calor do ano (grade 53×7)."""
+
+    def __init__(self, storage: Storage, palette: Palette, today: date) -> None:
+        super().__init__()
+        self.title("Mapa de calor do ano")
+        self.geometry("900x250")
+        self.resizable(False, False)
+        
+        self._storage = storage
+        self._palette = palette
+        self._today = today
+        
+        # Canvas para desenhar grade
+        self._canvas = ctk.CTkCanvas(self, width=880, height=200, bg_color="transparent")
+        self._canvas.pack(pady=10, padx=10, fill="both", expand=True)
+        
+        self._draw_heatmap()
+        apply_window_icon(self)
+        self.apply_palette(palette)
+
+    def _draw_heatmap(self) -> None:
+        """Desenha grade 53×7 com cores por minutos de foco."""
+        canvas = self._canvas
+        canvas.delete("all")
+        
+        # Geometria
+        cell_size, gap, padding = 10, 2, 10
+        dark = ctk.get_appearance_mode() == "Dark"
+        colors_list = self._palette.heatmap_colors
+        
+        # Dados
+        year = self._today.year
+        start = date(year, 1, 1)
+        minutes_by_day = heatmap_minutes_by_day(self._storage, start, self._today)
+        cells = heatmap_cells(year, cell_size, gap, padding)
+        
+        # Desenha células
+        for day, x0, y0, x1, y1 in cells:
+            minutes = minutes_by_day.get(day, 0)
+            bucket = heatmap_color_bucket(minutes)
+            color = colors_list[bucket]
+            canvas.create_rectangle(x0, y0, x1, y1, fill=color, outline="#999999", width=1)
+            
+            # Tooltip (hover): "DD/MM: XXXmin"
+            # (simplificado; Tkinter não tem tooltip nativo)
+
+    def apply_palette(self, palette: Palette) -> None:
+        """Aplica paleta."""
+        apply_window(self, palette, "CTkToplevel")
