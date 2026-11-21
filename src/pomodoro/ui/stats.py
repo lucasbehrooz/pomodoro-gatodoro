@@ -14,7 +14,7 @@ from datetime import date, timedelta
 import logging
 import math
 import tkinter as tk
-from tkinter import filedialog
+from tkinter import filedialog, colorchooser
 
 import customtkinter as ctk
 
@@ -299,6 +299,85 @@ def tasks_summary(storage: Storage, today: date, period: str) -> str:
         minutes = seconds // 60
         lines.append(f"  {task_label}: {minutes}m")
     return "\n".join(lines)
+
+
+def heatmap_year_range(today: date) -> tuple[date, date]:
+    """Intervalo [primeiro dia ano, hoje] para o mapa de calor."""
+    year_start = today.replace(month=1, day=1)
+    return year_start, today
+
+
+def heatmap_minutes_by_day(storage: Storage, start: date, end: date) -> dict[date, int]:
+    """Minutos de foco por dia no intervalo. Dias sem foco = 0."""
+    seconds_by_day = storage.daily_focus_seconds(start, end)
+    return {day: max(0, seconds // 60) for day, seconds in seconds_by_day.items()}
+
+
+def heatmap_color_bucket(minutes: int) -> int:
+    """Bucket de cor (0-4) por minutos de foco. 0=nenhum, 4=muito.
+    
+    Faixas: 0min, 1-50min, 51-150min, 151-300min, 300+min.
+    """
+    if minutes == 0:
+        return 0
+    elif minutes <= 50:
+        return 1
+    elif minutes <= 150:
+        return 2
+    elif minutes <= 300:
+        return 3
+    else:
+        return 4
+
+
+def heatmap_grid_geometry(
+    cell_size: int, gap: int, padding: int
+) -> dict[str, int]:
+    """Dimensões do grid 53×7 (semanas × dias da semana).
+    
+    Retorna: width, height, cell_width, cell_height.
+    """
+    cols, rows = 53, 7
+    total_width = padding * 2 + cols * cell_size + (cols - 1) * gap
+    total_height = padding * 2 + rows * cell_size + (rows - 1) * gap
+    return {
+        "width": total_width,
+        "height": total_height,
+        "cell_width": cell_size,
+        "cell_height": cell_size,
+        "gap": gap,
+        "padding": padding,
+    }
+
+
+def heatmap_cells(
+    year: int, cell_size: int, gap: int, padding: int
+) -> list[tuple[date, int, int, int, int]]:
+    """Calcula posição de cada dia no grid: (date, x0, y0, x1, y1).\n    Grid 53×7 (52 semanas + 1 dia). Segunda=col 0, domingo=row 6.
+    """
+    cells = []
+    jan1 = date(year, 1, 1)
+    # Primeira segunda da semana ISO 1
+    first_monday = jan1 - timedelta(days=jan1.weekday())
+    current = first_monday
+    year_end = date(year, 12, 31)
+    
+    col, row = 0, 0
+    while current <= year_end and col < 53:
+        x0 = padding + col * (cell_size + gap)
+        y0 = padding + row * (cell_size + gap)
+        x1 = x0 + cell_size
+        y1 = y0 + cell_size
+        
+        if current.year == year:
+            cells.append((current, x0, y0, x1, y1))
+        
+        current += timedelta(days=1)
+        row = (row + 1) % 7
+        if row == 0:
+            col += 1
+    
+    return cells
 
 
 # ---- janela -----------------------------------------------------------------

@@ -34,6 +34,7 @@ class Palette:
     goal_line: str | None  # linha da meta diária no gráfico (padrão: CHART_GOAL_LIGHT/DARK)
     warning: str  # aviso (ex.: configurações pendentes)
     error: str  # erro de validação
+    heatmap_colors: list[str]  # 5 cores: vazio, baixo, médio, alto, muito
 
 
 PADRAO = Palette(
@@ -49,6 +50,7 @@ PADRAO = Palette(
     goal_line=None,
     warning="#f0ad4e",
     error="#d9534f",
+    heatmap_colors=["#E8E8E8", "#A8D5BA", "#6BB6A8", "#4A9B96", "#2D7F84"],
 )
 
 FEMININO = Palette(
@@ -64,6 +66,7 @@ FEMININO = Palette(
     goal_line="#6B2C91",
     warning="#9A5B00",
     error="#A4262C",
+    heatmap_colors=["#F5E6F0", "#F0B3D4", "#E0609A", "#C94C86", "#A0307D"],
 )
 
 ESCURO = Palette(
@@ -79,6 +82,7 @@ ESCURO = Palette(
     goal_line="#F0AD4E",
     warning="#F0AD4E",
     error="#FF7B72",
+    heatmap_colors=["#3D444F", "#5B8C5E", "#7CB8B3", "#6BB6A8", "#4A9B96"],
 )
 
 # Linha da meta no gráfico do tema padrão, que segue o modo claro/escuro do sistema.
