@@ -5,6 +5,16 @@ Cada versão publicada por tag usa a seção correspondente como texto da releas
 
 ## [Não lançado]
 
+## [0.0.18]
+
+### Adicionado
+- **Mapa de calor do ano (F10.1)**: Canvas visual grid 53×7 com cores por tema, mostra histórico completo do ano em uma janela. Botão "Mapa do ano" em Estatísticas.
+- **Modo compacto UI (F11.1)**: Janela pequena sempre no topo com timer + Iniciar/Pausar + Sair. Botão "Compacto" em MainWindow.
+- **Cores de ruído multi-cor (F12.1)**: BrownNoisePlayer agora usa config.noise_color (branco/rosa/marrom) na inicialização.
+
+## [0.0.17]
+
+
 ## [0.0.17]
 
 ### Alterado
